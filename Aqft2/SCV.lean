@@ -47,9 +47,9 @@ variable (x : ℂ) (f : TestFunctionℂ)
 
 #check x • f        -- Lean should report:  `x • f : TestFunctionℂ`
 
-variable {n : ℕ}
-variable (z : ℂn n)               -- coefficients
+variable (n : ℕ)
 variable (J : Fin n → TestFunctionℂ)   -- test functions
+variable (z : ℂn n)               -- coefficients
 
 /-- **Linear combination operator**
     `weightedSumCLM J` takes a coefficient vector `z : ℂⁿ` and returns the test

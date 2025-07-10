@@ -46,11 +46,13 @@ open scoped MeasureTheory Complex BigOperators
 /- OS0 Analyticity -/
 
 variable (n : ℕ)
-variable (z : ℂn n)               -- coefficients
 variable (J : Fin n → TestFunctionℂ)   -- test functions
+variable (z : ℂn n)               -- coefficients
 variable (dμ : ProbabilityMeasure FieldSpace)
 
-abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM n J z
+#check weightedSumCLM (n := n) (J := J) z
+
+abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM (n := n) (J := J) z
 
 #check (weightedSum n J z)
 
