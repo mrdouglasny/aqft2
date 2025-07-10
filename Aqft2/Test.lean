@@ -28,34 +28,40 @@ import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Density
 
+import Mathlib.Analysis.RCLike.Basic
+import Mathlib.Analysis.NormedSpace.RCLike
+import Mathlib.Analysis.NormedSpace.Real
+
 import Aqft2.Basic
+import Aqft2.SCV
 
 /- These are the O-S axioms in the form given in Glimm and Jaffe, Quantum Physics, pp. 89-90 -/
 
 open MeasureTheory NNReal ENNReal
-open TopologicalSpace Measure
+open TopologicalSpace Measure SCV
 
 noncomputable section
 open scoped MeasureTheory Complex BigOperators
---open scoped RealInnerProductSpace
 
 /- OS0 Analyticity -/
 
-abbrev ℂn (n : ℕ) := Fin n → ℂ
--- EuclideanSpace ℂ (Fin n)
-
 variable (n : ℕ)
-def foo := (∑ n_1, fun x : ℂn n => x n_1 ^ 2)
-def bar := (fun x : ℂn n ↦ ∑ i ∈ (Finset.univ : Finset (Fin n)), (x i) ^ 2)
-#check foo
-#check bar
+variable (z : ℂn n)               -- coefficients
+variable (J : Fin n → TestFunctionℂ)   -- test functions
+variable (dμ : ProbabilityMeasure FieldSpace)
 
+abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM n J z
 
+#check (weightedSum n J z)
 
---example test : foo = bar
+def trial (z : ℂn n) : ℂ := generatingFunctionalℂ dμ (weightedSum n J z)
 
-def Entire {n : ℕ} (f : ℂn n → ℂ) : Prop :=
-  AnalyticOn ℂ f Set.univ          --  ⇔  ∀ z, HolomorphicAt ℂ f z
+/-- GJ Axiom OS0. -/
+
+lemma GJAxiom_OS0 : Entire (trial n J dμ) := by
+  sorry
+
+/- tests of ability to prove functions are analytic -/
 
 def gaussian1 (z : ℂ) : ℂ := Complex.exp (-(z ^ 2))
 
@@ -92,49 +98,3 @@ lemma sumSquares_analytic {n : ℕ} :
           simpa using sorry
 
   simpa [Finset.sum_apply] using h_sum_aux.analyticOn
-
-variable (x : ℂ) (f : TestFunctionℂ)
-
-#check x • f        -- Lean should report:  `x • f : TestFunctionℂ`
-
-variable {n : ℕ}
-variable (z : ℂn n)               -- coefficients
-variable (J : Fin n → TestFunctionℂ)   -- test functions
-
-variable {f : ℂn n → ℂ}
-
-#check AnalyticOn ℂ f Set.univ  -- joint analyticity in all n coordinates
-
-/-- **Linear combination operator**
-    `weightedSumCLM J` takes a coefficient vector `z : ℂⁿ` and returns the test
-    function `∑ i, z i • J i`.  Being linear and the domain finite-dimensional,
-    it is automatically continuous, so we package it as a `ContinuousLinearMap`. -/
-noncomputable
-def weightedSumCLM : ℂn n →L[ℂ] TestFunctionℂ := by
-  let L : ℂn n →ₗ[ℂ] TestFunctionℂ :=
-    { toFun      := fun z ↦ (Finset.univ).sum (fun i ↦ z i • J i),
-      map_add'   := by
-        intro z₁ z₂
-        simp [add_smul, Finset.sum_add_distrib],
-      map_smul' := by
-        intro c z
-        simp [smul_smul, Finset.smul_sum]
-    }
-  have hcont : Continuous L := L.continuous_of_finiteDimensional
-  exact { toLinearMap := L, cont := hcont }
-
-abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM J z
-
-variable (dμ : ProbabilityMeasure FieldSpace)
-
-#check (generatingFunctional dμ (weightedSum J z))
-
-/-- GJ Axiom OS0. -/
-
-lemma GJAxiom_OS0 : AnalyticOn ℂ (generatingFunctional (weightedSum J))  Set.univ := by
-  sorry
-
-/-- **Entire‐ness**: the map `z ↦ ∑ zᵢ • Jᵢ` is analytic on all of ℂⁿ. -/
-lemma weightedSum_analytic :
-    AnalyticOn ℂ (generatingFunctional (weightedSum J)) Set.univ :=
-      (weightedSumCLM J).analyticOn _
