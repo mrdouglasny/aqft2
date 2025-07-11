@@ -35,6 +35,9 @@ def STDimension := 4
 abbrev RSpaceTime := EuclideanSpace ℝ (Fin STDimension)
 abbrev μ : Measure RSpaceTime := volume    -- Lebesgue, just named “μ”
 
+/- Euclidean symmetries of spacetime -/
+
+
 /- Distributions and test functions -/
 
 abbrev TestFunction : Type := SchwartzMap RSpaceTime ℝ
@@ -68,4 +71,4 @@ def generatingFunctional (J : TestFunction) : ℂ :=
   charFunDual dμ (pairingCLM J)
 
 def generatingFunctionalℂ (dμ : ProbabilityMeasure FieldSpace) (J : TestFunctionℂ) : ℂ :=
-  sorry
+  sorry -- this should be constructed from the generatingFunctional
