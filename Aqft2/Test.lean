@@ -60,8 +60,7 @@ def trial (z : ℂn n) : ℂ := generatingFunctionalℂ dμ (weightedSum n J z)
 
 /-- GJ Axiom OS0. -/
 
-lemma GJAxiom_OS0 : Entire (trial n J dμ) := by
-  sorry
+axiom GJAxiom_OS0 : Entire (trial n J dμ)
 
 /- tests of ability to prove functions are analytic -/
 

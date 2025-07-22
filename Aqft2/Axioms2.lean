@@ -1,4 +1,5 @@
-
+/- This is a version of the axioms for more general spacetimes
+ -/
 import Mathlib.Analysis.Calculus.ContDiff.Defs
 import Mathlib.Geometry.Manifold.IsManifold.Basic
 import Mathlib.Geometry.Manifold.Instances.Real

@@ -45,6 +45,7 @@ variable [SigmaFinite μ]
 
 abbrev TestFunction : Type := SchwartzMap RSpaceTime ℝ
 abbrev TestFunction𝕜 : Type := SchwartzMap RSpaceTime 𝕜
+abbrev TestFunctionℂ := TestFunction𝕜 (𝕜 := ℂ)
 
 /- Space of fields -/
 
@@ -56,11 +57,6 @@ abbrev FieldSpace𝕜 (𝕜 : Type) [RCLike 𝕜] := Lp 𝕜 2 μ
 instance : MeasurableSpace (FieldSpace𝕜 ℂ) := borel _
 instance : BorelSpace (FieldSpace𝕜 ℂ) := ⟨rfl⟩
 
-#check FieldSpace
-#check Module ℂ (FieldSpace𝕜 ℂ)
-#check Lp ℂ 2 μ
-example : SeminormedAddCommGroup (FieldSpace) := by infer_instance
-example : SeminormedAddCommGroup (Lp ℂ 2 μ) := by infer_instance
 example : SeminormedAddCommGroup (FieldSpace𝕜 ℂ) := by infer_instance
 example : InnerProductSpace ℂ (FieldSpace𝕜 ℂ) := by infer_instance
 example : BorelSpace (FieldSpace) := by infer_instance
@@ -72,7 +68,7 @@ variable (x : RSpaceTime) (φ : FieldSpace)
 
 variable (dμ : ProbabilityMeasure FieldSpace)
 
-variable (dμ' : Measure (FieldSpace𝕜 ℂ))
+--variable (dμ' : Measure (FieldSpace𝕜 ℂ))
 
 /- Generating functional of correlation functions -/
 
@@ -87,10 +83,35 @@ def pairingCLM (J : TestFunction) : FieldSpace →L[ℝ] ℝ :=
 def generatingFunctional (J : TestFunction) : ℂ :=
   charFunDual dμ (pairingCLM J)
 
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [MeasurableSpace E]
+
 def MeasureTheory.charFunC
-    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [MeasurableSpace E]
-    (μ : Measure E) : (E →L[ℂ] ℂ) → ℂ :=
+  (μ : Measure E) : (E →L[ℂ] ℂ) → ℂ :=
   fun L => ∫ x, cexp (I * L x) ∂μ
 
-def generatingFunctionalℂ (J : TestFunction𝕜 (𝕜 := ℂ)) : ℂ :=
-  charFunC dμ' (pairingCLM' J)
+section LiftMeasure
+  variable [SigmaFinite μ_bg]
+
+  /--
+  Lifts a probability measure from the space of real fields to the space of
+  complex fields, with support on the real subspace.
+  -/
+  noncomputable def embedding (φ : FieldSpace) : FieldSpace𝕜 ℂ := sorry
+
+  noncomputable def liftMeasure
+      (dμ_real : ProbabilityMeasure (FieldSpace)) :
+      ProbabilityMeasure (FieldSpace𝕜 ℂ) :=
+    let dμ_complex_measure : Measure (FieldSpace𝕜 ℂ) :=
+      Measure.map embedding dμ_real
+    have h_ae : AEMeasurable embedding dμ_real := sorry
+    have h_is_prob := isProbabilityMeasure_map h_ae
+    ⟨dμ_complex_measure, h_is_prob⟩
+
+end LiftMeasure
+
+variable (J : TestFunctionℂ)
+
+def generatingFunctionalℂ : ℂ :=
+  charFunC (liftMeasure dμ) (pairingCLM' J)
+
+#check generatingFunctionalℂ dμ J
