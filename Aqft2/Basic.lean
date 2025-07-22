@@ -29,11 +29,14 @@ open MeasureTheory NNReal ENNReal
 open TopologicalSpace Measure
 
 noncomputable section
-open scoped MeasureTheory Complex
+open MeasureTheory Complex
+
+variable {𝕜 : Type} [RCLike 𝕜]
 
 def STDimension := 4
 abbrev RSpaceTime := EuclideanSpace ℝ (Fin STDimension)
 abbrev μ : Measure RSpaceTime := volume    -- Lebesgue, just named “μ”
+variable [SigmaFinite μ]
 
 /- Euclidean symmetries of spacetime -/
 
@@ -41,17 +44,27 @@ abbrev μ : Measure RSpaceTime := volume    -- Lebesgue, just named “μ”
 /- Distributions and test functions -/
 
 abbrev TestFunction : Type := SchwartzMap RSpaceTime ℝ
-abbrev TestFunctionℂ : Type := SchwartzMap RSpaceTime ℂ
+abbrev TestFunction𝕜 : Type := SchwartzMap RSpaceTime 𝕜
 
 /- Space of fields -/
 
-abbrev FieldSpace := Lp (p := 2) (μ := μ) ℝ
+abbrev FieldSpace := Lp ℝ 2 μ
 instance : MeasurableSpace FieldSpace := borel _
 instance : BorelSpace    FieldSpace := ⟨rfl⟩
 
-abbrev ComplexFieldSpace := Lp (p := 2) (μ := μ) ℂ
-instance : MeasurableSpace ComplexFieldSpace := borel _
-instance : BorelSpace    ComplexFieldSpace := ⟨rfl⟩
+abbrev FieldSpace𝕜 (𝕜 : Type) [RCLike 𝕜] := Lp 𝕜 2 μ
+instance : MeasurableSpace (FieldSpace𝕜 ℂ) := borel _
+instance : BorelSpace (FieldSpace𝕜 ℂ) := ⟨rfl⟩
+
+#check FieldSpace
+#check Module ℂ (FieldSpace𝕜 ℂ)
+#check Lp ℂ 2 μ
+example : SeminormedAddCommGroup (FieldSpace) := by infer_instance
+example : SeminormedAddCommGroup (Lp ℂ 2 μ) := by infer_instance
+example : SeminormedAddCommGroup (FieldSpace𝕜 ℂ) := by infer_instance
+example : InnerProductSpace ℂ (FieldSpace𝕜 ℂ) := by infer_instance
+example : BorelSpace (FieldSpace) := by infer_instance
+example : BorelSpace (FieldSpace𝕜 ℂ) := by infer_instance
 
 variable (x : RSpaceTime) (φ : FieldSpace)
 
@@ -59,9 +72,13 @@ variable (x : RSpaceTime) (φ : FieldSpace)
 
 variable (dμ : ProbabilityMeasure FieldSpace)
 
-variable (dμ' : ProbabilityMeasure ComplexFieldSpace)
+variable (dμ' : Measure (FieldSpace𝕜 ℂ))
 
 /- Generating functional of correlation functions -/
+
+def pairingCLM' (J : TestFunction𝕜 (𝕜 := ℂ)) : (FieldSpace𝕜 ℂ) →L[ℂ] ℂ :=
+  (innerSL ℂ (E := FieldSpace𝕜 ℂ))
+    (J.toLp (p := 2) (μ := μ))
 
 def pairingCLM (J : TestFunction) : FieldSpace →L[ℝ] ℝ :=
   (innerSL ℝ (E := FieldSpace))
@@ -70,5 +87,10 @@ def pairingCLM (J : TestFunction) : FieldSpace →L[ℝ] ℝ :=
 def generatingFunctional (J : TestFunction) : ℂ :=
   charFunDual dμ (pairingCLM J)
 
-def generatingFunctionalℂ (dμ : ProbabilityMeasure FieldSpace) (J : TestFunctionℂ) : ℂ :=
-  sorry -- this should be constructed from the generatingFunctional
+def MeasureTheory.charFunC
+    {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [MeasurableSpace E]
+    (μ : Measure E) : (E →L[ℂ] ℂ) → ℂ :=
+  fun L => ∫ x, cexp (I * L x) ∂μ
+
+def generatingFunctionalℂ (J : TestFunction𝕜 (𝕜 := ℂ)) : ℂ :=
+  charFunC dμ' (pairingCLM' J)
