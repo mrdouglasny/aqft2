@@ -65,7 +65,7 @@ def generatingFunctionalℂ (J : TestFunctionℂ) : ℂ :=
 
 /- Local functionals on fields -/
 def polyObservable (p : Polynomial ℝ) (φ : FieldSpace) : ℝ :=
-  ∫ x, p.eval ((φ : RSpaceTime →ₘ[μ] ℝ) x) ∂μ
+  ∫ x, p.eval ((φ : SpaceTime →ₘ[μ] ℝ) x) ∂μ
 
 /- stuff -/
 def realToComplexCLM : (Lp ℝ 2 μ) →L[ℝ] Lp ℂ 2 μ :=

@@ -8,12 +8,15 @@ import Mathlib.Tactic  -- gives `ext` and `simp` power
 import Mathlib.Data.Complex.Basic
 import Mathlib.Data.Complex.Module
 import Mathlib.Data.Complex.Exponential
+import Mathlib.Algebra.Group.Support
+import Mathlib.Algebra.Star.Basic
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Analytic.Basic
 import Mathlib.Analysis.Analytic.Constructions
 import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
+import Mathlib.Analysis.Distribution.SchwartzSpace
 
 import Mathlib.Topology.Algebra.Module.LinearMapPiProd
 
@@ -31,6 +34,8 @@ import Mathlib.Probability.Density
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Analysis.NormedSpace.RCLike
 import Mathlib.Analysis.NormedSpace.Real
+
+import Mathlib.LinearAlgebra.TensorAlgebra.Basic
 
 import Aqft2.Basic
 import Aqft2.SCV
@@ -58,44 +63,82 @@ abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM (n := n) (J 
 
 def trial (z : ℂn n) : ℂ := generatingFunctionalℂ dμ (weightedSum n J z)
 
-/-- GJ Axiom OS0. -/
-
 axiom GJAxiom_OS0 : Entire (trial n J dμ)
 
-/- tests of ability to prove functions are analytic -/
+/-- OS3 Reflection Positivity -/
 
-def gaussian1 (z : ℂ) : ℂ := Complex.exp (-(z ^ 2))
+def HasPositiveTime (x : SpaceTime) : Prop := getTimeComponent x > 0
+def positiveTimeSet : Set SpaceTime := {x | HasPositiveTime x}
 
-lemma h_exp_arg : AnalyticOn ℂ (fun z : ℂ ↦ -(z ^ 2)) Set.univ :=
-  ((analyticOn_id (𝕜 := ℂ) (E := ℂ) (s := Set.univ)).pow 2).neg
+open Function
 
-/-- The Gaussian is analytic on all of ℂ – i.e. *entire*. -/
-lemma gaussian1_entire : AnalyticOn ℂ gaussian1 Set.univ := by
- simpa [gaussian1] using
-  ((analyticOn_id (𝕜 := ℂ) (E := ℂ) (s := Set.univ)).pow 2).neg.cexp
+-- Ensure this set is actually open.
+lemma is_open_positiveTimeSet : IsOpen positiveTimeSet :=
+  isOpen_lt continuous_const (continuous_apply (0 : Fin STDimension))
 
-def gaussian (x : ℂn n) : ℂ := Complex.exp (-∑ i, (x i)^2)
+--def PositiveTimeTestFunction : Type :=
+--  { f : TestFunctionℂ // tsupport f ⊆ positiveTimeSet }
 
-lemma sumSquares_analytic {n : ℕ} :
-    AnalyticOn ℂ (fun x : ℂn n ↦ ∑ i, (x i) ^ 2) Set.univ := by
-  /- 1.  Each coordinate projection is analytic-on-a-neighbourhood. -/
-  have h_coord (i : Fin n) :
-      AnalyticOnNhd ℂ (fun x : ℂn n ↦ x i) Set.univ :=
-      (ContinuousLinearMap.proj i : ℂn n →L[ℂ] ℂ).analyticOnNhd _
+def timeReflection (x : SpaceTime) : SpaceTime := update x 0 (-(x 0))
 
-  /- 2.  Square it (`(hf).pow 2`) – still `AnalyticOnNhd`. -/
-  have h_sq (i : Fin n) :
-      AnalyticOnNhd ℂ (fun x : ℂn n ↦ (x i) ^ 2) Set.univ :=
-      (h_coord i).pow 2
+def PositiveTimeTestFunctions.submodule : Submodule ℂ TestFunctionℂ where
+  carrier := { f :  TestFunctionℂ | tsupport f ⊆ positiveTimeSet }
+  zero_mem' := by
+    simp only [Set.mem_setOf_eq]
+    suffices h : tsupport (0 : TestFunctionℂ) = ∅ by
+      rw [h]
+      apply Set.empty_subset
+    rw [tsupport_eq_empty_iff]
+    rfl
+  add_mem'  := fun hf hg => (tsupport_add).trans (Set.union_subset hf hg)
+  smul_mem' := fun c f hf => by
+    refine (tsupport_smul_subset_right (fun _ : SpaceTime => c) f).trans hf
 
-  have h_sum_aux :
-      AnalyticOnNhd ℂ
-        (fun x : ℂn n ↦ ∑ i ∈ (Finset.univ : Finset (Fin n)), (x i) ^ 2)
-        Set.univ := by
-          have foo := Finset.analyticOnNhd_sum
-             (N := (Finset.univ : Finset (Fin n)))
-              (f := fun i ↦ fun x : ℂn n ↦ (x i) ^ 2)
-             (λ i _hi ↦ h_sq i)
-          simpa using sorry
+abbrev PositiveTimeTestFunction : Type := PositiveTimeTestFunctions.submodule
+instance : AddCommMonoid PositiveTimeTestFunction := by infer_instance
+instance : AddCommGroup PositiveTimeTestFunction := by infer_instance
 
-  simpa [Finset.sum_apply] using h_sum_aux.analyticOn
+def EuclideanAlgebra : Type :=
+  TensorAlgebra ℂ PositiveTimeTestFunction
+
+#check EuclideanAlgebra
+
+-- we took out the complex conjugation
+noncomputable instance : Star TestFunctionℂ where
+  star f := {
+    toFun := fun x ↦ (f (timeReflection x)), -- `star` on ℂ is complex conjugation
+    -- Proofs that the result is still a Schwartz function would follow
+    smooth' := by sorry,
+    decay' := by sorry
+  }
+
+/- it seems that mathlib does not implement multiplication of Schwarz functions
+ -/
+variable {E : Type} [NormedAddCommGroup E] [NormedSpace ℂ E]
+
+def schwartzMul
+    (f g : TestFunctionℂ) : TestFunctionℂ :=
+by
+  refine
+    { toFun   := fun x => f x * g x
+      smooth' := (f.smooth').mul g.smooth'     -- `ContDiff.mul`
+      decay'  := (f.decay').mul g.decay' }     -- `SchwartzWith.mul`
+
+
+-- This should provide the HMul instance needed for your axiom.
+example (f g : TestFunctionℂ) : TestFunctionℂ := schwartzMul f g
+
+variable (f_positive : PositiveTimeTestFunction)
+
+def starred_f' : TestFunctionℂ := star f_positive.val
+
+#check star (f_positive : TestFunctionℂ)
+
+def S (f : TestFunction) : ℂ := generatingFunctional dμ f
+
+variable (f : TestFunction)
+#check generatingFunctional dμ f
+
+axiom GJAxiom_OS3 : ∀ (F : PositiveTimeTestFunction),
+  0 ≤ (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).re ∧
+      (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).im = 0

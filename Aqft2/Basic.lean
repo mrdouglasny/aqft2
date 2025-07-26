@@ -33,9 +33,12 @@ open MeasureTheory Complex
 
 variable {𝕜 : Type} [RCLike 𝕜]
 
-def STDimension := 4
-abbrev RSpaceTime := EuclideanSpace ℝ (Fin STDimension)
-abbrev μ : Measure RSpaceTime := volume    -- Lebesgue, just named “μ”
+abbrev STDimension := 4
+abbrev SpaceTime := EuclideanSpace ℝ (Fin STDimension)
+abbrev getTimeComponent (x : SpaceTime) : ℝ :=
+ x ⟨0, by simp +arith⟩
+
+abbrev μ : Measure SpaceTime := volume    -- Lebesgue, just named “μ”
 variable [SigmaFinite μ]
 
 /- Euclidean symmetries of spacetime -/
@@ -43,8 +46,8 @@ variable [SigmaFinite μ]
 
 /- Distributions and test functions -/
 
-abbrev TestFunction : Type := SchwartzMap RSpaceTime ℝ
-abbrev TestFunction𝕜 : Type := SchwartzMap RSpaceTime 𝕜
+abbrev TestFunction : Type := SchwartzMap SpaceTime ℝ
+abbrev TestFunction𝕜 : Type := SchwartzMap SpaceTime 𝕜
 abbrev TestFunctionℂ := TestFunction𝕜 (𝕜 := ℂ)
 
 /- Space of fields -/
@@ -62,7 +65,7 @@ example : InnerProductSpace ℂ (FieldSpace𝕜 ℂ) := by infer_instance
 example : BorelSpace (FieldSpace) := by infer_instance
 example : BorelSpace (FieldSpace𝕜 ℂ) := by infer_instance
 
-variable (x : RSpaceTime) (φ : FieldSpace)
+variable (x : SpaceTime) (φ : FieldSpace)
 
 /- Probability distribution over fields -/
 
