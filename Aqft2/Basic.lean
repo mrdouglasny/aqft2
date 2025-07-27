@@ -9,7 +9,12 @@ import Mathlib.Data.Complex.Exponential
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Distribution.SchwartzSpace
+import Mathlib.Analysis.RCLike.Basic
+import Mathlib.Analysis.NormedSpace.RCLike
+import Mathlib.Analysis.NormedSpace.Real
+import Mathlib.Analysis.NormedSpace.Extend
 import Mathlib.Analysis.Complex.Basic
+
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
@@ -18,31 +23,28 @@ import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Analysis.NormedSpace.RCLike
-import Mathlib.Analysis.NormedSpace.Real
-import Mathlib.Analysis.NormedSpace.Extend
+import Mathlib.LinearAlgebra.UnitaryGroup
 
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Density
-open MeasureTheory NNReal ENNReal
-open TopologicalSpace Measure
 
-noncomputable section
-open MeasureTheory Complex
-
-variable {𝕜 : Type} [RCLike 𝕜]
-
+-- move this when Euclidean is done
+--import Aqft2.Euclidean
 abbrev STDimension := 4
+abbrev STvector : Type := (Fin STDimension) → ℝ
 abbrev SpaceTime := EuclideanSpace ℝ (Fin STDimension)
 abbrev getTimeComponent (x : SpaceTime) : ℝ :=
  x ⟨0, by simp +arith⟩
 
+open MeasureTheory NNReal ENNReal Complex
+open TopologicalSpace Measure
+
+noncomputable section
+
+variable {𝕜 : Type} [RCLike 𝕜]
+
 abbrev μ : Measure SpaceTime := volume    -- Lebesgue, just named “μ”
 variable [SigmaFinite μ]
-
-/- Euclidean symmetries of spacetime -/
-
 
 /- Distributions and test functions -/
 

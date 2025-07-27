@@ -37,6 +37,7 @@ import Mathlib.Analysis.NormedSpace.Real
 
 import Mathlib.LinearAlgebra.TensorAlgebra.Basic
 
+--import Aqft2.Euclidean
 import Aqft2.Basic
 import Aqft2.SCV
 
