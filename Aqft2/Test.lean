@@ -10,7 +10,6 @@ import Mathlib.Data.Complex.Module
 import Mathlib.Data.Complex.Exponential
 import Mathlib.Algebra.Group.Support
 import Mathlib.Algebra.Star.Basic
-import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Analytic.Basic
@@ -117,17 +116,29 @@ noncomputable instance : Star TestFunctionℂ where
  -/
 variable {E : Type} [NormedAddCommGroup E] [NormedSpace ℂ E]
 
-def schwartzMul
-    (f g : TestFunctionℂ) : TestFunctionℂ :=
-by
-  refine
-    { toFun   := fun x => f x * g x
-      smooth' := (f.smooth').mul g.smooth'     -- `ContDiff.mul`
-      decay'  := (f.decay').mul g.decay' }     -- `SchwartzWith.mul`
+open scoped SchwartzMap
 
+/-- The constant‐field bilinear map `B(a)(b) = a * b`. -/
+abbrev V := ℂ
+def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ
 
--- This should provide the HMul instance needed for your axiom.
-example (f g : TestFunctionℂ) : TestFunctionℂ := schwartzMul f g
+lemma SchwartzMap.hasTemperateGrowth
+    {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
+    (g : 𝓢(SpaceTime, V)) :
+    Function.HasTemperateGrowth (⇑g) := by
+  refine ⟨g.smooth', ?_⟩
+  intro n
+  -- take k = 0 in the decay estimate
+  rcases g.decay' 0 n with ⟨C, hC⟩
+  refine ⟨0, C, ?_⟩
+  intro x
+  have : ‖x‖ ^ 0 * ‖iteratedFDeriv ℝ n g x‖ ≤ C := by
+    simpa using hC x
+  simpa using this
+
+/-- Multiplication lifted to the Schwartz space. -/
+def schwartzMul (g : TestFunctionℂ) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
+  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (g.hasTemperateGrowth))
 
 variable (f_positive : PositiveTimeTestFunction)
 
