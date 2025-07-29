@@ -59,6 +59,48 @@ def GJAxiom_OS1 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
     (∀ f, OS1_bound dμ f p c) ∧ 
     (p = 2 → OS1_two_point_condition dμ)
 
+/-- Time translation on spacetime -/
+def time_translation (t : ℝ) (x : SpaceTime) : SpaceTime :=
+  Function.update x 0 (getTimeComponent x + t)
+
+/-- Action of time translation on test functions.
+    
+    This defines how time translations act on test functions in the Euclidean theory.
+    The translation by time t is implemented as a pullback: (T_t f)(x) = f(x + (-t)*e_0).
+    
+    The negative sign ensures that T_t T_s = T_{t+s} (group action property). -/
+def time_translation_action (t : ℝ) (f : TestFunctionℂ) : TestFunctionℂ := 
+{
+  toFun := fun x => f (time_translation (-t) x),
+  smooth' := by 
+    -- The smoothness is preserved under translation by a diffeomorphism
+    -- time_translation is a smooth map (just coordinate shift)
+    sorry,
+  decay' := by
+    -- The decay properties are preserved under translation
+    -- |∂^α (f ∘ τ_t)(x)| = |∂^α f(x - t·e_0)| has same decay
+    sorry
+}
+
+/-- OS4: The ergodicity axiom.
+    
+    The ergodic property relates time averages to ensemble averages.
+    The correct mathematical formulation should be:
+    
+    lim_{T→∞} (1/T) ∫₀ᵀ [some function of T_t applied to the measure] dt = [generating functional]
+    
+    Where the left side is a time average (NOT involving the measure dμ directly)
+    and the right side is the generating functional with respect to dμ.
+    
+    This captures the ergodic principle: time averages = ensemble averages.
+    
+    TODO: Implement the correct formulation once the proper mathematical 
+    machinery (ergodic theory, time averaging) is available. -/
+axiom GJAxiom_OS4 (dμ : ProbabilityMeasure FieldSpace) : Prop
+-- Note: The exact mathematical formulation of OS4 varies in the literature
+-- and often involves sophisticated ergodic theory. For now we state it as an axiom
+-- to be refined later with the proper mathematical machinery.
+
 /-- The main structure for a quantum field theory satisfying OS axioms. -/
 class QFT where
   field_measure : ProbabilityMeasure FieldSpace
@@ -71,6 +113,8 @@ class QFT where
   os3_reflection_positivity : ∀ (F : PositiveTimeTestFunction),
     0 ≤ (generatingFunctionalℂ field_measure (schwartzMul (star F.val) F.val)).re ∧
     (generatingFunctionalℂ field_measure (schwartzMul (star F.val) F.val)).im = 0
+  /-- OS4: Ergodicity (time translation invariance) -/
+  os4_ergodicity : GJAxiom_OS4 field_measure
 
 /-- Exponential functional on field space -/
 def exponential_functional (φ : FieldSpace𝕜 ℂ) (f : TestFunctionℂ) : ℂ :=
@@ -80,17 +124,17 @@ def exponential_functional (φ : FieldSpace𝕜 ℂ) (f : TestFunctionℂ) : ℂ
 def exponential_sum {n : ℕ} (c : Fin n → ℂ) (f : Fin n → TestFunctionℂ) (φ : FieldSpace𝕜 ℂ) : ℂ :=
   ∑ i, c i • (exponential_functional φ (f i))
 
-/-- Time translation on spacetime -/
-def time_translation (t : ℝ) (x : SpaceTime) : SpaceTime :=
-  Function.update x 0 (getTimeComponent x + t)
+/-- Time translation action forms a group homomorphism -/
+theorem time_translation_group_action (s t : ℝ) (f : TestFunctionℂ) :
+  time_translation_action s (time_translation_action t f) = time_translation_action (s + t) f := by
+  -- This follows from the fact that time_translation (s) (time_translation (t) x) = time_translation (s + t) x
+  sorry
 
-/-- Action of time translation on test functions -/
-def time_translation_action (t : ℝ) (f : TestFunctionℂ) : TestFunctionℂ := 
-  sorry -- This needs proper implementation
-
-/-- OS4: The ergodicity axiom -/
-axiom GJAxiom_OS4 (dμ : ProbabilityMeasure FieldSpace) : 
-  True -- Simplified for now
+/-- Time translation action at zero is the identity -/
+theorem time_translation_zero (f : TestFunctionℂ) :
+  time_translation_action 0 f = f := by
+  -- time_translation 0 is the identity function
+  sorry
 
 /-- Structure for a Wightman QFT, the target of reconstruction -/
 structure WightmanQFT where
