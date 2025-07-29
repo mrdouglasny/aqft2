@@ -33,6 +33,9 @@ import Mathlib.Probability.Density
 abbrev STDimension := 4
 abbrev STvector : Type := (Fin STDimension) → ℝ
 abbrev SpaceTime := EuclideanSpace ℝ (Fin STDimension)
+
+noncomputable instance : InnerProductSpace ℝ SpaceTime := by infer_instance
+
 abbrev getTimeComponent (x : SpaceTime) : ℝ :=
  x ⟨0, by simp +arith⟩
 

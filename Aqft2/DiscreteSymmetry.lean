@@ -5,6 +5,7 @@ import Mathlib.Data.Complex.Module
 import Mathlib.Data.Complex.Exponential
 import Mathlib.Algebra.Group.Support
 import Mathlib.Algebra.Star.Basic
+import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Analytic.Basic
@@ -80,6 +81,55 @@ def timeReflectionLinear : SpaceTime →ₗ[ℝ] SpaceTime :=
 
 def timeReflectionCLM : SpaceTime →L[ℝ] SpaceTime :=
 timeReflectionLinear.toContinuousLinearMap (E := SpaceTime) (F' := SpaceTime)
+
+open InnerProductSpace
+
+/-- Time reflection preserves inner products -/
+lemma timeReflection_inner_map (x y : SpaceTime) :
+    inner (timeReflection x) (timeReflection y) = inner x y := by
+  ext i j
+  simp [timeReflection, Function.update]
+  -- Split into components and use the definition of inner product
+  -- The time component gets a negative sign which squares to 1
+  by_cases hi : i = 0
+  · by_cases hj : j = 0
+    · simp [hi, hj]
+      ring
+    · simp [hi, hj]
+  · by_cases hj : j = 0
+    · simp [hi, hj]
+    · simp [hi, hj]
+
+/-- Time reflection as a linear isometry equivalence -/
+def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
+{ toFun := timeReflection
+  invFun := timeReflection  -- Time reflection is self-inverse
+  left_inv := by
+    intro x
+    ext i
+    by_cases h : i = 0
+    · simp [timeReflection, Function.update]
+      subst h
+      simp
+    · simp [timeReflection, Function.update, h]
+  right_inv := by
+    intro x
+    ext i
+    by_cases h : i = 0
+    · simp [timeReflection, Function.update]
+      subst h
+      simp
+    · simp [timeReflection, Function.update, h]
+  map_add' := timeReflectionLinear.map_add'
+  map_smul' := timeReflectionLinear.map_smul'
+  norm_map' := by
+    intro x
+    -- Use the fact that norm squared is inner product with self
+    have h : ‖timeReflection x‖ ^ 2 = inner (timeReflection x) (timeReflection x) := rfl
+    rw [h]
+    rw [timeReflection_inner_map]
+    -- And back to norm squared
+    rfl }
 
 example (x : SpaceTime) :
     timeReflectionCLM x =
