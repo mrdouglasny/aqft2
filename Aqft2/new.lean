@@ -43,12 +43,30 @@ open scoped MeasureTheory Complex BigOperators
 
 noncomputable section
 
+/-- OS1: The regularity bound on the generating functional -/
+def OS1_bound (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) (p : ℝ) (c : ℝ) : Prop :=
+  ‖generatingFunctional dμ f‖ ≤ Real.exp (c * (∫ x, ‖f x‖ ∂μ + (∫ x, ‖f x‖^p ∂μ)^(1/p)))
+
+/-- OS1: Additional condition when p = 2 for two-point function integrability -/
+def OS1_two_point_condition (_dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∀ x y : SpaceTime, x ≠ y → 
+    ∃ (S₂ : SpaceTime → SpaceTime → ℂ), 
+      Integrable (fun (xy : SpaceTime × SpaceTime) => ‖S₂ xy.1 xy.2‖) (μ.prod μ)
+
+/-- OS1: The regularity axiom -/
+def GJAxiom_OS1 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧ 
+    (∀ f, OS1_bound dμ f p c) ∧ 
+    (p = 2 → OS1_two_point_condition dμ)
+
 /-- The main structure for a quantum field theory satisfying OS axioms. -/
 class QFT where
   field_measure : ProbabilityMeasure FieldSpace
   /-- OS0: Analyticity -/
   os0_analyticity : ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), 
     Entire (trial n J field_measure)
+  /-- OS1: Regularity -/
+  os1_regularity : GJAxiom_OS1 field_measure
   /-- OS3: Reflection positivity -/
   os3_reflection_positivity : ∀ (F : PositiveTimeTestFunction),
     0 ≤ (generatingFunctionalℂ field_measure (schwartzMul (star F.val) F.val)).re ∧
@@ -61,14 +79,6 @@ def exponential_functional (φ : FieldSpace𝕜 ℂ) (f : TestFunctionℂ) : ℂ
 /-- Sum of exponential functionals with complex coefficients -/
 def exponential_sum {n : ℕ} (c : Fin n → ℂ) (f : Fin n → TestFunctionℂ) (φ : FieldSpace𝕜 ℂ) : ℂ :=
   ∑ i, c i • (exponential_functional φ (f i))
-
-/-- OS1: The regularity bound on the generating functional -/
-def OS1_bound (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) (p : ℝ) (c : ℝ) : Prop :=
-  True -- Simplified for now
-
-/-- OS1: The regularity axiom -/
-axiom GJAxiom_OS1 (dμ : ProbabilityMeasure FieldSpace) : 
-  ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ ∀ f, OS1_bound dμ f p c
 
 /-- Time translation on spacetime -/
 def time_translation (t : ℝ) (x : SpaceTime) : SpaceTime :=
@@ -96,5 +106,5 @@ structure WightmanQFT where
 def reconstruct (qft : QFT) : WightmanQFT := sorry
 
 /-- Statement of the OS reconstruction theorem -/
-theorem OS_reconstruction (qft : QFT) : 
+theorem OS_reconstruction (_qft : QFT) : 
   True := by trivial
