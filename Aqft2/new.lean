@@ -15,6 +15,8 @@ import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.MeasureTheory.Measure.MeasureSpace
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Calculus.FDeriv.Basic
+import Mathlib.Topology.Basic
+import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
 
 /-!
 # New QFT Structures and Axioms
@@ -37,9 +39,9 @@ and the reconstruction theorem.
 * Osterwalder and Schrader, "Axioms for Euclidean Green's Functions"
 -/
 
-open MeasureTheory NNReal ENNReal Complex
+open MeasureTheory NNReal ENNReal Complex Filter Topology
 open TopologicalSpace Measure SCV QFT
-open scoped MeasureTheory Complex BigOperators
+open scoped MeasureTheory Complex BigOperators Topology
 
 noncomputable section
 
@@ -82,24 +84,51 @@ def time_translation_action (t : ℝ) (f : TestFunctionℂ) : TestFunctionℂ :=
     sorry
 }
 
+/-- Time average of a complex-valued function over an interval [0, T] -/
+def timeAverage (f : ℝ → ℂ) (T : ℝ) : ℂ :=
+  if T > 0 then (1 / T) * ∫ t in (0 : ℝ)..T, f t else 0
+
 /-- OS4: The ergodicity axiom.
     
-    The ergodic property relates time averages to ensemble averages.
-    The correct mathematical formulation should be:
+    This axiom states that time averages of dynamical quantities converge to
+    their ensemble averages (given by the generating functional).
     
-    lim_{T→∞} (1/T) ∫₀ᵀ [some function of T_t applied to the measure] dt = [generating functional]
+    The CORRECT formulation should involve:
+    - Left side: Time average of some DYNAMICAL quantity (not involving dμ)
+      Examples might include:
+      * lim_{T→∞} (1/T) ∫₀ᵀ ⟨φ(t·e₀), f⟩ dt  (field expectation)
+      * lim_{T→∞} (1/T) ∫₀ᵀ F[T_t φ] dt  (some functional of translated fields)
+    - Right side: Ensemble average = generating functional with respect to dμ
     
-    Where the left side is a time average (NOT involving the measure dμ directly)
-    and the right side is the generating functional with respect to dμ.
+    The key insight is that the left side should involve the DYNAMICS of the field
+    (time evolution, field correlations, etc.) while the right side involves the
+    STATISTICS (probability measure dμ).
     
-    This captures the ergodic principle: time averages = ensemble averages.
+    This captures the fundamental principle: Dynamical averages = Statistical averages
     
-    TODO: Implement the correct formulation once the proper mathematical 
-    machinery (ergodic theory, time averaging) is available. -/
+    However, the exact form of the dynamical quantity on the left depends on
+    the specific formulation of the field theory and requires a proper dynamical
+    framework which we haven't established yet. -/
 axiom GJAxiom_OS4 (dμ : ProbabilityMeasure FieldSpace) : Prop
--- Note: The exact mathematical formulation of OS4 varies in the literature
--- and often involves sophisticated ergodic theory. For now we state it as an axiom
--- to be refined later with the proper mathematical machinery.
+-- TODO: Replace with correct formulation once we have:
+-- 1. A proper dynamical system on field space (Hamiltonian, time evolution, etc.)
+-- 2. Field observables/functionals that don't depend on the measure dμ
+-- 3. The correct mathematical machinery for field dynamics and time evolution
+-- 4. Clarification from the literature on the exact form of OS4
+
+/-- Basic property: time average at T=0 is undefined, but we can extend it consistently -/
+lemma timeAverage_zero (f : ℝ → ℂ) : timeAverage f 0 = 0 := by
+  simp [timeAverage]
+
+/-- Basic property: time average is linear in the function -/
+lemma timeAverage_linear (f g : ℝ → ℂ) (a b : ℂ) (T : ℝ) :
+  timeAverage (fun t => a * f t + b * g t) T = a * timeAverage f T + b * timeAverage g T := by
+  simp [timeAverage]
+  split_ifs with h
+  · -- T > 0 case: use linearity of integrals
+    ring_nf
+    sorry -- This requires detailed integration properties
+  · ring
 
 /-- The main structure for a quantum field theory satisfying OS axioms. -/
 class QFT where
@@ -135,6 +164,9 @@ theorem time_translation_zero (f : TestFunctionℂ) :
   time_translation_action 0 f = f := by
   -- time_translation 0 is the identity function
   sorry
+
+-- Note: A theorem about translation invariance implying OS4 would go here,
+-- but since we don't have the correct formulation of OS4 yet, we omit it.
 
 /-- Structure for a Wightman QFT, the target of reconstruction -/
 structure WightmanQFT where
