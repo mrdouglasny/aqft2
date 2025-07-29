@@ -140,7 +140,15 @@ noncomputable instance : Star TestFunctionℂ where
         ‖x‖ ^ k * ‖iteratedFDeriv ℝ n (fun x ↦ star (f (timeReflection x))) x‖ = ‖x‖ ^ k * ‖iteratedFDeriv ℝ n (star ∘ f ∘ timeReflection) x‖ := by
           rfl
         _ = ‖timeReflection (timeReflection x)‖ ^ k * ‖iteratedFDeriv ℝ n (star ∘ f ∘ timeReflection) x‖ := by
-          rw [h_iso (timeReflection x)]
+          -- timeReflection is self-inverse: timeReflection (timeReflection x) = x
+          have h_inv : timeReflection (timeReflection x) = x := by
+            -- timeReflection is self-inverse
+            ext i
+            simp [timeReflection, Function.update]
+            by_cases h : i = 0
+            · rw [h]; simp
+            · simp [h]
+          rw [h_inv]
         _ = ‖timeReflection x‖ ^ k * ‖iteratedFDeriv ℝ n f (timeReflection x)‖ := by
           sorry  -- Need lemma about derivatives of composed functions
         _ ≤ C := by

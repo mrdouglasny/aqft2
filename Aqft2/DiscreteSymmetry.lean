@@ -86,19 +86,15 @@ open InnerProductSpace
 
 /-- Time reflection preserves inner products -/
 lemma timeReflection_inner_map (x y : SpaceTime) :
-    inner (timeReflection x) (timeReflection y) = inner x y := by
-  ext i j
-  simp [timeReflection, Function.update]
-  -- Split into components and use the definition of inner product
-  -- The time component gets a negative sign which squares to 1
-  by_cases hi : i = 0
-  · by_cases hj : j = 0
-    · simp [hi, hj]
-      ring
-    · simp [hi, hj]
-  · by_cases hj : j = 0
-    · simp [hi, hj]
-    · simp [hi, hj]
+    ⟪timeReflection x, timeReflection y⟫_ℝ = ⟪x, y⟫_ℝ := by
+  -- Direct proof using fintype inner product
+  simp only [inner]
+  congr 1
+  ext i
+  simp only [timeReflection, Function.update]
+  by_cases h : i = 0
+  · rw [h]; simp
+  · simp [h]
 
 /-- Time reflection as a linear isometry equivalence -/
 def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
@@ -124,12 +120,18 @@ def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
   map_smul' := timeReflectionLinear.map_smul'
   norm_map' := by
     intro x
-    -- Use the fact that norm squared is inner product with self
-    have h : ‖timeReflection x‖ ^ 2 = inner (timeReflection x) (timeReflection x) := rfl
-    rw [h]
-    rw [timeReflection_inner_map]
-    -- And back to norm squared
-    rfl }
+    -- The goal is to show that the LinearIsometryEquiv preserves norms
+    -- First simplify the LinearIsometryEquiv application
+    show ‖timeReflection x‖ = ‖x‖
+    -- Use that time reflection preserves inner products
+    have h : ⟪timeReflection x, timeReflection x⟫_ℝ = ⟪x, x⟫_ℝ := timeReflection_inner_map x x
+    -- For real inner product spaces, ⟪x, x⟫ = ‖x‖^2 directly
+    have h1 : ⟪timeReflection x, timeReflection x⟫_ℝ = ‖timeReflection x‖ ^ 2 := by
+      rw [← real_inner_self_eq_norm_sq]
+    have h2 : ⟪x, x⟫_ℝ = ‖x‖ ^ 2 := by
+      rw [← real_inner_self_eq_norm_sq]
+    rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)]
+    rw [← h1, ← h2, h] }
 
 example (x : SpaceTime) :
     timeReflectionCLM x =
