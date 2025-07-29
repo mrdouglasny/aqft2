@@ -36,14 +36,16 @@ import Mathlib.Analysis.NormedSpace.Real
 
 import Mathlib.LinearAlgebra.TensorAlgebra.Basic
 
+import Aqft2.FunctionalAnalysis
 import Aqft2.Basic
 import Aqft2.EuclideanS
+import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
 
 /- These are the O-S axioms in the form given in Glimm and Jaffe, Quantum Physics, pp. 89-90 -/
 
 open MeasureTheory NNReal ENNReal
-open TopologicalSpace Measure SCV
+open TopologicalSpace Measure SCV QFT
 
 noncomputable section
 open scoped MeasureTheory Complex BigOperators
@@ -76,11 +78,6 @@ open Function
 lemma is_open_positiveTimeSet : IsOpen positiveTimeSet :=
   isOpen_lt continuous_const (continuous_apply (0 : Fin STDimension))
 
---def PositiveTimeTestFunction : Type :=
---  { f : TestFunctionℂ // tsupport f ⊆ positiveTimeSet }
-
-def timeReflection (x : SpaceTime) : SpaceTime := update x 0 (-(x 0))
-
 def PositiveTimeTestFunctions.submodule : Submodule ℂ TestFunctionℂ where
   carrier := { f :  TestFunctionℂ | tsupport f ⊆ positiveTimeSet }
   zero_mem' := by
@@ -101,19 +98,38 @@ instance : AddCommGroup PositiveTimeTestFunction := by infer_instance
 def EuclideanAlgebra : Type :=
   TensorAlgebra ℂ PositiveTimeTestFunction
 
-#check EuclideanAlgebra
+variable (f : TestFunctionℂ)
+#check f.smooth'
 
--- we took out the complex conjugation
+noncomputable def compTimeReflection : TestFunctionℂ →L[ℝ] TestFunctionℂ := by
+  have hg_upper : ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖timeReflectionCLM x‖) ^ k := by
+    use 1; use 1; simp; intro x
+    have hh := ContinuousLinearMap.le_opNorm timeReflectionCLM x
+    have hhh := 0 < ‖timeReflectionCLM‖
+    sorry
+  exact SchwartzMap.compCLM (𝕜 := ℝ) (hg := timeReflectionCLM.hasTemperateGrowth) (hg_upper := hg_upper)
+
+#check compTimeReflection
+
 noncomputable instance : Star TestFunctionℂ where
   star f := {
-    toFun := fun x ↦ (f (timeReflection x)), -- `star` on ℂ is complex conjugation
-    -- Proofs that the result is still a Schwartz function would follow
-    smooth' := by sorry,
-    decay' := by sorry
+    toFun := fun x ↦ star (f (timeReflection x)),
+    smooth' := by
+      exact Complex.conjLIE.toContinuousLinearMap.contDiff.comp (f.smooth'.comp timeReflectionCLM.contDiff)
+    decay' := by
+      intro k n
+      rcases f.decay' k n with ⟨C, hf⟩
+      use C
+      intro x
+      -- This proof requires the norm-preserving property from the LinearIsometryEquiv.
+      simp only [star]
+      have r := norm_iteratedFDeriv_comp_le timeReflectionCLM.contDiff f.smooth' True x
+      rw [norm_iteratedFDeriv_comp_le timeReflectionCLM.contDiff f.smooth' True x]
+      refine (norm_iteratedFDeriv_comp_le timeReflection.contDiff x f.smooth' n).trans ?_
+    -- We can now directly use the hypothesis `hf` at the transformed point.
+      exact hf (timeReflection x)
   }
 
-/- it seems that mathlib does not implement multiplication of Schwarz functions
- -/
 variable {E : Type} [NormedAddCommGroup E] [NormedSpace ℂ E]
 
 open scoped SchwartzMap
@@ -122,7 +138,8 @@ open scoped SchwartzMap
 abbrev V := ℂ
 def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ
 
-lemma SchwartzMap.hasTemperateGrowth
+/- for some reason the version in FunctionalAnalysis doesn't elaborate -/
+lemma SchwartzMap.hasTemperateGrowth'
     {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
     (g : 𝓢(SpaceTime, V)) :
     Function.HasTemperateGrowth (⇑g) := by
@@ -136,9 +153,10 @@ lemma SchwartzMap.hasTemperateGrowth
     simpa using hC x
   simpa using this
 
+
 /-- Multiplication lifted to the Schwartz space. -/
 def schwartzMul (g : TestFunctionℂ) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
-  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (g.hasTemperateGrowth))
+  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (g.hasTemperateGrowth'))
 
 variable (f_positive : PositiveTimeTestFunction)
 
