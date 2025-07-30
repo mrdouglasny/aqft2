@@ -25,7 +25,7 @@ the star operation (complex conjugation composed with time reflection) for test 
 ## Main definitions
 
 * `HasPositiveTime`: Predicate for spacetime points with positive time component
-* `positiveTimeSet`: The set of all positive time points  
+* `positiveTimeSet`: The set of all positive time points
 * `PositiveTimeTestFunction`: Test functions supported in the positive time region
 * `starTestFunction`: Star operation combining time reflection and complex conjugation
 * `starRingEnd_iteratedFDeriv_norm_eq`: Helper lemma for norm preservation under star operation
@@ -77,11 +77,15 @@ def EuclideanAlgebra : Type :=
 /-- Helper lemma: starRingEnd ℂ commutes through derivatives and preserves norms -/
 lemma starRingEnd_iteratedFDeriv_norm_eq (g : TestFunctionℂ) (n : ℕ) (x : SpaceTime) :
   ‖iteratedFDeriv ℝ n (fun x => starRingEnd ℂ (g x)) x‖ = ‖iteratedFDeriv ℝ n g x‖ := by
-  -- This is a fundamental property: since starRingEnd ℂ = Complex.conjLIE is a
-  -- ℝ-linear isometric equivalence ℂ → ℂ, it commutes through derivatives and preserves norms.
-  -- The proof follows from LinearIsometryEquiv.norm_iteratedFDeriv_comp_left,
-  -- but requires careful handling of the ℝ vs ℂ field structures.
-  sorry
+  -- Use the fact that starRingEnd ℂ = Complex.conjLIE (as functions)
+  have h : (fun x => starRingEnd ℂ (g x)) = Complex.conjLIE ∘ g := by
+    ext y
+    rw [Function.comp_apply]
+    -- Use the fact that conjLIE and starRingEnd are the same
+    exact congr_fun (@RCLike.conjLIE_apply ℂ _) (g y)
+  rw [h]
+  -- Now apply the norm preservation lemma for LinearIsometryEquiv
+  exact LinearIsometryEquiv.norm_iteratedFDeriv_comp_left Complex.conjLIE g x n
 
 /-- Star operation on test functions: time reflection followed by complex conjugation -/
 noncomputable def starTestFunction (f : TestFunctionℂ) : TestFunctionℂ :=
