@@ -99,89 +99,58 @@ def EuclideanAlgebra : Type :=
   TensorAlgebra ℂ PositiveTimeTestFunction
 
 variable (f : TestFunctionℂ)
-#check f.smooth'
 
-noncomputable def compTimeReflection : TestFunctionℂ →L[ℝ] TestFunctionℂ := by
-  have hg_upper : ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖timeReflectionCLM x‖) ^ k := by
-    use 1; use 1; simp; intro x
-    have hh := ContinuousLinearMap.le_opNorm timeReflectionCLM x
-    have hhh := 0 < ‖timeReflectionCLM‖
-    sorry
-  exact SchwartzMap.compCLM (𝕜 := ℝ) (hg := timeReflectionCLM.hasTemperateGrowth) (hg_upper := hg_upper)
+-- Helper lemma: starRingEnd ℂ commutes through derivatives and preserves norms
+lemma starRingEnd_iteratedFDeriv_norm_eq (g : TestFunctionℂ) (n : ℕ) (x : SpaceTime) :
+  ‖iteratedFDeriv ℝ n (fun x => starRingEnd ℂ (g x)) x‖ = ‖iteratedFDeriv ℝ n g x‖ := by
+  -- This is a fundamental property: since starRingEnd ℂ = Complex.conjLIE is a
+  -- ℝ-linear isometric equivalence ℂ → ℂ, it commutes through derivatives and preserves norms.
+  -- The proof follows from LinearIsometryEquiv.norm_iteratedFDeriv_comp_left,
+  -- but requires careful handling of the ℝ vs ℂ field structures.
+  sorry
 
-#check compTimeReflection
+-- Define a helper function for the star operation
+noncomputable def starTestFunction (f : TestFunctionℂ) : TestFunctionℂ :=
+  -- Apply time reflection then complex conjugation pointwise
+  let f_reflected := compTimeReflection f
+  -- Apply complex conjugation to each value
+  ⟨fun x => starRingEnd ℂ (f_reflected x),
+   -- Smoothness: starRingEnd is smooth and compTimeReflection gives smooth functions
+   by
+     -- Apply the continuous linear map contDiff lemma
+     apply ContDiff.comp
+     · -- starRingEnd ℂ is smooth
+       exact ContinuousLinearMap.contDiff (Complex.conjLIE.toContinuousLinearMap)
+     · -- f_reflected is smooth
+       exact f_reflected.smooth ⊤,
+   -- Decay
+   fun k n => by
+     -- Use the bound from f_reflected and the fact that starRingEnd is an isometry
+     obtain ⟨C, hC⟩ := f_reflected.decay' k n
+     use C
+     intro x
+     -- Since starRingEnd ℂ is complex conjugation, which is an isometry,
+     -- it preserves the norms of derivatives. This follows from standard properties
+     -- of linear isometries and the chain rule for derivatives.
+     have : ‖iteratedFDeriv ℝ n (fun x => starRingEnd ℂ (f_reflected x)) x‖ = ‖iteratedFDeriv ℝ n f_reflected x‖ :=
+       starRingEnd_iteratedFDeriv_norm_eq f_reflected n x
+     rw [this]
+     exact hC x⟩
 
 noncomputable instance : Star TestFunctionℂ where
-  star f := {
-    toFun := fun x ↦ star (f (timeReflection x)),
-    smooth' := by
-      exact Complex.conjLIE.toContinuousLinearMap.contDiff.comp (f.smooth'.comp timeReflectionCLM.contDiff)
-    decay' := by
-      intro k n
-      -- Get the decay bound for f
-      rcases f.decay' k n with ⟨C, hf⟩
-      use C
-      intro x
-      simp only [star]
-
-      -- Key fact: timeReflection is a linear isometry
-      have h_iso : ∀ y : SpaceTime, ‖timeReflection y‖ = ‖y‖ := by
-        intro y
-        have h := LinearIsometryEquiv.norm_map (timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime)
-        exact h y
-
-      -- The complex conjugate doesn't change norms
-      have h_conj_norm : ∀ z : ℂ, ‖star z‖ = ‖z‖ := by
-        intro z
-        exact Complex.norm_conj z
-
-      -- Now we can chain our inequalities
-      calc
-        ‖x‖ ^ k * ‖iteratedFDeriv ℝ n (fun x ↦ star (f (timeReflection x))) x‖ = ‖x‖ ^ k * ‖iteratedFDeriv ℝ n (star ∘ f ∘ timeReflection) x‖ := by
-          rfl
-        _ = ‖timeReflection (timeReflection x)‖ ^ k * ‖iteratedFDeriv ℝ n (star ∘ f ∘ timeReflection) x‖ := by
-          -- timeReflection is self-inverse: timeReflection (timeReflection x) = x
-          have h_inv : timeReflection (timeReflection x) = x := by
-            -- timeReflection is self-inverse
-            ext i
-            simp [timeReflection, Function.update]
-            by_cases h : i = 0
-            · rw [h]; simp
-            · simp [h]
-          rw [h_inv]
-        _ = ‖timeReflection x‖ ^ k * ‖iteratedFDeriv ℝ n f (timeReflection x)‖ := by
-          sorry  -- Need lemma about derivatives of composed functions
-        _ ≤ C := by
-          exact hf (timeReflection x)
-  }
+  star f := starTestFunction f
 
 variable {E : Type} [NormedAddCommGroup E] [NormedSpace ℂ E]
 
 open scoped SchwartzMap
 
-/-- The constant‐field bilinear map `B(a)(b) = a * b`. -/
+/-- The constant‐field bilinear map `B(a)(b) = a * b`. -/
 abbrev V := ℂ
 def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ
 
-/- for some reason the version in FunctionalAnalysis doesn't elaborate -/
-lemma SchwartzMap.hasTemperateGrowth'
-    {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
-    (g : 𝓢(SpaceTime, V)) :
-    Function.HasTemperateGrowth (⇑g) := by
-  refine ⟨g.smooth', ?_⟩
-  intro n
-  -- take k = 0 in the decay estimate
-  rcases g.decay' 0 n with ⟨C, hC⟩
-  refine ⟨0, C, ?_⟩
-  intro x
-  have : ‖x‖ ^ 0 * ‖iteratedFDeriv ℝ n g x‖ ≤ C := by
-    simpa using hC x
-  simpa using this
-
-
 /-- Multiplication lifted to the Schwartz space. -/
 def schwartzMul (g : TestFunctionℂ) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
-  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (g.hasTemperateGrowth'))
+  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (SchwartzMap.hasTemperateGrowth_general g))
 
 variable (f_positive : PositiveTimeTestFunction)
 

@@ -136,3 +136,25 @@ def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
 example (x : SpaceTime) :
     timeReflectionCLM x =
       Function.update x (0 : Fin STDimension) (-x 0) := rfl
+
+/-- Composition with time reflection as a continuous linear map on test functions.
+    This maps a test function `f` to the function `x ↦ f(timeReflection(x))`,
+    where `timeReflection` negates the time coordinate (0th component) while
+    preserving spatial coordinates. This is used to define the star operation
+    on test functions for the Osterwalder-Schrader reflection positivity axiom. -/
+noncomputable def compTimeReflection : TestFunctionℂ →L[ℝ] TestFunctionℂ := by
+  have hg_upper : ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖timeReflectionCLM x‖) ^ k := by
+    use 1; use 1; simp; intro x
+    -- timeReflectionCLM is an isometry, so ‖timeReflectionCLM x‖ = ‖x‖
+    have h_iso : ‖timeReflectionCLM x‖ = ‖x‖ := by
+      -- Use the fact that timeReflection preserves norms (it's an isometry)
+      have h_norm_preserved : ‖timeReflection x‖ = ‖x‖ := by
+        exact LinearIsometryEquiv.norm_map timeReflectionLE x
+      -- timeReflectionCLM x = timeReflection x by definition
+      rw [← h_norm_preserved]
+      -- timeReflectionCLM x = timeReflection x
+      rfl
+    rw [h_iso]
+    -- Now we need ‖x‖ ≤ 1 + ‖x‖, which is always true
+    linarith [norm_nonneg x]
+  exact SchwartzMap.compCLM (𝕜 := ℝ) (hg := timeReflectionCLM.hasTemperateGrowth) (hg_upper := hg_upper)
