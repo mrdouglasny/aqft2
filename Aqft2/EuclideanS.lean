@@ -29,7 +29,7 @@ noncomputable section
 /-OS2 R^d with d=4, where mu is the Lebegue measure.
 We know the OS2 dp must be Euclidean invariant -/
 
-open scoped Real InnerProductSpace
+open scoped Real InnerProductSpace SchwartzMap
 
 namespace QFT
 
@@ -236,3 +236,30 @@ lemma measurePreserving_act (g : E) :
     refine ⟨(continuous_id.add continuous_const).measurable, ?_⟩
     simpa using map_add_right_eq_self μ g.t
   simpa [act, Function.comp] using trans.comp rot
+
+/-! ### Action of Euclidean group on test functions --------- -/
+
+/-- Action of Euclidean group on test functions via pullback.
+    For g ∈ E and f ∈ TestFunctionℂ, define (g • f)(x) = f(g⁻¹ • x).
+    This is the standard pullback action: to evaluate the transformed function
+    at x, we evaluate the original function at the inverse-transformed point. -/
+noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunctionℂ := by
+  -- Follow the pattern from compTimeReflection in DiscreteSymmetry.lean
+  -- The Euclidean action g⁻¹ is x ↦ g⁻¹.R x + g⁻¹.t (isometry + translation)
+  let euclidean_map : SpaceTime → SpaceTime := act g⁻¹
+
+  -- We need to show that this map has temperate growth and polynomial upper bounds
+  have hg_upper : ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖euclidean_map x‖) ^ k := by
+    -- Since euclidean_map x = g⁻¹.R x + g⁻¹.t and g⁻¹.R is an isometry:
+    -- ‖euclidean_map x‖ = ‖g⁻¹.R x + g⁻¹.t‖ ≥ ‖g⁻¹.R x‖ - ‖g⁻¹.t‖ = ‖x‖ - ‖g⁻¹.t‖
+    -- So ‖x‖ ≤ ‖euclidean_map x‖ + ‖g⁻¹.t‖ ≤ (1 + ‖g⁻¹.t‖) * (1 + ‖euclidean_map x‖)
+    use 1; use (1 + ‖g⁻¹.t‖); intro x
+    sorry  -- This proof follows from triangle inequality and isometry properties
+
+  -- Create a continuous linear map from the Euclidean action
+  -- Since act is not linear, we use a different approach
+  have h_temp_growth : Function.HasTemperateGrowth euclidean_map := by
+    -- Affine maps (isometry + translation) have temperate growth
+    sorry
+
+  exact SchwartzMap.compCLM (𝕜 := ℂ) (hg := h_temp_growth) (hg_upper := hg_upper) f

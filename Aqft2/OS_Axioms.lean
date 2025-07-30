@@ -61,15 +61,8 @@ abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM (n := n) (J 
 
 def trial (z : ℂn n) : ℂ := generatingFunctionalℂ dμ (weightedSum n J z)
 
-axiom GJAxiom_OS0 : Entire (trial n J dμ)
-
-/-- The constant‐field bilinear map `B(a)(b) = a * b`. -/
-abbrev V := ℂ
-def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ
-
-/-- Multiplication lifted to the Schwartz space. -/
-def schwartzMul (g : TestFunctionℂ) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
-  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (SchwartzMap.hasTemperateGrowth_general g))
+def GJAxiom_OS0 (n : ℕ) (J : Fin n → TestFunctionℂ) (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  Entire (trial n J dμ)
 
 variable (f_positive : PositiveTimeTestFunction)
 
@@ -77,8 +70,61 @@ def starred_f' : TestFunctionℂ := star f_positive.val
 
 def S (f : TestFunction) : ℂ := generatingFunctional dμ f
 
-/-- OS3 Reflection Positivity -/
+/-- OS1: The regularity axiom -/
 
-axiom GJAxiom_OS3 : ∀ (F : PositiveTimeTestFunction),
-  0 ≤ (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).re ∧
-      (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).im = 0
+-- OS1: The regularity bound on the generating functional
+def OS1_bound (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) (p : ℝ) (c : ℝ) : Prop :=
+  ‖generatingFunctional dμ f‖ ≤ Real.exp (c * (∫ x, ‖f x‖ ∂μ + (∫ x, ‖f x‖^p ∂μ)^(1/p)))
+
+-- OS1: Additional condition when p = 2 for two-point function integrability
+def OS1_two_point_condition (_dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∀ x y : SpaceTime, x ≠ y →
+    ∃ (S₂ : SpaceTime → SpaceTime → ℂ),
+      Integrable (fun (xy : SpaceTime × SpaceTime) => ‖S₂ xy.1 xy.2‖) (μ.prod μ)
+
+-- OS1: The regularity axiom
+def GJAxiom_OS1 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
+    (∀ f, OS1_bound dμ f p c) ∧
+    (p = 2 → OS1_two_point_condition dμ)
+
+-- OS2: Euclidean invariance axiom
+def GJAxiom_OS2 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∀ (g : QFT.E) (f : TestFunctionℂ),
+    generatingFunctionalℂ dμ f = generatingFunctionalℂ dμ (QFT.euclidean_action g f)
+
+-- OS3 Reflection Positivity
+
+def GJAxiom_OS3 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∀ (F : PositiveTimeTestFunction),
+    0 ≤ (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).re ∧
+        (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).im = 0
+
+-- OS4: The ergodicity axiom
+def GJAxiom_OS4 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  -- This axiom states that time averages of dynamical quantities converge to
+  -- their ensemble averages (given by the generating functional).
+  --
+  -- The CORRECT formulation should involve:
+  -- - Left side: Time average of some DYNAMICAL quantity (not involving dμ)
+  --   Examples might include:
+  --   * lim_{T→∞} (1/T) ∫₀ᵀ ⟨φ(t·e₀), f⟩ dt  (field expectation)
+  --   * lim_{T→∞} (1/T) ∫₀ᵀ F[T_t φ] dt  (some functional of translated fields)
+  -- - Right side: Ensemble average = generating functional with respect to dμ
+  --
+  -- The key insight is that the left side should involve the DYNAMICS of the field
+  -- (time evolution, field correlations, etc.) while the right side involves the
+  -- STATISTICS (probability measure dμ).
+  --
+  -- This captures the fundamental principle: Dynamical averages = Statistical averages
+  --
+  -- However, the exact form of the dynamical quantity on the left depends on
+  -- the specific formulation of the field theory and requires a proper dynamical
+  -- framework which we haven't established yet.
+  --
+  -- TODO: Replace with correct formulation once we have:
+  -- 1. A proper dynamical system on field space (Hamiltonian, time evolution, etc.)
+  -- 2. Field observables/functionals that don't depend on the measure dμ
+  -- 3. The correct mathematical machinery for field dynamics and time evolution
+  -- 4. Clarification from the literature on the exact form of OS4
+  True  -- Placeholder for now

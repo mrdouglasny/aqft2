@@ -18,6 +18,7 @@ import Mathlib.Analysis.Normed.Group.Uniform
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis
+
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
@@ -103,3 +104,10 @@ def generatingFunctionalℂ (dμ : ProbabilityMeasure FieldSpace) (J : TestFunct
   charFunC (liftMeasure_real_to_complex dμ) (pairingCLM' J)
 
 #check generatingFunctionalℂ dμ J
+
+/-- The constant‐field bilinear map `B(a)(b) = a * b`. -/
+def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ
+
+/-- Multiplication lifted to the Schwartz space. -/
+def schwartzMul (g : TestFunctionℂ) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
+  (SchwartzMap.bilinLeftCLM pointwiseMulCLM (SchwartzMap.hasTemperateGrowth_general g))
