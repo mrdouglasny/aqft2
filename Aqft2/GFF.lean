@@ -30,13 +30,13 @@ import Mathlib.Probability.Distributions.Gaussian.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.ProbabilityMassFunction.Basic
 
-import Aqft2.Basic
 import Aqft2.OS_Axioms
+import Aqft2.Basic
 
 
 open RCLike Real Filter Topology ComplexConjugate Finsupp Bornology
 open LinearMap (BilinForm)
-open MeasureTheory InnerProductSpace ProbabilityTheory QFT
+open MeasureTheory InnerProductSpace ProbabilityTheory SCV QFT
 
 noncomputable section
 
@@ -167,7 +167,7 @@ theorem GFF_satisfies_OS_axioms
   (abstract_field : AbstractFreeField 𝕜 F)
   (GFF : GaussianFreeField Ω abstract_field) :
   ∃ (dμ : ProbabilityMeasure FieldSpace),
-    (∀ n J, GJAxiom_OS0 n J dμ) ∧
+    OS0_Analyticity dμ ∧
     GJAxiom_OS1 dμ ∧
     GJAxiom_OS2 dμ ∧
     GJAxiom_OS3 dμ ∧

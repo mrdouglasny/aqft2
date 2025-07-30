@@ -63,7 +63,7 @@ abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM (n := n) (J 
 
 def trial (z : ℂn n) : ℂ := generatingFunctionalℂ dμ (weightedSum n J z)
 
-axiom GJAxiom_OS0 : Entire (trial n J dμ)
+-- axiom GJAxiom_OS0 : Entire (trial n J dμ)  -- Moved to OS_Axioms.lean
 
 /-- OS3 Reflection Positivity -/
 

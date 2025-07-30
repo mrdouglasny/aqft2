@@ -35,7 +35,7 @@ import Mathlib.Analysis.NormedSpace.Real
 
 import Aqft2.FunctionalAnalysis
 import Aqft2.Basic
-import Aqft2.EuclideanS
+import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
 import Aqft2.PositiveTimeTestFunction
@@ -48,6 +48,13 @@ open TopologicalSpace Measure SCV QFT
 noncomputable section
 open scoped MeasureTheory Complex BigOperators SchwartzMap
 
+-- OS0: The analyticity axiom - the generating functional is entire in complex linear combinations
+def OS0_Analyticity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), Entire (fun z : ℂn n =>
+    generatingFunctionalℂ dμ (weightedSumCLM (n := n) (J := J) z))
+
+#check OS0_Analyticity
+
 variable (n : ℕ)
 variable (J : Fin n → TestFunctionℂ)   -- test functions
 variable (z : ℂn n)               -- coefficients
@@ -59,10 +66,9 @@ abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM (n := n) (J 
 
 /-- OS0 Analyticity -/
 
-def trial (z : ℂn n) : ℂ := generatingFunctionalℂ dμ (weightedSum n J z)
-
-def GJAxiom_OS0 (n : ℕ) (J : Fin n → TestFunctionℂ) (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  Entire (trial n J dμ)
+-- The trial function for a specific collection of test functions
+def trial (n : ℕ) (J : Fin n → TestFunctionℂ) (dμ : ProbabilityMeasure FieldSpace) (z : ℂn n) : ℂ :=
+  generatingFunctionalℂ dμ (weightedSum n J z)
 
 variable (f_positive : PositiveTimeTestFunction)
 

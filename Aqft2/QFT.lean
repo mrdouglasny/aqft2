@@ -7,7 +7,7 @@ Authors:
 import Aqft2.Basic
 import Aqft2.OS_Axioms
 import Aqft2.FunctionalAnalysis
-import Aqft2.EuclideanS
+import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
 import Aqft2.PositiveTimeTestFunction
@@ -42,8 +42,7 @@ noncomputable section
 class QFT where
   field_measure : ProbabilityMeasure FieldSpace
   /-- OS0: Analyticity -/
-  os0_analyticity : ∀ (n : ℕ) (J : Fin n → TestFunctionℂ),
-    GJAxiom_OS0 n J field_measure
+  os0_analyticity : GJAxiom_OS0 field_measure
   /-- OS1: Regularity -/
   os1_regularity : GJAxiom_OS1 field_measure
   /-- OS2: Euclidean invariance -/

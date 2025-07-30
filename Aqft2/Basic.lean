@@ -29,8 +29,8 @@ import Mathlib.LinearAlgebra.UnitaryGroup
 -- Import our functional analysis utilities
 import Aqft2.FunctionalAnalysis
 
--- move this when Euclidean is done
---import Aqft2.Euclidean
+-- Euclidean geometry definitions are now in Aqft2.Euclidean
+-- but we define basic spacetime here to avoid circular imports
 abbrev STDimension := 4
 abbrev STvector : Type := (Fin STDimension) → ℝ
 abbrev SpaceTime := EuclideanSpace ℝ (Fin STDimension)
