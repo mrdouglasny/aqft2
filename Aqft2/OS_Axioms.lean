@@ -48,66 +48,43 @@ open TopologicalSpace Measure SCV QFT
 noncomputable section
 open scoped MeasureTheory Complex BigOperators SchwartzMap
 
+def S (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) : ℂ := generatingFunctional dμ f
+
 -- OS0: The analyticity axiom - the generating functional is entire in complex linear combinations
 def OS0_Analyticity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
   ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), Entire (fun z : ℂn n =>
     generatingFunctionalℂ dμ (weightedSumCLM (n := n) (J := J) z))
-
-#check OS0_Analyticity
-
-variable (n : ℕ)
-variable (J : Fin n → TestFunctionℂ)   -- test functions
-variable (z : ℂn n)               -- coefficients
-variable (dμ : ProbabilityMeasure FieldSpace)
-
-abbrev weightedSum (z : ℂn n) : TestFunctionℂ := weightedSumCLM (n := n) (J := J) z
-
-#check (weightedSum n J z)
-
-/-- OS0 Analyticity -/
-
--- The trial function for a specific collection of test functions
-def trial (n : ℕ) (J : Fin n → TestFunctionℂ) (dμ : ProbabilityMeasure FieldSpace) (z : ℂn n) : ℂ :=
-  generatingFunctionalℂ dμ (weightedSum n J z)
-
-variable (f_positive : PositiveTimeTestFunction)
-
-def starred_f' : TestFunctionℂ := star f_positive.val
-
-def S (f : TestFunction) : ℂ := generatingFunctional dμ f
-
-/-- OS1: The regularity axiom -/
 
 -- OS1: The regularity bound on the generating functional
 def OS1_bound (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) (p : ℝ) (c : ℝ) : Prop :=
   ‖generatingFunctional dμ f‖ ≤ Real.exp (c * (∫ x, ‖f x‖ ∂μ + (∫ x, ‖f x‖^p ∂μ)^(1/p)))
 
 -- OS1: Additional condition when p = 2 for two-point function integrability
-def OS1_two_point_condition (_dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ x y : SpaceTime, x ≠ y →
-    ∃ (S₂ : SpaceTime → SpaceTime → ℂ),
-      Integrable (fun (xy : SpaceTime × SpaceTime) => ‖S₂ xy.1 xy.2‖) (μ.prod μ)
+def OS1_two_point_condition (_ : ProbabilityMeasure FieldSpace) : Prop :=
+  -- Placeholder for two-point function integrability condition
+  -- TODO: Implement proper two-point function integrability
+  True
 
 -- OS1: The regularity axiom
-def GJAxiom_OS1 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+def OS1_Regularity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ f, OS1_bound dμ f p c) ∧
+    (∀ (f : TestFunction), OS1_bound dμ f p c) ∧
     (p = 2 → OS1_two_point_condition dμ)
 
 -- OS2: Euclidean invariance axiom
-def GJAxiom_OS2 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+def OS2_EuclideanInvariance (dμ : ProbabilityMeasure FieldSpace) : Prop :=
   ∀ (g : QFT.E) (f : TestFunctionℂ),
     generatingFunctionalℂ dμ f = generatingFunctionalℂ dμ (QFT.euclidean_action g f)
 
 -- OS3 Reflection Positivity
 
-def GJAxiom_OS3 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+def OS3_ReflectionPositivity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
   ∀ (F : PositiveTimeTestFunction),
     0 ≤ (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).re ∧
         (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).im = 0
 
 -- OS4: The ergodicity axiom
-def GJAxiom_OS4 (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+def OS4_Ergodicity (_ : ProbabilityMeasure FieldSpace) : Prop :=
   -- This axiom states that time averages of dynamical quantities converge to
   -- their ensemble averages (given by the generating functional).
   --

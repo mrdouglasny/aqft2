@@ -168,10 +168,10 @@ theorem GFF_satisfies_OS_axioms
   (GFF : GaussianFreeField Ω abstract_field) :
   ∃ (dμ : ProbabilityMeasure FieldSpace),
     OS0_Analyticity dμ ∧
-    GJAxiom_OS1 dμ ∧
-    GJAxiom_OS2 dμ ∧
-    GJAxiom_OS3 dμ ∧
-    GJAxiom_OS4 dμ := by
+    OS1_Regularity dμ ∧
+    OS2_EuclideanInvariance dμ ∧
+    OS3_ReflectionPositivity dμ ∧
+    OS4_Ergodicity dμ := by
   sorry
 
 end

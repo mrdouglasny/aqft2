@@ -42,14 +42,14 @@ noncomputable section
 class QFT where
   field_measure : ProbabilityMeasure FieldSpace
   /-- OS0: Analyticity -/
-  os0_analyticity : GJAxiom_OS0 field_measure
+  os0_analyticity : OS0_Analyticity field_measure
   /-- OS1: Regularity -/
-  os1_regularity : GJAxiom_OS1 field_measure
+  os1_regularity : OS1_Regularity field_measure
   /-- OS2: Euclidean invariance -/
-  os2_euclidean_invariance : GJAxiom_OS2 field_measure
+  os2_euclidean_invariance : OS2_EuclideanInvariance field_measure
   /-- OS3: Reflection positivity -/
-  os3_reflection_positivity : GJAxiom_OS3 field_measure
+  os3_reflection_positivity : OS3_ReflectionPositivity field_measure
   /-- OS4: Ergodicity (time translation invariance) -/
-  os4_ergodicity : GJAxiom_OS4 field_measure
+  os4_ergodicity : OS4_Ergodicity field_measure
 
 end
