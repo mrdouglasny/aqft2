@@ -5,16 +5,15 @@ Authors:
 
 Gaussian free fields.
 
-A GFF is a probability distribution over a Hilbert space, with Boltzmann
+A GFF is a probabi  sorry
+
+enda Hilbert space, with Boltzmann
 weight the exponential of a quadratic energy functional.
-This functinoal could be specified in various ways.
+This functional could be specified in various ways.
 Here we take <v,Av> + i <J,v> where A is an invertible linear operator.
 
 The source term should be implemented as a characteristic function.
-Do we want the real linear term?  Probably yes.
-
-What do we need to prove?  We define the Gaussian measure axiomatically,
-then we should show that it exists?
+The goal is to prove that the GFF satisfies the Osterwalder-Schrader axioms.
 -/
 
 import Mathlib.Algebra.Algebra.Defs
@@ -31,79 +30,148 @@ import Mathlib.Probability.Distributions.Gaussian.Basic
 import Mathlib.Probability.Distributions.Gaussian.Real
 import Mathlib.Probability.ProbabilityMassFunction.Basic
 
+import Aqft2.Basic
+import Aqft2.OS_Axioms
+
 
 open RCLike Real Filter Topology ComplexConjugate Finsupp Bornology
-
 open LinearMap (BilinForm)
-open MeasureTheory InnerProductSpace ProbabilityTheory
+open MeasureTheory InnerProductSpace ProbabilityTheory QFT
 
 noncomputable section
 
-variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E] (h : HilbertSpace 𝕜 E)
+/-! ## Abstract Free Field Structure -/
 
+/-- A Hilbert space typeclass -/
 class IsHilbert (𝕜 E : Type*) [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] : Prop where
   complete : CompleteSpace E
 
-variable {𝕜 F : Type*} [ NormedAddCommGroup F] [InnerProductSpace ℝ F] [IsHilbert ℝ F]
+/-- Symmetry condition for linear operators -/
+def IsSymmetric {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] (T : F →L[𝕜] F) : Prop :=
+  ∀ x y, ⟪T x, y⟫_𝕜 = ⟪x, T y⟫_𝕜
 
-def IsSymmetric (T : F →L[ℝ] F) : Prop :=
-  ∀ x y, ⟪T x, y⟫_ℝ = ⟪x, T y⟫_ℝ
+/-- Positive definiteness for linear operators -/
+def IsPositiveDefinite {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] (T : F →L[𝕜] F) : Prop :=
+  ∀ f, 0 ≤ RCLike.re (⟪T f, f⟫_𝕜) ∧ (RCLike.re (⟪T f, f⟫_𝕜) = 0 → f = 0)
 
-/- these should all be class attributes -/
-variable (A : F →L[ℝ] F) -- symmetric, positive-definite
-variable [Invertible A] -- just for simplicity
-variable (J : F)
+/-- The quadratic action functional for the free field -/
+def quadratic_action {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] (A : F →L[𝕜] F) (J f : F) : ℝ :=
+  (1 / 2) * RCLike.re (⟪f, A f⟫_𝕜) + RCLike.re (⟪J, f⟫_𝕜)
 
-def quadratic_action (A : F →L[ℝ] F) (J f : F) : ℝ :=
-  ((1 : ℝ) / 2) • (⟪f, A f⟫_ℝ : ℝ) + (⟪J, f⟫_ℝ : ℝ)
-
-structure AbstractGFF (A : F →L[ℝ] F) (J : F) where
-  A := A
-  J := J
-  CovOp := A.inverse
+/-- Abstract structure for a free field with inverse covariance operator and source -/
+structure AbstractFreeField (𝕜 : Type*) (F : Type*) [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] where
+  /-- The inverse covariance operator (symmetric, positive definite) -/
+  A : F →L[𝕜] F
+  /-- The source term -/
+  J : F
+  /-- A is symmetric -/
   symmetric : IsSymmetric A
-  positive : ∀ f, 0 ≤ ⟪A f, f⟫_ℝ
+  /-- A is positive definite -/
+  positive_definite : IsPositiveDefinite A
+  /-- A is invertible -/
+  invertible : Invertible A
+  /-- The covariance operator (inverse of A) -/
+  CovOp : F →L[𝕜] F := A.inverse
+  /-- The action functional -/
   action : F → ℝ := quadratic_action A J
 
+/-! ## Gaussian Free Field -/
+
+/--
+A Gaussian Free Field is a probability measure on a space of field configurations
+that realizes the abstract free field structure through Gaussian distributions.
+-/
 structure GaussianFreeField
-  (Ω : Type*) [TopologicalSpace Ω] [MeasurableSpace Ω] [MeasureSpace Ω] [AddCommMonoid Ω]
-  (S : AbstractGFF A J) where
+  {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
+  (Ω : Type*) [TopologicalSpace Ω] [MeasurableSpace Ω]
+  (abstract_field : AbstractFreeField 𝕜 F) where
+  /-- The probability measure on field space -/
   P : ProbabilityMeasure Ω
+  /-- How test functions act on field configurations -/
   apply : F → Ω → ℝ
+  /-- Each test function gives a measurable map -/
   measurable : ∀ f, Measurable (apply f)
+  /-- Each test function induces a Gaussian distribution -/
   gaussian : ∀ f, IsGaussian (P.toMeasure.map (apply f : Ω → ℝ))
-  mean : ∀ f, ∫ ω, apply f ω ∂P.toMeasure = - ⟪S.CovOp S.J, f⟫_ℝ
-  covariance : ∀ f g, ∫ ω, apply f ω * apply g ω ∂P.toMeasure = ⟪S.CovOp f, g⟫_ℝ
+  /-- Mean is determined by the source term -/
+  mean : ∀ f, ∫ ω, apply f ω ∂P.toMeasure = -RCLike.re ⟪abstract_field.CovOp abstract_field.J, f⟫_𝕜
+  /-- Covariance is given by the covariance operator -/
+  covariance : ∀ f g, ∫ ω, apply f ω * apply g ω ∂P.toMeasure = RCLike.re ⟪abstract_field.CovOp f, g⟫_𝕜
 
-variable (S : AbstractGFF A J)
-variable (Ω : Type*) [TopologicalSpace Ω] [MeasurableSpace Ω] [MeasureSpace Ω] [AddCommMonoid Ω]
-variable (f : F)
-#check ProbabilityTheory.gaussianPDF (- ⟪S.CovOp S.J, f⟫_ℝ) (Real.toNNReal ⟪S.CovOp f, f⟫_ℝ) (1:ℝ)
-variable (GFF : GaussianFreeField A J Ω S)
+/-! ## Connection to Test Functions -/
 
-/- let's prove that the pdf is the action -/
+/--
+Given a Gaussian Free Field, we can define a generating functional
+that should satisfy the OS axioms.
+-/
+def GFF_generating_functional
+  {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
+  {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
+  (abstract_field : AbstractFreeField 𝕜 F)
+  (GFF : GaussianFreeField Ω abstract_field)
+  (J : F) : ℂ :=
+  ∫ ω, Complex.exp (Complex.I * (GFF.apply J ω : ℂ)) ∂GFF.P.toMeasure
 
-lemma GFF_pdf_eq_action (GFF : GaussianFreeField A J Ω S) :
-  ∀ f,  (Real.exp (- S.action f)) = ENNReal.toReal ((ProbabilityTheory.gaussianPDF (- ⟪S.CovOp S.J, f⟫_ℝ)) (Real.toNNReal ⟪S.CovOp f, f⟫_ℝ) (1 : ℝ)) :=
+/-! ## Lemmas for OS Axioms -/
+
+/-- The PDF of the GFF is related to the exponential of the action -/
+lemma GFF_pdf_eq_exp_action
+  {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
+  {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
+  (abstract_field : AbstractFreeField 𝕜 F)
+  (GFF : GaussianFreeField Ω abstract_field) :
+  ∀ f, Real.exp (-abstract_field.action f) =
+    ENNReal.toReal (ProbabilityTheory.gaussianPDF
+      (-RCLike.re ⟪abstract_field.CovOp abstract_field.J, f⟫_𝕜)
+      (Real.toNNReal (RCLike.re ⟪abstract_field.CovOp f, f⟫_𝕜)) f) :=
+sorry
+
+/-- The generating functional satisfies the expected exponential form -/
+lemma GFF_generating_functional_form
+  {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
+  {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
+  (abstract_field : AbstractFreeField 𝕜 F)
+  (GFF : GaussianFreeField Ω abstract_field) :
+  ∀ J, GFF_generating_functional abstract_field GFF J =
+    Complex.exp (-Complex.I * (abstract_field.action J : ℂ)) := by
   sorry
 
-variable (CovOp : F →L[ℝ] F)
+/-- Positivity property needed for OS1 -/
+lemma GFF_positivity
+  {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
+  {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
+  (abstract_field : AbstractFreeField 𝕜 F)
+  (GFF : GaussianFreeField Ω abstract_field) :
+  ∀ f : F, 0 ≤ (GFF_generating_functional abstract_field GFF f).re := by
+  sorry
 
-structure GaussianFreeField' where
-  P : ProbabilityMeasure Ω
-  apply : F → Ω → ℝ
-  measurable : ∀ f, Measurable (apply f)
-  gaussian : ∀ f, IsGaussian (P.toMeasure.map (apply f : Ω → ℝ))
-  mean_zero : ∀ f, ∫ ω, apply f ω ∂P.toMeasure = 0
-  covariance : ∀ f g, ∫ ω, apply f ω * apply g ω ∂P.toMeasure = ⟪CovOp f, g⟫_ℝ
+/-- Euclidean invariance needed for OS2 -/
+lemma GFF_euclidean_invariance
+  {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
+  {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
+  (abstract_field : AbstractFreeField 𝕜 F)
+  (GFF : GaussianFreeField Ω abstract_field) :
+  ∀ J, GFF_generating_functional abstract_field GFF J =
+    GFF_generating_functional abstract_field GFF J := by
+  sorry
 
-/- the standard Gaussian measure -/
+/-! ## Main Goal: OS Axioms -/
 
-variable (n : ℕ)
-def Rn := EuclideanSpace ℝ (Fin n)
-#check MeasurableSpace (Rn n)
+/--
+The main theorem we want to prove: a Gaussian Free Field satisfies the OS axioms.
+For now, we assume F can be cast to TestFunctionℂ.
+-/
+theorem GFF_satisfies_OS_axioms
+  {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
+  {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
+  (abstract_field : AbstractFreeField 𝕜 F)
+  (GFF : GaussianFreeField Ω abstract_field) :
+  ∃ (dμ : ProbabilityMeasure FieldSpace),
+    (∀ n J, GJAxiom_OS0 n J dμ) ∧
+    GJAxiom_OS1 dμ ∧
+    GJAxiom_OS2 dμ ∧
+    GJAxiom_OS3 dμ ∧
+    GJAxiom_OS4 dμ := by
+  sorry
 
---abbrev μ : Measure (Rn n) := volume    -- Lebesgue, just named “μ”
-
---def stdGaussianMeasure (n : ℕ) : ProbabilityMeasure (Rn n) :=
---  ProbabilityMeasure.mk (gaussian n) (by simp [gaussian_apply_univ])
+end
