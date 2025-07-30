@@ -5,6 +5,7 @@ import Mathlib.Data.Complex.Module
 import Mathlib.Data.Complex.Exponential
 import Mathlib.Algebra.Group.Support
 import Mathlib.Algebra.Star.Basic
+import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Analytic.Basic
@@ -80,6 +81,57 @@ def timeReflectionLinear : SpaceTime →ₗ[ℝ] SpaceTime :=
 
 def timeReflectionCLM : SpaceTime →L[ℝ] SpaceTime :=
 timeReflectionLinear.toContinuousLinearMap (E := SpaceTime) (F' := SpaceTime)
+
+open InnerProductSpace
+
+/-- Time reflection preserves inner products -/
+lemma timeReflection_inner_map (x y : SpaceTime) :
+    ⟪timeReflection x, timeReflection y⟫_ℝ = ⟪x, y⟫_ℝ := by
+  -- Direct proof using fintype inner product
+  simp only [inner]
+  congr 1
+  ext i
+  simp only [timeReflection, Function.update]
+  by_cases h : i = 0
+  · rw [h]; simp
+  · simp [h]
+
+/-- Time reflection as a linear isometry equivalence -/
+def timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime :=
+{ toFun := timeReflection
+  invFun := timeReflection  -- Time reflection is self-inverse
+  left_inv := by
+    intro x
+    ext i
+    by_cases h : i = 0
+    · simp [timeReflection, Function.update]
+      subst h
+      simp
+    · simp [timeReflection, Function.update, h]
+  right_inv := by
+    intro x
+    ext i
+    by_cases h : i = 0
+    · simp [timeReflection, Function.update]
+      subst h
+      simp
+    · simp [timeReflection, Function.update, h]
+  map_add' := timeReflectionLinear.map_add'
+  map_smul' := timeReflectionLinear.map_smul'
+  norm_map' := by
+    intro x
+    -- The goal is to show that the LinearIsometryEquiv preserves norms
+    -- First simplify the LinearIsometryEquiv application
+    show ‖timeReflection x‖ = ‖x‖
+    -- Use that time reflection preserves inner products
+    have h : ⟪timeReflection x, timeReflection x⟫_ℝ = ⟪x, x⟫_ℝ := timeReflection_inner_map x x
+    -- For real inner product spaces, ⟪x, x⟫ = ‖x‖^2 directly
+    have h1 : ⟪timeReflection x, timeReflection x⟫_ℝ = ‖timeReflection x‖ ^ 2 := by
+      rw [← real_inner_self_eq_norm_sq]
+    have h2 : ⟪x, x⟫_ℝ = ‖x‖ ^ 2 := by
+      rw [← real_inner_self_eq_norm_sq]
+    rw [← sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)]
+    rw [← h1, ← h2, h] }
 
 example (x : SpaceTime) :
     timeReflectionCLM x =

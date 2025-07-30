@@ -14,10 +14,10 @@ import Mathlib.Analysis.NormedSpace.RCLike
 import Mathlib.Analysis.NormedSpace.Real
 import Mathlib.Analysis.NormedSpace.Extend
 import Mathlib.Analysis.Complex.Basic
+import Mathlib.Analysis.Normed.Group.Uniform
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis
-import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
@@ -25,14 +25,17 @@ import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 
 import Mathlib.LinearAlgebra.UnitaryGroup
 
-import Mathlib.Probability.Independence.Basic
-import Mathlib.Probability.Density
+-- Import our functional analysis utilities
+import Aqft2.FunctionalAnalysis
 
 -- move this when Euclidean is done
 --import Aqft2.Euclidean
 abbrev STDimension := 4
 abbrev STvector : Type := (Fin STDimension) → ℝ
 abbrev SpaceTime := EuclideanSpace ℝ (Fin STDimension)
+
+noncomputable instance : InnerProductSpace ℝ SpaceTime := by infer_instance
+
 abbrev getTimeComponent (x : SpaceTime) : ℝ :=
  x ⟨0, by simp +arith⟩
 
@@ -94,29 +97,9 @@ def MeasureTheory.charFunC
   (μ : Measure E) : (E →L[ℂ] ℂ) → ℂ :=
   fun L => ∫ x, cexp (I * L x) ∂μ
 
-section LiftMeasure
-  variable [SigmaFinite μ_bg]
-
-  /--
-  Lifts a probability measure from the space of real fields to the space of
-  complex fields, with support on the real subspace.
-  -/
-  noncomputable def embedding (φ : FieldSpace) : FieldSpace𝕜 ℂ := sorry
-
-  noncomputable def liftMeasure
-      (dμ_real : ProbabilityMeasure (FieldSpace)) :
-      ProbabilityMeasure (FieldSpace𝕜 ℂ) :=
-    let dμ_complex_measure : Measure (FieldSpace𝕜 ℂ) :=
-      Measure.map embedding dμ_real
-    have h_ae : AEMeasurable embedding dμ_real := sorry
-    have h_is_prob := isProbabilityMeasure_map h_ae
-    ⟨dμ_complex_measure, h_is_prob⟩
-
-end LiftMeasure
-
 variable (J : TestFunctionℂ)
 
-def generatingFunctionalℂ : ℂ :=
-  charFunC (liftMeasure dμ) (pairingCLM' J)
+def generatingFunctionalℂ (dμ : ProbabilityMeasure FieldSpace) (J : TestFunctionℂ) : ℂ :=
+  charFunC (liftMeasure_real_to_complex dμ) (pairingCLM' J)
 
 #check generatingFunctionalℂ dμ J

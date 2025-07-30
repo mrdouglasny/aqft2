@@ -118,16 +118,41 @@ noncomputable instance : Star TestFunctionℂ where
       exact Complex.conjLIE.toContinuousLinearMap.contDiff.comp (f.smooth'.comp timeReflectionCLM.contDiff)
     decay' := by
       intro k n
+      -- Get the decay bound for f
       rcases f.decay' k n with ⟨C, hf⟩
       use C
       intro x
-      -- This proof requires the norm-preserving property from the LinearIsometryEquiv.
       simp only [star]
-      have r := norm_iteratedFDeriv_comp_le timeReflectionCLM.contDiff f.smooth' True x
-      rw [norm_iteratedFDeriv_comp_le timeReflectionCLM.contDiff f.smooth' True x]
-      refine (norm_iteratedFDeriv_comp_le timeReflection.contDiff x f.smooth' n).trans ?_
-    -- We can now directly use the hypothesis `hf` at the transformed point.
-      exact hf (timeReflection x)
+
+      -- Key fact: timeReflection is a linear isometry
+      have h_iso : ∀ y : SpaceTime, ‖timeReflection y‖ = ‖y‖ := by
+        intro y
+        have h := LinearIsometryEquiv.norm_map (timeReflectionLE : SpaceTime ≃ₗᵢ[ℝ] SpaceTime)
+        exact h y
+
+      -- The complex conjugate doesn't change norms
+      have h_conj_norm : ∀ z : ℂ, ‖star z‖ = ‖z‖ := by
+        intro z
+        exact Complex.norm_conj z
+
+      -- Now we can chain our inequalities
+      calc
+        ‖x‖ ^ k * ‖iteratedFDeriv ℝ n (fun x ↦ star (f (timeReflection x))) x‖ = ‖x‖ ^ k * ‖iteratedFDeriv ℝ n (star ∘ f ∘ timeReflection) x‖ := by
+          rfl
+        _ = ‖timeReflection (timeReflection x)‖ ^ k * ‖iteratedFDeriv ℝ n (star ∘ f ∘ timeReflection) x‖ := by
+          -- timeReflection is self-inverse: timeReflection (timeReflection x) = x
+          have h_inv : timeReflection (timeReflection x) = x := by
+            -- timeReflection is self-inverse
+            ext i
+            simp [timeReflection, Function.update]
+            by_cases h : i = 0
+            · rw [h]; simp
+            · simp [h]
+          rw [h_inv]
+        _ = ‖timeReflection x‖ ^ k * ‖iteratedFDeriv ℝ n f (timeReflection x)‖ := by
+          sorry  -- Need lemma about derivatives of composed functions
+        _ ≤ C := by
+          exact hf (timeReflection x)
   }
 
 variable {E : Type} [NormedAddCommGroup E] [NormedSpace ℂ E]

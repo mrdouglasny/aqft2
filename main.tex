@@ -1,0 +1,1267 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+
+
+\bibliographystyle{amsplain}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}\newtheorem{sentence}{Sentence}
+\newtheorem{para}{Paragraph}
+% SSG structure - we might redefine these
+\def\ssgbegin{\begin{itemize}}
+\def\entity#1{\item {[#1] =~}}
+\def\ssgend{\end{itemize}}
+\newcommand{\ignore}[1]{}
+\def\IC{\mathbb{C}}
+\def\IR{\mathbb{R}}
+\def\IN{{\mathbb N}}
+\def\IZ{\mathbb{Z}}
+\def\E{{\mathbb E}}
+\def\True{$\mbox{True}$}
+\def\False{$\mbox{False}$}
+\newcommand{\cA}{\mathcal A}
+\newcommand{\cG}{\mathcal G}
+\newcommand{\cI}{\mathcal I}
+\newcommand{\cM}{\mathcal M}
+\newcommand{\cN}{\mathcal N}
+\newcommand{\cO}{\mathcal O}
+\newcommand{\cP}{\mathcal P}
+\newcommand{\cR}{\mathcal R}
+\newcommand{\cS}{\mathcal S}
+\newcommand{\cT}{\mathcal T}
+\newcommand{\cU}{\mathcal U}
+\newcommand{\cV}{\mathcal V}
+\newcommand{\intype}[2]{#1\!:\!#2}
+\newcommand{\infc}{\!:\!}
+\newcommand{\bool}{\mathbf{Bool}}
+\newcommand{\sett}{\mathbf{Set}}
+%
+\newcommand{\be}{\begin{equation}}
+\newcommand{\ee}{\end{equation}}
+\newcommand{\ba}{\begin{array}}
+\newcommand{\ea}{\end{array}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+%
+% definitions for lean inline code
+\usepackage{pstricks,pst-node,pst-text,pst-3d}
+\definecolor{lightgray}{gray}{0.95}
+\usepackage{color,xcolor}
+\definecolor{keywordcolor}{rgb}{0.5, 0.1, 0.1}   % red
+\definecolor{tacticcolor}{rgb}{0.1, 0.2, 0.4}    % blue
+\definecolor{commentcolor}{rgb}{0.4, 0.4, 0.4}   % grey
+\definecolor{symbolcolor}{rgb}{0.0, 0.1, 0.6}    % blue
+\definecolor{sortcolor}{rgb}{0.1, 0.5, 0.1}      % green
+\definecolor{attributecolor}{rgb}{0.7, 0.1, 0.1} % red
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue,citecolor=blue]{hyperref}
+\usepackage{upgreek}
+\usepackage{listings}
+\def\lstlanguagefiles{lstlean.tex}
+\lstset{language=lean}
+\lstset{xleftmargin=1em}
+%
+\def\boldclass{\bf\sf}
+\def\P{{\boldclass P}}
+\def\NP{{\boldclass NP}}
+\def\MA{{\boldclass MA}}
+\def\QMA{{\boldclass QMA}}
+\def\NPC{{\boldclass NPC}}
+\def\coNP{{\boldclass{co}}\mbox{-}{\boldclass{NP}}}
+\def\DP{{\boldclass DP}}
+\def\RP{{\boldclass RP}}
+\def\PH{{\boldclass PH}}
+\def\PP{{\boldclass PP}}
+\def\BPP{{\boldclass BPP}}
+\def\NQP{{\boldclass NQP}}
+\def\Pitwo{{\boldclass \Pi}_2}
+\def\Sig#1{{\boldclass \Sigma}_#1}
+\def\BQP{{\boldclass BQP}}
+\def\PostBQP{{\boldclass PostBQP}}
+\def\PostBPP{{\boldclass PostBPP}}
+\def\PSPACE{{\boldclass PSPACE}}
+\def\EXP{{\boldclass EXP}}
+\def\FPTAS{{\boldclass FPTAS}}
+\def\Ppoly{{\boldclass P/poly}}
+\def\BQPqpoly{{\boldclass BQP/qpoly}}
+\def\PPpoly{{\boldclass PP/poly}}
+\def\FP{{\boldclass FP}}
+\def\FNP{{\boldclass FNP}}
+\def\BPPpath{{\boldclass BPP_{path}}}
+\def\AC{{\boldclass AC}}
+\def\NC{{\boldclass NC}}
+\def\TC{{\boldclass TC}}
+%
+\def\itclass{\it}
+\def\SAT{{\itclass SAT}}
+\def\UNSAT{{\itclass UNSAT}}
+\def\itBP{{\itclass BP}}
+\def\VP{{\itclass VP}}
+\def\AP{{\itclass AP}}
+%
+\newcommand\MRD[1]{{\color{red} Mike's Note: #1}}
+\usepackage{xcolor} % already loads color
+\newcommand{\SH}[2][blue]{\textcolor{#1}{\footnotesize\sf[#2]}}
+% usage: \SH{Needs a citation} or \SH[blue]{check sign}
+
+%
+\title{Formalizing QFT} 
+\date{August 2025}
+
+\author{Michael R. Douglas and Sarah Hoback}
+
+\begin{document}
+\maketitle{}
+
+\begin{abstract}
+\end{abstract}
+\vfill\eject
+
+\iffalse\tableofcontents\fi
+
+\newpage
+
+\section{Introduction}
+\label{s:intro}
+
+AI is starting to have a major impact on science.  This is happening in many ways, and one of them is the development of a practical technology for proving mathematical theorems expressed in a formal language.  A growing number of mathematicians and experts in AI believe that this will be important, and we are exploring its application to theoretical physics.
+
+To this end, we set out a program to formalize quantum field theory and report on our progress so far.  As formalization is not a widely known concept in the theoretical physics community, we will begin by explaining what it is and why physicists should be interested in it.  We then set out goals.  Some are important foundational and technical results, most importantly the definitions of QFT within various axiom systems and the reconstruction theorems which relate them.  We also outline more ambitious goals which we believe might be possible with strong enough formalization technology.
+We then discuss our methods and options for achieving these goals.
+
+In \S \ref{s:org} we set out a more detailed blueprint for our project. ...
+
+\subsection{What is formalization?}
+Interactive theorem proving (ITP) is a method for the development and verification of proofs written in a formal theorem proving language.  It has been developed for many decades and there are several ITP languages which are well suited to express mathematics, such as Coq \cite{}, Isabelle \cite{} and more recently Lean \cite{}.  Formalization is the process of translating a piece of standard human written (or ``informal'') mathematics into an ITP language and verifying its correctness.  In principle, it is possible to formalize any part of the mathematical literature in any of the three languages we cited.  The Lean theorem proving language, being the most recently developed and the best adapted to mathematics (rather than software verification), is the focus of most current work.  
+
+Some recent introductions to Lean are \cite{}.  Just to give a flavor of it, in figure NNN we quote the proof of XXX.
+We will save more detailed discussion for our actual topics, but at first glance one sees programming code not too different from familiar languages such as Python and Mathematica.  This is correct, with the crucial difference that the operations, both predefined and user defined, are all constrained to perform steps in a sound logical argument.  The elementary steps include applying rules of logical inference, bringing in axioms, substituting variables and so on.  By the use of subroutine definitions and the sophisticated dependent type system,
+logical arguments composed of many, many elementary steps can be expressed concisely.  If carefully written,
+Lean code can be executed in the same way as other programming languages.  But one also has the option to use
+noncomputable logical arguments, such as the principle of the excluded middle (for any $X$, one of $X$ or $\mbox{not}\, X$ 
+must be true).  Thus Lean and the other advanced ITP systems are capable of expressing any mathematical statement
+and of verifying proofs which use the full range of mathematical technique.
+
+Clearly a technology which speeds up proof would be extremely valuable throughout the mathematical sciences.  Mathematics journals are known for their lengthy review times, and this is largely because checking all of the details of a proof is laborious and time-consuming.  Even then there is no guarantee; there are famous cases of proofs which were published and generally accepted, only for flaws to be found later.  Another major benefit of ITP is that it facilitates collaboration.  Often the main bottleneck in assembling a large collaboration is the need to vet the contributors and verify their contributions; this difficulty could be largely removed.  For these reasons, mathematicians are excited about the potential of ITP \cite{}.
+\SH{We can cite the terry tao announcements }
+
+How excited should theoretical physicists be about ITP?  One barrier is that formalization (at least as it exists now) requires the informal mathematics to be rigorously stated and proven, and much of the physics literature does not follow this standard.  There are good reasons for this and we will discuss the point elsewhere \cite{}, but for present purposes, let us consider a piece of mathematical physics which is rigorously stated and proven.  For example, the problem of rigorously defining quantum field theory and proving that examples exist (often called ``constructing'' the QFT) has been much studied and there are many significant results.  Is it practical to formalize these constructions?
+
+At the time we are writing this, ITP is not having a major impact on how mathematics is done, for several reasons.  One reason starts from the observation that much of mathematics builds on a deep structure of definitions based on other definitions, which takes years of study to gain even a basic familiarity.  This is also true of much of theoretical physics.  Now, to formalize a piece of mathematics, all of its prerequisite definitions must already be formalized, at least to some extent; one might omit some proofs to start.  But, even with this relaxed standard of omitting proofs, only a small fraction of the math literature has been formalized.  Until this is done, the scope of ITP will be limited.  Second, all of the ITP languages are rather difficult to use, with training and practice times on the order of a year required to become even moderately fluent \cite{}.    This contrasts with tools like computer algebra which can be profitably used after a few days of study.
+Third, formalization is laborious.  The Lean mathlib library \cite{} 
+%has (at this writing) 588 contributors and 
+is growing at about 300K lines/year; taking into account that a formal proof is about 5 times as long as an informal proof this corresponds to the entire community of several hundred active contributors formalizing about one textbook every 2 months.  At present mathlib has fairly good coverage of the undergraduate math curriculum, but at this rate it will take many years to formalize the prerequisites for research level topics in differential geometry, PDE, probability theory and so on.  Thus, at present, the answer to the question we raised on the practicality of formalizing constructive QFT is, probably not.
+
+However, this situation is rapidly improving.  Automated theorem proving technologies such as the ``sledgehammer'', \SH{and interactive Lean MCP protocols} technique \cite{} have made steady progress.  And, of potentially far greater import, one can apply artificial intelligence to the problem, and benefit from the amazing recent progress in AI.   This direction, sometimes
+called AITP, has been actively pursued since around 2015 \cite{}, and is now starting to bear significant fruit.
+Many experts believe this direction is starting to  take off, for example DARPA's expMath initiative sets as a goal the speedup of ITP formalization by a factor of 100 in the next few years \cite{}.  At this rate, even the present Lean community could formalize 600 textbooks/year and rapidly bring much of math and physics into the scope of ITP.
+And if the techniques become easy to learn, one can foresee widespread adoption.
+
+There are several AITP paradigms.  One is to think of the process of developing a proof as like a game of solitaire, and to use AI methods for game playing \cite{}, most notably reinforcement learning as famously demonstrated by AlphaGo and AlphaZero.  AlphaProof is a recent example \cite{}.
+Another paradigm is to think of formalization as a form of language translation, and to automate it -- autoformalization \cite{} -- using AI methods for language translation.  This makes contact with the remarkable development of large language models (LLMs) \cite{}, which have revolutionized computational linguistics, and seem to be in the process of revolutionizing computer programming and many of the other tasks which lie at the heart of computing.  LLMs have remarkable problem solving and reasoning abilities and are advancing rapidly, and there are projections that ``artificial general intelligence'' (an ill-defined term) will be achieved soon.  Some AI researchers believe that AITP will be a central part of this.  One argument is that the most successful AI technologies are statistical and destined to make errors (at least occasionally), so to make long correct chains of argument they must be coupled to a verification engine such as an ITP system.
+
+We leave further discussion and speculation for other venues, but the point we draw from this is that ITP technology is advancing quickly and it is reasonable to expect the problems of practical difficulty and insufficient libraries to be largely solved over the next few years (the first author has consistently predicted this by 2030 in many talks as far back as 2019 \cite{}).  We will report below on our experience using the existing tools for theorem proving, and we do see rapid progress: our ability to do ITP with mid-2025 tools is far greater than it was a year ago.
+It seems entirely possible that, over the coming years, AI will so much enhance our abilities (or even achieve superhuman abilities) that the advantages of rigor and formalization will far outweigh the remaining disadvantages.  Thus we believe that yes, theoretical physicists should be excited about ITP.
+
+\subsection{Ambitious goals for a QFT formalization project}
+
+We are formal theorists and as such our focus on QFT is a natural one.  Some significant goals 
+for which these methods would be suitable are:
+\begin{itemize}
+    \item Define the space of 2d QFTs which are used in string theory, and prove that some particularly important examples exist, in particular the $(2,2)$ gauged linear sigma models.  Math constructions of $d=2$ nonsupersymmetric QFTs include \cite{}.  It is generally stated that fermionic theories are easier to construct than bosonic \cite{},
+    because they do not suffer from the large field problem, so susy QFT should be constructible.
+    \item Use these results to prove some formulation of mirror symmetry, making the original Greene-Plesser argument rigorous.
+    \item Define 4d Yang-Mills theory and its $\cN=1,2,4$ supersymmetric analogs (SYM).  While proving that these exist
+    as QFTs is beyond present-day mathematics, one could hope to show that if they exist, then known physics results such as perturbative and instanton calculations emerge as limits of exact QFT observables in the ways we expect.
+    \item Formalize Nekrasov's computation of the $\cN=2$ Seiberg-Witten prepotential in terms of matrix integrals
+    and show that it is the correct prepotential of $\cN=2$ SYM (since we cannot construct this QFT, we might allow additional hypotheses about it to rule out terms which do not appear in Nekrasov's computation).
+    \item Formalize the maximal supergravities in $d=10,11$ and their compactification on spheres, as classical PDEs with physics generalizations such as anticommuting variables, and prove simple consequences of supersymmetry such as BPS arguments.
+    \item Formalize the Witten-style computation of boundary observables in supergravity on $AdS_p\times S^q$.
+    \item Combine these results to formally state Maldacena's conjectured duality between the large $N$
+    limit of $\cN=4$ SYM and supergravity on  $AdS_5\times S^5$.
+\end{itemize}
+Of course, these are very ambitious goals. We believe that they are achievable in principle with our present day understanding of mathematical physics, but are far out of reach due to the vast amount of work they require.
+We are optimistic that the development of AI and theorem proving could bring them within range.
+
+\SH{ Some additional goals related to major fields of interest at the time of writing this include: Defining string theory non-perturbatively, formalizing near extremal Black holes have $AdS_2 \times S_{d-2}$ geometry beyond \cite{Upamanyu Moitra, Sandip P. Trivedi, V. Vishal}, formalizing that adding observers of a specific type turn you from a type III von Neumann algebra to a type II vN algebra and conjecturally that adding a finite lived observer reduces our type II algebra to a type I factor, formalizing that the dimension of a closed Hilbert space = 1 }
+
+\subsection{Nearer term goals}
+\SH{Our near term goals: prove free theory satisfies OS, and reconstruction theorem}
+
+Even granting the optimistic projections, it will be a while before the goals listed above come within reach.  First, we must formalize some definitions of QFT and supergravity along with prerequisites such as the space-time symmetry and supersymmetry algebras and groups.  Classic results of axiomatic QFT, such as the CPT and spin-statistics theorems, and the reconstruction theorems which relate QFT's defined in different axiom systems, would be another early target.
+
+Axiomatic and constructive QFT have been made rigorous in more than one way.
+The Wightman axioms define QFT as a quantum mechanics with operators acting on a Hilbert space.
+Another choice is to define Euclidean QFT (the theory
+in ``imaginary time'') using the Osterwalder-Schrader axioms. 
+This is the choice used in most mathematical work, largely because integrals over a positive
+probability measure are better controlled than the oscillatory integrals of the real time path integral.
+There are other important axiom systems, for example Costello's ``factorization algebra'' \cite{}.
+The Euclidean CFT axioms are also very important.
+
+
+The first milestone we will discuss in this work is to formalize a broad range of QFTs in at least two axiom systems,
+We then want to prove the reconstruction theorems which, given a QFT in one axiom system, produce a unique
+QFT in another axioms system.  The case of starting with O-S and getting Wightman and HK is discussed in 
+chapter 19 of Glimm and Jaffe.  [add more references]
+This goal is challenging as many prerequisites are missing.  But it would be a solid foundation
+for future work.
+
+Where to start?  We will spell out a road map below, but let us make some general comments.
+First, there are many topics in physics which have been treated rigorously and are ready to formalize.  Some, such as group theory, are of such central importance that the rigorous theory is well developed.   When there are differences in how mathematicians and physicists treat these topics, we suggest that in the absence of good reasons not to, we follow the mathematicians' lead, to avoid unnecessary duplication of conventions and effort.  
+Topics we need include functional analysis, group theory, operators on Hilbert space, ...
+
+Second, a lot of the theoretical physics literature, while not itself making claims to rigor, could (with enough work) be combined with existing mathematics to prove rigorous theorems.  The basic example for QFT is a calculation in perturbation theory.  Perturbation theory avoids much of the hard analysis required to prove that a QFT exists and replaces it with algebra (the structures in the diagrammatic expansion); the remaining analysis is of finite dimensional integration over a very restricted class of integrands \cite{}.  Renormalized perturbation theory for gauge field theories has already been rigorously formulated by Costello and others \cite{}.  While at present the work required to  make perturbative results rigorous would generally not be repaid by the value of doing it, making this easy to do is a good example of a realistic goal for near term work.
+
+One can imagine taking existing software to evaluate Feynman diagrams such as the Mathematica package FeynCalc \cite{},
+and adding code to output along with a computation, a formal mathematical statement
+of what was computed.  With more work, it might output the Lean proof of the statement.  In computer science terminology this is a ``certificate'' of the validity of the computation.  This idea is of course not restricted to computing Feynman diagrams, essentially any symbolic or numerical software could in principle be augmented to produce formal statements and certificates.  Proposing formats for such statements and certificates which would make them usable in larger proofs, and implementing them, are important topics for future work.
+
+\subsection{Methods to achieve our goals}
+
+
+We have many choices to make:
+\begin{itemize}
+    \item What existing libraries do we use?  In particular do we use PhysLean ?
+    \item Do we start with simpler problems, such as quantum mechanics of particles.
+    \item Which versions of the various axioms systems to use.
+    \item Do we stick to the bare bones axioms or do we add structure which will be useful for other work.
+    For example, much constructive work starts from a lattice QFT.  It is possible to formulate the definitions
+    in a way that covers both continuum and lattice formulations, for example a scalar field could live in an
+    abstract space of functions which is later specified to be some class of functions on $\IR^D$ (or a more
+    general manifold) or functions on a finite space.
+    \item Do we look ahead to other constructive developments such as those based on stochastic quantization?
+    \item Do we make explicit definitions of the free scalar field?  Free fermions?
+    \item Whatever we do, we will need lots of prerequisites which are not in the existing libraries, we will need to make
+    provisional definitions and add theorems with ``sorry.''
+\end{itemize}
+
+After these high level choices, we need to make more detailed choices:
+\begin{itemize}
+    \item For each mathematical prerequisite not already in mathlib, we should propose the basic structure of
+    definitions and representative textbooks and notes which state the essential content.
+    \item Level of generality.  For example, most QFTs make sense with a wide variety of choices of manifold for space-time.
+    But, most of the issues are present for Euclidean space-time, this is usually the case of primary interest,
+    and we gain significant simplifications by restricting to this case.
+    Still we should try to faciliate the later generalization, how do we do this?
+\end{itemize}
+
+\section{Axiom systems for QFT}
+
+\SH{Review them, and list specific axioms for the ones we focus on. Explain why we landed on OS. }
+
+A QFT can be defined in several ways.  In each, one gives a basic set of observables which suffice to completely specify the theory.
+These must satisfy a short list of axioms, the consistency conditions which are the
+necessary and sufficient conditions for the observables to actually come from a QFT.
+One can then prove reconstruction theorems which given the QFT data of one approach, show that the data in another approach
+is uniquely determined and satisfies the axioms of that approach.
+Let us enumerate the main approaches.
+
+The most direct approach is to formulate the QFT in the usual language of quantum mechanics (QM), with a Hilbert space, a Hamiltonian
+and field operators.  These must satisfy the Wightman axioms, which express Lorentz invariance, microscopic causality
+(field operators at space-like separations commute or anticommute), and the existence of a vacuum state.
+Physically this is the original definition of QFT; the other approaches are justified by their relation to it.
+Assuming these axioms, one can rigorously prove the CPT theorem and the spin-statistics theorem \S \ref{spintheorem}.
+
+Given field operators and a vacuum state, one can define the vacuum expectation value of a product of $n$ operators,
+the Wightman distributions on $M^n$.  The Wightman reconstruction theorem shows that this data is equivalent --
+it uniquely determines the original QM formulation \ref{wightmantheorem}. \MRD{are the axioms these satisfy also called Wightman axioms?}
+As will be familiar from QFT textbooks, these can be analytically continued to complex time 
+and thus to Euclidean spacetime.  These are the Schwinger functions, which are nonsingular on n-tuples of points in $M^d$ which are pairwise distinct \cite{1 }.
+They are the defining observables of Euclidean QFT, and can also be summarized in a generating function Eq. (\ref{eq:genfn}).
+
+The Schwinger functions, or equivalently their generating function, must satisfy the Osterwalder-Schrader (OS) Axioms.
+We will state these in \S \ref{OSaxioms}.  Their primary justification is the Osterwalder-Schrader reconstruction theorem \cite{OS1973}.
+This states that Euclidean Schwinger functions that satisfy the OS axioms can be analytically continued to Lorentzian Wightman distributions 
+which satisfy Wightman axioms and thus define a QFT in Minkowski spacetime. 
+
+There are other approaches: the Haag-Kastler axioms which govern algebrai QFT, CFT approaches using operator product expansions or sewing axioms,
+factorization algebras, and more.  While each has its own advantages, it seems fair to say that most mathematical work on QFT defines it in terms of
+Euclidean correlation functions and the OS axioms.  One of the main reasons for this is that it turns the problem of defining a QFT into one of 
+defining a functional measure (a path integral), which in many interesting cases (scalar fields with a real action, pure Yang-Mills theory) is a
+probability measure (real and non-negative), and this has many advantages.  The real time path integral with its
+indefinite signed or complex measure generally involves drastic cancellations which are difficult for both mathematicians and physicists to deal with.
+This is not the case for probability measures, and thus their mathematical theory is much more developed.
+
+Thus, we set ourselves the goal of formalizing the OS axioms, in the slightly modified form given in Glimm and Jaffe \cite{GJ1987Axioms}.
+To show that this is correctly done, we also formalize and prove some basic results which use them.
+For example, we show that the free scalar field satisfies the OS axioms.  A milestone would be to go on and prove the OS reconstruction theorem.
+We do this assuming some mathematical prerequisites. \MRD{The required theorems in complex analysis may be hard to prove.}
+
+
+\iffalse
+We choose the second approach due to the broad use of path integrals in QFT to compute correlation functions. 
+The three main approaches to axiomatizing QFT from the path integral perspective are via the Wightman Axioms \ref{wightmanaxioms}, Osterwalder-Schrader (OS) Axioms \ref{OSaxioms}, and Haag-Kastler axioms. Both the Wightman and Haag-Kastler axioms formulate a QFT in Minkowski spacetime, the first in terms of correlation functions and the second in terms of $C^*$ operator algebras.
+The OS axioms axiomatize QFT in Euclidean space (complex time). For reasons detailed below we will show that the OS axioms are easier to formalize in Lean.. 
+
+Schwinger functions, also known as Euclidean correlation functions, are Wightman distributions that can be analytically continued to analytic functions in Euclidean space with the domain restricted to n-tuples in $R^d$ are pairwise distinct \cite{1 }. The properties of Schwinger functions are known as the OS axioms which describe Euclidean Green's functions. The 
+
+The Wightman axioms \ref{wightmanaxioms} explain how the algebra of observables in a QFT in Minkowski spacetime are generated by quantum fields. The Wightman reconstruction theorem \ref{wightmantheorem} states that knowledge of all correlation functions of all of the fields in the vacuum is equivalent to knowledge of the quantum fields. 
+\fi
+
+
+
+
+\section{Road map}
+
+Give the basic definitions in Lean and the statements of the axioms and theorems we intend to prove.
+Then list prerequisites and auxiliary theorems we will need.
+
+[ we might eventually move all the detailed discussions to appendices ]
+
+\subsection{Euclidean correlations and generating function}
+
+The basic definition is a probability measure over a space of fields (scalar functions
+on space-time).
+% variable (x : RSpaceTime) (φ : FieldSpace)
+\begin{lstlisting}
+def STDimension := 4
+abbrev RSpaceTime := EuclideanSpace ℝ (Fin STDimension)
+abbrev μ : Measure RSpaceTime := volume
+abbrev FieldSpace := Lp (p := 2) (μ := μ) ℝ
+variable (dμ : ProbabilityMeasure FieldSpace)
+\end{lstlisting}
+
+The generating function of correlation functions is a standard definition both in physics
+and in probability theory (where it is called the characteristic function):
+\begin{lstlisting}
+abbrev TestFunction : Type := SchwartzMap RSpaceTime ℝ
+def pairingCLM (J : TestFunction) : FieldSpace →L[ℝ] ℝ :=
+  (innerSL ℝ (E := FieldSpace))
+    (J.toLp (p := 2) (μ := μ))
+def generatingFunctional (J : TestFunction) : ℂ :=
+  charFunDual dμ (pairingCLM J)
+\end{lstlisting}
+
+The necessary and sufficient conditions on the generating functional for it to be
+the characteristic functional of a probability measure  are given by the Bochner-Minlos theorem
+(see Glimm and Jaffe thm 3.4.2).
+
+\subsection{Osterwalder-Schrader Axioms} \label{OSaxioms}
+
+Osterwalder and Schrader \cite{OS1973}  provided necessary and sufficient conditions under which the Euclidean Green's functions have analytic continuations whose values define a unique set of Wightman distributions. They propose 5 conditions: Temperedness, Euclidean Covariance, Positivity, Symmetry, and the Cluster property. These conditions are slightly modified in \cite{GJ1987Axioms} and are repacked as: Analyticity, Regularity, Euclidean Invariance, Reflection Positivity, and Ergodicity. We use the Glimm and Jaffe statement of the OS axioms.  
+
+We define the generating functional on $D(R^d)$, the space of all smooth functions with compact support, 
+\begin{equation} \label{eq:genfn}
+    S(f):= \int e^{i \phi(f) } d \mu
+\end{equation}
+
+as the inverse Fourier transform of a Borel probability measure, $d\mu$ on $D'(R^d)$, where  $D'(R^d)$ is the space of distributions that is dual to the space of all smooth functions with compact support, $D(R^d)= C_0^{\infty} (R^d)$. 
+\begin{itemize}
+    \item OS0: Analyticity- The functional $S (f) $ is analytic. An analytic function is a function that is locally given by a converging power series. For every finite set of test functions $f \in D({R^d})$,  where we have a finite set of test functions $f_j$ with $j= 1,2, \ldots, N, $ and complex numbers $Z = \{ z_1, \ldots, z_n\} \in C^n$, the function 
+
+\begin{equation}
+    z \rightarrow S (\sum_{j=1}^n  z_j f_j )
+\end{equation}
+
+is entire on $C^N$. An entire function is a complex valued function of one complex variable that is defined to be holomorphic, complex-differentiable/ complex-analytic, on the entire complex plane. Each test function $f$ is $C^{\infty}$, meaning every partial derivative of every order exists and is a bounded function. 
+
+    
+    \item OS1: Regularity-
+There exist a real number \(p\) with \(1\le p\le 2\) and a constant \(c>0\) such that, for every test function \(f\in\mathcal{C}^{\infty}_{\mathrm c}(\mathbb{R}^{d})\), where $C_c^{\infty} (U)$ is the set of all real or complex-valued functions. Said more simply for some p and c that meet the above conditions the below inequality holds for all test functions f
+\begin{equation}\label{eq:OS1}
+\bigl|S\{f\}\bigr|
+\;\le\;
+\exp\!\Bigl[c\bigl(\|f\|_{L^{1}}+\|f\|_{L^{p}}^p\bigr)\Bigr].
+\tag{6.1.5}
+\end{equation}
+
+where $L_1$ is and $L_p$ are Lebesgue space of p-integrable functions. $L^p(R^d)$ is the banach space of p-integrable functions. The definition for $1 \leq p < \infty$ 
+\begin{equation}
+    || f ||_{L^p}= (\int_{R^d} |f(x)|^p dx)^{1/p} \qquad L^p(R^d)= \{f: |f||_{L^p}| < \infty \}
+\end{equation}
+If \(p=2\), we further assume that the two‑point Schwinger function
+\[
+S_{2}(x,y)\;:=\;
+\left.\frac{\partial^{2}}{\partial z_{1}\partial z_{2}}\,
+S\!\bigl\{\,z_{1}\delta_{x}+z_{2}\delta_{y}\bigr\}\right|_{z_{1}=z_{2}=0},
+\]
+is locally integrable in $(x,y)$ and is defined in our generating functional, $S(f) = \int e^{i \phi(f)} d \mu$. Let $d \mu$ be a probability measure on $D'(R^d)$ which satisfies OS0. Then the measure $d\mu$ has moments of all order. The nth-moment has a density $S_n(x_1, \ldots, x_n) \in D'(R^{nd})$ which means 
+\begin{equation}
+    \int \phi(f_1) \ldots \phi(f_n) d \mu = \int S_{n}(x_1, \ldots x_n) \prod_{i=1}^n f_i (x_i) dx 
+\end{equation}
+is locally integrable in \((x,y)\in\mathbb{R}^{d}\times\mathbb{R}^{d}\).Note that for $p=2$ then $||f||_{L^2}$ gives us a hilbert space norm which is useful for Fourier analysis and two-point functions. 
+
+    \item OS2: Euclidean Invariance- $S(f)$ is invariant under Euclidean symmetries (translations, rotations and reflections) E of $R^d$.
+    \begin{equation}
+        S(f)= S(Ef)
+    \end{equation}
+
+    or Equivalently, $d\mu$ is Euclidean invariant such that $d\mu = E d\mu$
+
+    \item OS3: Reflection Positivity- Define exponential functions on $D'(R^d)$ as
+    \begin{equation}
+         A(\phi)= \sum_{j=1}^N c_j \exp (\phi(f_j)), c_j \in C, f_j \in D(R^d))
+    \end{equation}
+
+     Now let $A$ be the set of all of these functionals. 
+
+      \begin{equation}
+        A = \{ A(\phi)= \sum_{j=1}^N c_j \exp (\phi(f_i)), c_j \in C, f_j \in D)\}.
+    \end{equation}
+     
+     Then by axiom OS0 this is a subset of $L_2(d \mu)$. Moreover, the Euclidean symmetries act on $D'(R^d)$, so that $E \phi(f) = \phi(Ef)$, which defines a unitary condition action on the $L_2(d \mu)$. 
+
+     Finally, let $A^+ \subset  A $ be the set of functionals where $f_j \in C_0(R_{+}^d)$ and $C_0(R_{+}^d)$ is the space of continuous functions that vanish at infinity in the positive half space. $R_+^d := \{ (t, \vec{x}): t > 0$ so now if we let $\theta: (t , \vec{x}) \rightarrow (-t, \vec{x})$ be the time reflection. Then the content of this axiom states that the inner-product inequality is satisfied:  
+     \begin{equation}
+         < \theta A, A >_{L_2(d \mu)}\geq 0 
+     \end{equation}
+     
+    \item OS4: Ergodicity- The time translation subgroup $T(t)$ acts ergotically, meaning it upholds the uniqueness of the vacuum, on the measure $D'(R^d), d\mu$. The time translation subgroup in Euclidean space is the one parameter group of pure time shifts 
+    \begin{equation}
+        T(t) : x = (t, \vec{x})\rightarrow (t+ t', \vec{x}) \qquad t'\in R 
+    \end{equation}
+so that $T(t+s)= T(t) T(s)$. 
+
+This is equivalent to saying that for all $L_{1}$ functions $A(\phi)$, 
+
+\begin{equation}
+    \lim_{t \rightarrow \infty} {1 \over t} T(s) A(\phi) T(s)^{-1} ds = \int A (\phi) d \mu(\phi)
+\end{equation}
+
+\end{itemize}
+
+\subsection{Rewritting of the Axioms to be AI friendly}
+
+Global definitions to carry through autoformalization:
+
+define $R^d$ in Lean as: abbrev RSpaceTime := EuclideanSpace R (Fin STDimension)
+
+$R^d = R \times R^{d-1}$
+
+$R_+^d:= \{(t,\vec{x}| t> 0\}$
+
+$C_0(R_+^d):= \{ f \in C(R_+^d)| f(z) \rightarrow 0 |z \rightarrow 0|$
+
+$D(R^d)= C_0^{\infty} (R^d)$ 
+
+$D'(R^d)$: space of distributions dual to $D(R^d)$
+
+$d \mu (\phi)= d \mu$= Borel probability measure
+
+$S(f):= \int e^{i \phi(f)} d \mu$: inverse Fourier transform of $d \mu$. 
+
+$\phi(f) = < \phi, f>= \int_{R^d }\phi(x) f(x) dx$
+
+$f$= test functions $\in D(R^d)$
+
+$S_n(x_1 \ldots x_n) \in D'(R^{nd})$
+
+For $1 \leq p < \infty$ then
+\begin{equation}
+    || f ||_{L^p}= (\int_{R^d} |f(x)|^p dx)^{1/p} \qquad L^p(R^d)= \{f: |f||_{L^p}| < \infty \}
+\end{equation}
+
+ **Now formalize Axioms OS0-OS4**
+
+OS0: Analyticity-  Given $S (f) $ with $f = \sum_{j=1}^n z_j f_j \in D({R^d})$ with $j= 1,2, \ldots, N, $ and complex numbers $z= \{ z_1, \ldots, z_n\} \in C^n$, the function 
+
+\begin{equation}
+    z \rightarrow S (\sum_{j=1}^n  z_j f_j )
+\end{equation}
+
+is a complex-valued function of one complex variable that is defined to be holomorphic on $C^n$ 
+
+OS1:
+There exist a real number \(p\) with \(1\le p\le 2\) and a constant \(c>0\) such that, for every test function \(f\in\mathcal{C}^{\infty}_{\mathrm c}(\mathbb{R}^{d})\).Using a p and c that satisfy the above then this inequality holds for all test functions f:
+\begin{equation}\label{eq:OS1}
+\bigl|S\{f\}\bigr|
+\;\le\;
+\exp\!\Bigl[c\bigl(\|f\|_{L^{1}}+\|f\|_{L^{p}}^p\bigr)\Bigr].
+\tag{6.1.5}
+\end{equation}
+
+where $L_p$ are Lebesgue space of p-integrable functions.
+If \(p=2\), we assume $S_n(x,y)$ where $n=2$ is locally integrable in $(x,y)$.
+
+ O2: $S(f)= S(Ef)$ where E is the group of Euclidean Symmetries
+
+ O3: Define exponential functions on $D'(R^d)$ as
+    \begin{equation}
+         A(\phi)= \sum_{j=1}^N c_j \exp (\phi(f_j)), c_j \in C, f_j \in D(R^d))
+    \end{equation}
+
+Define a set $A$ be the set of all of these functionals
+      \begin{equation}
+        A = \{ A(\phi)= \sum_{j=1}^N c_j \exp (\phi(f_i)), c_j \in C, f_j \in D)\}.
+    \end{equation}
+     
+
+   Define $A^+ \subset  A $ be the set of functionals where $f_j \in C_0(R_{+}^d)$ and $C_0(R_{+}^d)$ .
+   
+   Define the time reflection as $\theta: (t , \vec{x}) \rightarrow (-t, \vec{x})$. 
+   
+   Given the above definitions the inner-product inequality is satisfied:  
+     \begin{equation}
+         < \theta A, A >_{L_2(d \mu)}:= \int \overline{A(\theta \phi)} A(\phi) d \mu(\phi)\geq 0 
+     \end{equation}
+     
+   OS4: 
+   Define The time translation subgroup $T(t)$ as 
+    \begin{equation}
+        T(t) : x = (t, \vec{x})\rightarrow (t+ t', \vec{x}) \qquad t'\in R 
+    \end{equation}
+
+
+Given, The definition of $T(t)$, $L_1$ and $A(\phi)$ then 
+
+\begin{equation}
+    \lim_{t \rightarrow \infty} {1 \over t} T(s) A(\phi) T(s)^{-1} ds = \int A (\phi) d \mu(\phi)
+\end{equation}
+
+ Look at 19.7 and spell out the uniqueness of the vaccuum section. 
+
+
+
+\subsection{Extensions of Osterwalder-Schrader}
+
+The original OS axioms and most of the variations on them cover correlation functions of scalar operators which
+are Euclidean invariant.  We need to extend them to cover supersymmetric theories.
+
+Multiple operators.
+
+Multiple vacua.
+
+Non-scalar fields.
+
+Supersymmetry algebras.
+
+Conformal symmetry.
+
+\subsection{Wightman axioms}\label{wightmanaxioms}
+
+The Wightman axioms are an attempt to formalize the notation of a relativistic QFT in Minksowski spacetime. Quantum fields are definied as operator-valued distributions acting on some Hilbert space with a few additional conditions. The Wightman axioms are stated below using the Axioms of \cite{https://ncatlab.org/nlab/show/Wightman+axioms}
+
+\begin{enumerate}
+    \item There is a physical Hilbert space, $\mathcal{H}$ in which a unitary representation $U(a, \Lambda)$ of the Poincare group,  $P_0$,  acts
+    \item The spectrum of the energy-momentum operator P is concentrated in the closer upper lightcone, $V^+$. 
+    \item In the $\mathcal{H}$ there exists a unique unit vector, the vacuum state denoted $|\Omega>$, that is invariant w.r.t the space-time translations $U(a,1)$.
+    \item The components $\phi_i$ of the quantum field $ \phi$ are operator-valued distributions , $\phi_i(x)$ over the Schwartz space S(M) with domain definition D which is common to all of the operators and is dense in $\mathcal{H}$. The vacuum state is contain in D and D is taken into itself under the action of $\phi(f)$ and the unitary representation, $U(a\Lambda)$. An operator-valued distribution is a distribution with values in a space of linear operators. 
+    \item \begin{equation}
+        U(a, \Lambda) \phi_i(x) U^{-1}(a, \Lambda)= \sum_j V_{ij} (\Lambda^{-1}) \phi_j(\Lambda x + a)
+    \end{equation}
+    where $V_{ij}(\Lambda)$ is a cmplex or real finite-dimensional matrix representation of $SL(2,C)$
+    \item Microcausality: local field operators, $\phi_i(x)$ and $\phi_j(y)$ commute at space-like seperation. 
+    \item The set $D_0$ of finite linear combinations of vectors of the form 
+    \begin{equation}
+        \phi_i(f_1) \ldots \phi_n(f_n) |\Omega>
+    \end{equation}
+    is dense in $\mathcal{H}$. 
+\end{enumerate}
+
+A Wightman QFT can be fully characterized by Wightman functions, 
+
+\begin{equation}
+    < \Omega | \phi(x_1) 
+    \ldots \phi(x_n)| \Omega > 
+\end{equation}
+
+where $\Omega$ is the Poincare invariant vacuum vector. This is the statement of the Wightman Reconstuction Theorem. 
+\MRD{What conditions do the Wightman functions have to satisfy?  Are these conditions also called Wightman axioms?}
+
+\SH{Wightman fields are operator-valued distributions satisfying the Wightman Axioms. Wightman functions are the correlation functions of Wightman fields}
+
+\subsection{Supplementary definitions}
+
+The relation between the generating function and the $n$-point correlation function,
+\be
+S_n(x_1,\ldots,x_n) \;:=\; (-i)^n \;
+\left.\frac{\partial^{n}}{\partial z_{1}\ldots\partial z_{n}}\,
+S\!\bigl\{\,\sum_{i=1}^n z_{i}\delta_{x_i}\bigr\}\right|_{\forall i, z_{i}=0}.
+\ee
+
+\noindent
+The connected correlation functions 
+\be
+C_n(x_1,\ldots,x_n) \;:=\; (-i)^n \;
+\left.\frac{\partial^{n}}{\partial z_{1}\ldots\partial z_{n}}\,
+\log S\!\bigl\{\,\sum_{i=1}^n z_{i}\delta_{x_i}\bigr\}\right|_{\forall i, z_{i}=0}.
+\ee
+and their Fourier transforms
+\be
+\tilde C_n(p_1,\ldots,p_{n-1}) \delta\left(\sum_{i=1}^n p_i \right) \;:=\; \int \prod_{i=1}^n d^Dx_i \, e^{\sum_{i=1}^n p_i\cdot x^i} \, C_n(x_1,\ldots,x_n)  
+\ee
+
+\noindent
+The spectral representation of the connected two-point function:
+\be
+\tilde C_2(p) = \int \frac{d\rho(m^2)}{p^2+m^2}
+\ee
+where $d\rho(m^2)$ is a positive measure of at most polynomial increase.  
+In GJ thm 6.2.4 additional conditions are stated for $d\rho(m^2)$ in spacetime dimension $d\le 2$,
+these are presumably required for the integrals to converge.
+
+The mass gap $\Delta$ is probably best defined as
+\be
+\Delta^2 = \inf \mbox{support} \, d\rho(m^2) .
+\ee
+An alternate definition is
+\be \label{eq:massgap}
+\Delta \;:=\; \lim_{R\rightarrow\infty} \inf_{|x|>R} \frac{-\log |C_2(0,x)|}{ |x| }
+% \mathbb{E}[ \phi(x)\, \phi(y)] - \mathbb{E}[ W(L_x) ]\;\mathbb{E}[ W(L_y) ] \le e^{-\Delta |x-y|}.
+\ee
+Maybe these are the same (?).
+
+\subsection{Free fields are QFTs}
+
+This would be a good place to start.
+
+Prove theorem 6.2.2 Gaussian in Glimm and Jaffe
+
+Free fields are the most simple example of a QFT fulfilling the Wightman Axioms and thus the Oserwalder-Schrader axioms. 
+
+\section{Things we built along the way}
+
+Greens functions:
+
+Given a scalar field theory with a single field $\phi(x) $ and a vacuum state $| \Omega>$ at every x in spacetime, the n-point correlation function is the vacuum expectation valye of the time-ordered products of n field operators in the Heisenberg picture, 
+\begin{equation}
+    G_n(x_1 \ldots x_n)= < \Omega | T \{ \phi(x_1) \ldots \phi(x_n) | \Omega>
+\end{equation}
+
+where $T\{\}$ is the time-ordering operator. We can transform the fields and states into the interaction ficture as 
+
+\begin{equation}
+    G_n(x_1 \ldots x_n)={< \Omega|T \{ \phi(x_1) \ldots \phi(x_n) e^{i S[\phi]}
+    \} |\Omega> \over <0| e^{i S[\phi]}|0>}
+\end{equation}
+
+where $|0>$ is the ground state of the free theory and $S[\phi]$ is the action. 
+
+\subsection{Reconstruction theorems}
+
+\subsection{OS Reconstuction theorem Theorem}\label{OStheorems}
+
+The Osterwalder-Schrader reconstruction theorem  theorem states the conditions for which correlation functions in Euclidean spacetime must satisfy in order to be equivalent to the correlation functions of a Wightman QFT on Minkowski spacetime. The OS theorem states and proves the conditions with which wick rotation is a well-defined isomorphism of QFTs on Minkowski and Euclidean spacetimes. 
+
+6.1.5 GLimm and Jaffe: For every measure satisfying the axioms stated by the OS axioms there is a Wightman field such that the Schwinger and Wightman functions are related by: 
+\begin{equation}
+    \int \phi_E (x_1, t_1) \ldots \phi_E(x_n, t_n)= < \Omega| \phi_M(x_1, \tau) \ldots \phi_M(x_n, \tau) | \Omega> 
+\end{equation}
+
+where $\phi_E$ is a Schwinger function, $\phi_M$ is a Wightman field, and $\Omega$ is the vacuum vector of the Wightman fields. Said anther way, Schwinger functions at non-coincident points satisfying the OS conditions recovers Wightman functions satisfying the Wightman axioms.
+
+ 
+
+Reconstruction of Quantum Mechanics: Let $d \mu$ be a probability measure on $D'$. Assume reflection positivity, reflection and time translation invariance. Then for $0 \leq t , T(t) $ that satisfies 
+\begin{equation}
+S: D(s) \cup 
+\end{equation}
+
+Definitions: $\mathcal{E}=$ Euclidean (pre-) Hilbert space built from test-function smeared fields before imposing reflection positivity. Inner product $< .,.>_{\mathcal{E}}$. $\mathcal{E}_+ \subset \mathcal{E}=$ the vectors whose teat functions have support in positive Euclidean time, $x_0 > 0$. $\mathcal{N} \subset \mathcal{E}_+$ is the null space of the semi-definition form of $< \theta A, B> _{\mathcal{E}}$, where two vectors differing by something in the null space are declared equivalent. $\mathcal{H} := \bar{ \mathcal{E}_{+}/\mathcal{N}}$ is the physical Hilbert space obtained by quotienting $\mathcal{E}_+$ by $\mathcal{N}$ and completing. Inner product $< . , . >_{\mathcal{H}}$. S is a linear operator on $\mathcal{E}$, whose domain is $D(S)$.$\vec{S}$ is the operator induced by S on equivalence classes provided that induction is well-defined. 
+
+If we want to guarantee 
+
+\begin{equation}
+    \begin{split}
+        < \vec{A}, \vec{B >}_{\mathcal{H}}= < \theta A, B>_{\mathcal{E}}
+        \\
+        < \hat{A}, \hat{S} \hat{B}>_{\mathcal{H}}= < \theta A, SB>_{\mathcal{E}}.
+    \end{split}
+\end{equation}
+
+
+then $\hat{S}$ must be defined on equivalence classes. In other words we are requiring that, 
+
+\begin{equation}\label{6113}
+    S: D(s) \cap  \mathcal{E}_+ \rightarrow \qquad \mathcal{E_{+}, S: D(S) } \mathcal{N} \rightarrow \mathcal{N}
+\end{equation}
+
+Assuming that $T(t)$ satisfies \eqref{6113} and and $\hat{T}(t) = e^{-t H}$ . In this case $0 \leq H = H^*$ and for $\Omega= \hat{1}$ then $H \Omega = 0 $. Simply put H is a positive definite self-adjoint operator with ground state $\Omega$. 
+
+\subsection{Proof of Reconstruction Theorem}
+
+
+ \(T(t)\colon\mathcal{E}_{+}\to\mathcal{E}_{+}\).
+If \(A\in\mathcal{E}_{+}\), then by the unitarity of \(T\),
+
+\begin{equation}\label{ 6.1.14}
+    \begin{split}
+      \langle\theta T(t)A,\,T(t) A\rangle_{\mathcal {X}}
+   &=\langle T(-t)\theta A,\,T(t)A\rangle_{\mathcal{ X}}\notag\\
+   &=\langle\theta A,\,T(2t)A\rangle_{\mathcal{ X}}\notag\\
+  = &\le\langle\theta A,\,A\rangle_{\mathcal{ X}}^{1/2}
+        \langle\theta T(2t)AT(2t)A\rangle_{\mathcal{X}}^{1/2}=0,  
+    \end{split}
+\end{equation}
+
+
+by the Schwarz inequality for the form
+\begin{equation}
+    b (A, B) - < \theta A, B >_{L_2}= \int (\theta A)^- B d \mu = < \theta A, B>_\mathcal{E}
+\end{equation}
+
+where we have defined the bilinear form $b(A,B)$ on $\mathcal{E}_+ \times \mathcal{E}_+$
+Hence \(T(t)\colon\mathcal{E}_{+}\to\widehat{\mathcal{X}}\), and
+\(T(t)^{\wedge}\) is well defined.  
+For convenience set \(R(t):=\hat{T}(t)\).
+We verify four properties of \(R(t)\):
+
+\begin{itemize}
+    \item \emph{Semigroup law:} \(R(t)R(s)=R(t+s)\) for \(s,t\ge0\).
+\item \(R(t)\) is Hermitian.
+\item \(\lVert R(t)\rVert_{\mathcal X}\le1\) (contraction).
+\item \(R(t)\to I\) strongly as \(t\to0\). 
+\end{itemize}
+
+
+
+These say \(R(t)\) is a strongly continuous, self‑adjoint contraction
+semigroup, so \(R(t)=e^{-tH}\) for a positive self‑adjoint \(H\).
+Moreover \(T(t)\mathbf1=\mathbf1\); with \(\Omega=\widehat{\mathbf1}\) we have
+\(e^{-tH}\Omega=(T(t)\mathbf1)^{\wedge}=\Omega\), hence \(H\Omega=0\).
+
+Property (i) follows from the multiplication law for \(T(t)\):
+\[
+R(t)R(s)=\hat{(T(t)T(s))}=\hat{T}(t+s)=R(t+s).
+\]
+
+For \(A\in\mathcal{E}_{+}\),
+\[
+\langle R(t)\widehat{A},\,\widehat{A}\rangle_{\mathcal X}
+  =\langle\widehat{A},\,R(t)\widehat{A}\rangle_{\mathcal X},
+\]
+so \(R(t)\) is Hermitian, proving (ii).
+
+To prove (iii), apply the Schwarz inequality repeatedly.  For
+\(A\in\mathcal{E}_{+}\),
+\[
+\|R(t)\widehat{A}\|_{\mathcal X}
+  =\bigl\langle\widehat{A},\,R(2t)\widehat{A}\bigr\rangle_{\mathcal X}^{1/2}
+  \le\|\widehat{A}\|_{\mathcal X}^{1/2}\,
+      \|R(2t)\widehat{A}\|_{\mathcal X}^{1/2}.
+\]
+Iterating this argument \(n\) times gives
+\[
+\|R(t)\widehat{A}\|_{\mathcal X}
+  \le\|\widehat{A}\|_{\mathcal X}^{1-2^{-n}}\,
+      \|T(2^{n}t)A\|_{\mathcal X}^{2^{-n}}
+  \le\|\widehat{A}\|_{\mathcal X},
+\]
+because \(T(\tau)\) is unitary.  Density of the hatted vectors,$\hat{A}$ in Hilbert space $\mathcal{\chi}$ yields (iii).
+
+For (iv), notice that \(T(t)\) is strongly continuous on
+\(\mathcal{E}_{+}\) and \(\lVert R(t)\rVert\le1\); hence \(R(t)\) is
+strongly continuous on the dense set
+\(\{\widehat{A}\mid A\in\mathcal{E}_{+}\}\) and therefore on the whole
+Hilbert space \(\mathcal X\).  The proof is complete.
+
+
+
+
+
+
+\subsection{Wightman Reconstruction theorem} \label{wightmantheorem}
+\label{ss:wrt}
+
+\MRD{See also the version in \S \ref{s:wrt2}.}
+
+The vacuum expectation values, n-point functions, a theory that satisfy the Wightman axioms are all distributions of the form
+\begin{equation}
+    < \Omega | \phi_{i_1} (f_1) \ldots \phi_{i_n}(f_n) | \Omega> 
+\end{equation}
+
+In short, the Wightman reconstruction theorem states properties that a set of tempered distributions need to have to be the set of vacuum expectation values of a Wightman theory. 
+
+\subsection{Spin-Statistics Theorem}\label{spintheorem}
+
+If we take field to be localized in the sense of the Wightman axioms then the locality axiom of microcausality spacelike seperated field operators either commute or anti-commute. We definite ferminion and bosonic fields by their commutation relations. Two fermionic fields anticommute, two boson fields commute and a fermionic and bosonic field commute. 
+
+The spin-statistics theorem says that fields with integer spin are boson fields and fields with half integer spin are fermion spins, where the spin number $s$ comes from the representation of the Poincare group with $s= {n \over 2}, n \in N$. 
+
+
+\subsection{Conformal Field Theory}
+
+Probably not Segal as this focuses on general topologies etc. 
+
+
+\subsection{Prerequisites}
+Outline the prerequisites and auxiliary theorems we will need.
+
+\section{Large scale road map}
+
+This is a sizable project, even with AI help.
+The most important thing we could do to make it feasible is to divide it up into pieces
+which can be handled by different groups, either collaborators or semi-independently.
+Parts which could be split off include the definitions of space-time symmetry groups and Lie algebras,
+group representations, the same for internal symmetry, and many results on linear PDE such as
+properties of free Green's functions.  Some of this is already in PhysLean and needs to be checked.
+
+\subsection{Lean structures}
+
+An important part of the organization is the choice of top level Lean definitions: classes, structures and the like.
+We should make these as general as possible to allow for future improvements.
+
+We want a class which represents an abstract QFT with all of the data which (we believe as physicists) suffices to uniquely determine it,
+and then more concrete QFT classes which consist of the data of a QFT axiom system and proofs of the axioms.  These might also include ``weak QFTs,''
+data which does not satisfy all of the usual axioms.  This includes lattice or cutoff versions of the QFT, QFT with non-positive definite state space,
+CFT which does not satisfy exact OPE associativity, and so on.
+
+What is the data of a QFT?  The basic intuition is that there is a spacetime $M$ and a target space $X$, and the QFT is a path integral
+over maps from $M$ to $X$.  This needs to be extended to include fermions, gauge fields and eventually metric and higher spin degrees of freedom.
+We can define a notion of a generalized space $X$ in the spirit of a mathematical scheme or stack, a space which comes with a group action
+and derived spaces of fields.  Spacetime is also a manifold or orbifold with a metric and potentially other structure (frame bundles, spin structure {\it etc.}).
+All this should be built on the existing mathlib classes for Riemannian manifold, vector bundle and the like.
+It should then be the case that the fields live in a class of maps $M\rightarrow X$, perhaps to be called FieldMap or the like.
+
+We want to go on to supermanifolds $M$ and superfield versions of the maps.  We also want the definition of space-time to cover
+discrete (lattice) space-times.  Maybe we want to include more general cutoff theories but one could also argue that some cutoffs belong in the action.
+
+Then, we have the action.  In general this is a complex-valued functional on FieldMaps.  There are many standard examples such as the
+standard kinetic term determined by the metrics on $M$ and $X$.  The potential is a real-valued function on $X$.  There is the gauge field curvature
+and Yang-Mills functional.  These might all be constructed as integrals over a local Lagrangian which is derived from some generalization of function $X\rightarrow Y$.
+So, a Lagrangian is associated to a ``target space'' $\IR$ or $\IC$ which is an additive group.
+
+A full version of this is beyond the scope of this paper, but we can show how our scalar field theory example would be described in a general framework.
+
+\subsection{Physical hypotheses}
+
+Most QFTs have not been rigorously constructed, yet physicists have done a huge quantity of solid work on them.  How could we formalize this?
+
+One can certainly formalize conjectures and claims without proof, and these can be systematized.  
+This is standard practice in some fields of mathematics.  For example, in analytic number theory there are many conditional proofs which
+assume the Riemann hypothesis (and some which assume its negation).  Another style is illustrated by set theory, 
+in which one can propose a new axiom (such as the existence of an infinite cardinal with some property) and then work out its
+consequences.  If it does not lead to contradictions or other bad results, one then judges whether the new consequences allow
+proving interesting results or bear on other questions of interest. 
+
+An important concept in QFT is perturbation theory.  Given a QFT (fields and action), one can define a rigorous formal expansion
+in powers of the coupling constants.  One can then conjecture a relation between this and exact results, for example a precise statement
+that perturbation theory is asymptotic.  One can also conjecture nonperturbative properties such as the mass gap.  The question is, can such
+conjectures be the basis for an interesting formal proof?
+
+\section{Conclusions}
+
+\appendix
+
+\section{More about Lean}
+
+If we need it.
+
+Explanation of dependent type theory:
+This is like the type system in (say) C or Python, with the important difference that type definitions can have
+general dependence on parameters, which can be other types.  
+For example, the type ``vector'' naturally depends on two parameters, the base
+type (say reals or integers) and the dimension (a natural number).  While Python and C have vectors, the base type
+is restricted to a few types predefined in the language.  The templates of C++ are more general but still constrain
+the use of user defined types as parameters in other definitions.  The dependent type theory of Coq and Lean
+removes all of these restrictions.
+
+Lean is a theorem prover and programming language that enables correct, maintainable, and formally verified code. Lean was originally developed by Microsoft Research though now is being managed by the Lean Focused Research Organization (LFRO). 
+
+\subsection{Primitives}
+
+Terms and types are the primitives in Lean, where we have 3 fundamental types: Universes, functions and quotient types. A primitive is the smallest 'unit of processing' available to a programmer of a given machine, or can be an atomic element of an expression in a language. They serve as the foundation of the language and cannot be added by users. 
+
+Terms, also called expressions, are the fundamental units of meaning in Lean.  Lean's type system relates terms to their types, which are also themselves terms. Types can be thought of as denoting sets, whereas terms denote individual elements of these sets. A term is well-typed if it has a type under the rules of Lean's type theory. Only well-typed terms have a meaning. Terms are dependent typed lambda calculus, which we will discuss  in detail below. Type theory gets its name from the fact that every expression has an associated type. What makes simple type theory powerful is that one can build new types out of others. 
+
+Types are classified by universes (which are also referred to as sorts). Each universe has a level that is a natural number. The Sort operator constructs a universe from a given level. If the level of universe X is smaller than universe Y then universe X is smaller than Y.  Aside from propositions, types in a given universe only quantify over type in a small universe. Each universe is an element of a larger universe, so Sort 2 includes Sort 1. 
+
+Function types are a built-in feature of Lean. Functions map the values of one type, the domain, to another type the codomain. There are two kinds of function types, dependent, and non-dependent. In Lean’s core language, all function types are dependent. Dependent function types explicitly state the parameter and the functions codomain may explicitly refer to this name. Non-dependent function types do not include a name for the parameter. In the core language, non-dependent function types are dependent function types in which the parameter name does not occur in the codomain.
+
+In Lean’s core theory every function maps each element of the domain to a single element of the codomain. Every function expects exactly one parameter. This encoding is called currying, named after Haskell Curry. Lean's syntax for defining functions, specifying their types, and applying them creates the illusion of multiple-parameter functions, but the result of elaboration contains only single-parameter functions.
+
+From Leans perspective, all functions map each element of the domain to the codomain in finite time. In the case where functions are not proven to terminate in finite time the function can still be used as long as their codomain is nonempty. Functions are treated as uninterpreted functions and their computational behavior is ignored. 
+
+Quotient types allow a new type to be formed by decreasing the granularity of an existing type’s propositional equality. Propositions are meaningful statements that admit proof. All propositions are classified by Prop. Nonsensical statements are not propositions but false statements are. In a given type A with an equivalence relation ~ the quotient A/~ contains the same elements as A but every pair of elements that are related by ~ are now considered equal. 
+
+\subsection{Applications of Primitives}
+
+Inductive types are the primary method of creating new types in Lean. Inductive types are specified by their type constructors and their properties are derived from there constructor. Each inductive type has a single constructor which can take both universe and ordinary parameters. Equality is respected universally; nothing in Lean's logic can observe any difference between two equal terms. Thus, quotient types provide a way to build an impenetrable abstraction barrier. In particular, all functions from a quotient type must prove that they respect the equivalence relation.
+
+Propositions and data are used differently and are governed by different rules. The abbreviations Type and Prop are used to make the distinctions easier to understand. Type u is an abbreviation for Sort (u+1) (so Type 0 is Sort 1). Each universe contains dependent function types, which represent universal quantification and implication. A function type’s universe is determined by the universe of its arguments and return types. The specific rules of the universe depend on whether the return type of the function is a proposition. 
+
+Predicates, are functions that return propositions. They can have argument types in any universe, but the function type itself remains in propositions. For universes at level 1 and higher (that is, the Type u hierarchy), quantification is predicative. For these universes, the universe of a function type is the least upper bound of the argument and return types' universes. Lean's universes are not cumulative; a type in Type u is not automatically also in Type (u + 1). Each type inhabits precisely one universe.
+
+Axioms are postulated constants. In Lean the constant command allows us to declare new objects, which then become part of the global context. The only requirements for axioms are that the axiom’s type must itself be a type. Using axioms are risky because they introduced a new constant of any type and an inhabitant of of a type is a proposition that counts as proof of the proposition. Axioms can be used to prove false propositions. 
+
+A derivation demonstrates the well-typedness of a term by explicitly indicating the precise inference rules that are used. Lean's type theory is explicit enough that derivations can be reconstructed from well-typed terms, which greatly reduces the overhead that would be incurred from storing a complete derivation, while still being expressive enough to represent modern research mathematics. This means that proof terms are sufficient evidence of the truth of a theorem and are amenable to independent verification.
+
+The tactic language is a special-purpose programming language for constructing proofs. Remember, propositions are represented by types, and proofs are terms that inhabit these types. Tactics are programs that modify a proof state. A proof state consists of an (ordered) sequence of goals. The contents of this ordered sequence of goals are called subgoals. Goals are local assumptions that have types that still need to be inhabited. So a tactic may either succeed or fail if it cannot make progress on a goal. A proof is complete if a tactic succeeds with no subgoals.  
+
+Tactics construct proof terms. Proof terms are independently checkable evidence of a theorem’s truth. Each proof is checked in the kernel and can be verified with independently-implemented external checkers. The worst outcome from a bug in tactic is an error message rather than an incorrect proof. Each goal in a tactic proof corresponds to an incomplete portion of a proof term. 
+
+\subsection{How does Lean Prove things}
+
+Proofs are used to support a mathematical claim. Most proof methods can be reduced to their axioms and rules in any foundational system. Using this reduction, a computer can either help establish a claim by finding a proof or verifying that a proposed proof holds (Avigad, De Moura,  Kong 2021). Lean does the latter. 
+
+In natural‑deduction proof systems, a hypothesis is a temporary assumption introduced at some point in the derivation, and to discharge it means to remove the assumption after using it, turning the conditional argument into a statement of implication. The implication‑introduction rule states that if assuming a proposition p allows you to derive another proposition q, you may infer the compound proposition “p implies q”, written $p\rightarrow q$. 
+
+In a naive typed setting we might distinguish between propositions and their proofs by introducing a separate type constructor Proof; the rule would then be encoded as a constant taking a function that maps any proof of p to a proof of q and returning a proof object of the proposition implies p q. The symbol $\rightarrow$ inside the type of impliesintro is a metalevel arrow: it lives in the metalanguage we use to describe the type system and stands for an ordinary programming language function that takes one value to another. Curry–Howard identification removes the additional layer by equating a proposition with the type that contains its proofs. Under this identification Proof p collapses to p itself, which turns Proof p $\rightarrow$ Proof q into an object‑level arrow type $p\rightarrow q$ inside the theory; accordingly the explicit connective implies becomes unnecessary. In dependent type theory the arrow constructor $\rightarrow$ builds a function type from a domain type to a codomain type, so interpreting implication as $\rightarrow$ means that a proof of $p→q$ is literally a lambda‑abstraction that, given some term of type p, computes a term of type q. Lean follows this approach by treating Prop as an alias for Sort 0, the lowest universe in its cumulative hierarchy of Sorts, while Type u is Sort (u + 1) for any natural number level u. Remember a universe is simply a type whose elements are themselves types, introduced to avoid logical paradoxes. All universes, including Prop, are closed under →, meaning that if p and q are propositions then their arrow type $p→q$ is also a proposition. 
+
+A term t : p is therefore both a proof of p and, computationally, data inhabiting the type p. Constructive mathematicians interpret this as a precise description of what a proof is: it is concrete data whose structure is specified by p. 
+
+In Lean every expression is checked by a small trusted program called the kernel. The kernel’s basic task is to verify statements of the form “in the current context, the term t has type A,” written t : A. Nothing in the system marks certain types as “logical” and others as “ordinary data”; a type is simply a label describing what sort of thing its terms are. Lean treats the collection of all logical statements—called propositions—as just another kind of type, grouped in a universe named Prop. When you successfully build a term t whose type is a proposition p, Lean records the fact t : p. Because p is a proposition, this judgment means “t is a proof of p.” At the same time, because Lean sees every proposition as an ordinary type, the very same judgment also means “t is data that belongs to the type p.” 
+
+In Lean, determining that an expression t is a proof of assertion p would simply be a matter of checking that t has type Proof p. 
+
+Lean’s ability to certify theorems is bounded by two factors:  the expressive power of its underlying type theory (a cumulative hierarchy of dependent function types) and the axioms you import. The kernel’s only job is to check a judgment t : p; if it succeeds, the theorem p is now derivable from the current axiom set. Anything not derivable, either because it is logically independent of the axioms (e.g. the Continuum Hypothesis under ZFC) or because no one has yet supplied a term of the right type, remains unproved. 
+
+Gödel‑style incompleteness applies: if your axiom set is strong enough to encode arithmetic and is consistent, there are true arithmetic sentences that no Lean term can inhabit. Conversely, Lean can express, and will accept proofs of, every theorem provable in systems at least as strong as ZFC, because ZFC itself can be encoded as a Lean theory. The kernel cannot discover such proofs; search and tactic code run outside the small trusted base and may fail or loop forever, but whatever term they eventually produce must still pass the kernel’s decidable type‑checking algorithm. 
+
+Currently, practical limits for proof verification arise from human ingenuity and computational resources, not from the kernel. Very large terms may exhaust memory, and highly undecidable goals may defeat automation. However, there is no formal barrier in Lean other than the ability to express statements in the underlying type theory and the consistency of the chosen axioms.
+
+\subsection{Lambda Calculus}
+
+Type Theory was created to avoid the paradoxes in naive set theory and formal logic. Type theory refers to a typed system based around lambda calculus. Lambda calculus is a form system for expressing computation based on function abstraction and application using variable binding and substitution. Untyped lambda calculus is a universal machine (a model of computation that can be used to simulate any Turning machine). In typed lambda calculus, functions can be applied if only they are capable of accepting the given inputs “type” of data. Typed lambda calculi are strictly weaker than the untyped lambda calculus.  Typed lambda calculi is less expressive than untyped calculus. However, though it is less expressive, more things can be proven with type lambda calculi. 
+
+Typed lambda calculus extends the untyped lambda calculus by introducing a type system. It’s important to note that, unlike untyped lambda calculus, there are multiple typed lambda calculi, each differentiated by the specific features of the type system used. The exact features of the type system can be chosen with considerable flexibility (Serokell).  
+
+“Although the analogy is not perfect, the type assigned to a term may be compared to a dimension of a physical entity. These dimensions prevent us from wrong operations like adding 3 volts to 2 amperes. In a similar way types assigned to lambda terms provide a partial specification of the algorithms that are represented and useful for showing partial correctness” (Barendregt 1977). 
+
+Simply typed $\lambda$‑calculus (STLC): every term must carry a type and must be used only where that type fits. The typing rules forbid Y: the self‑application that makes Y work cannot be given a consistent type. As a result every well‑typed term reduces to a final value after finitely many steps (strong normalisation). Since any Turing‑complete language must allow programs that run forever, STLC is not Turing complete.
+
+In the simply typed λ‑calculus every program is guaranteed to stop running. This follows from strong normalization: the evaluation rules always reach a final value and can never loop. The guarantee holds because the typing discipline blocks so‑called fix‑point combinators, special terms that would otherwise let a function call itself indefinitely, so a typeable term can never express unbounded self‑reference (Guannan Wei ). Since one of the requirements for Turing completeness is the ability to build such non‑terminating computations, the calculus cannot represent all computable functions; it can describe only total ones, that is, computations that halt on every input (Mathematics Stack Exchange).
+
+To get more expressive power one can extend the calculus with polymorphism, letting terms be parametrized by types. Dependent‑type systems such as Lean’s go further by letting terms appear inside types, yet they must still enforce termination on all kernel‑level functions, using checks for structural or otherwise well‑founded recursion (Lean Language, Lean Language).
+
+In plain language, the limits are these: the basic typed λ‑calculus can express any computation that is guaranteed to finish and any finite data you can build without self‑reference, but it cannot natively express endless loops, interact with the outside world, or automatically handle every kind of generic (polymorphic) function without running into undecidability. Extensions that lift some of these limits either sacrifice the guarantee that all programs halt or make some questions about programs impossible to answer algorithmically.
+
+
+\section{The Wightman Reconstruction Theorem}
+\label{s:wrt2}
+
+Provided by o3 {\tt} https://chatgpt.com/share/6883cf15-5d7c-8010-8cf1-c7410c82099f}
+
+Let $\{ W_n(x_1, \dots, x_n) \}_{n \in \mathbb{N}}$ be a sequence of tempered distributions on $\mathbb{R}^{4n}$ (the Wightman functions), satisfying the following axioms:
+
+\begin{enumerate}
+  \item \textbf{Poincaré Covariance:} For each $(a, \Lambda)$ in the Poincaré group $\mathcal{P}$,
+  \[
+  W_n(x_1, \dots, x_n) = W_n(\Lambda x_1 + a, \dots, \Lambda x_n + a).
+  \]
+  
+  \item \textbf{Locality (Microcausality):} If $x_j - x_k$ is spacelike, then for bosonic fields,
+  \[
+  W_n(\dots, x_j, \dots, x_k, \dots) = W_n(\dots, x_k, \dots, x_j, \dots).
+  \]
+  For fermionic fields, antisymmetry applies.
+  
+  \item \textbf{Spectral Condition:} The joint Fourier transform of $W_n$ in the differences $x_i - x_n$ has support in $(\bar{V}_+)^{n-1}$, i.e., the product of closed forward lightcones.
+  
+  \item \textbf{Hermiticity:} 
+  \[
+  W_n(x_1, \dots, x_n) = \overline{W_n(x_n, \dots, x_1)}.
+  \]
+  
+  \item \textbf{Positive Definiteness:} For any finite set of test functions $\{ f_k \}$, the matrix
+  \[
+  M_{ij} = W_{i+j}(f_i^*, f_j)
+  \]
+  is positive semidefinite. That is,
+  \[
+  \sum_{i,j} \bar{c}_i c_j W_{i+j}(f_i^*, f_j) \geq 0.
+  \]
+  
+  \item \textbf{Uniqueness and Cyclicity of the Vacuum:} The vacuum vector $|0\rangle$ is the unique (up to scalar) Poincaré-invariant state and is cyclic under the field algebra.
+\end{enumerate}
+
+\subsection{Statement of the Reconstruction Theorem}
+
+\textbf{Theorem.} Given a sequence $\{ W_n \}$ of tempered distributions satisfying axioms (1)-(6), there exists a quantum field theory with:
+
+\begin{itemize}
+  \item A Hilbert space $\mathcal{H}$ with vacuum vector $|0\rangle$.
+  \item A unitary representation $U(a, \Lambda)$ of the Poincaré group with $U(a, \Lambda)|0\rangle = |0\rangle$.
+  \item Operator-valued tempered distributions $\phi(x)$ on $\mathcal{H}$ such that:
+  \[
+  \langle 0 | \phi(x_1) \cdots \phi(x_n) | 0 \rangle = W_n(x_1, \dots, x_n).
+  \]
+  \item The fields transform covariantly and satisfy locality and the spectrum condition.
+\end{itemize}
+
+\subsection{Proof Outline}
+
+\subsubsection{1. Construction of the Hilbert Space}
+
+Define a vector space $\mathscr{V}$ with basis vectors of the form:
+\[
+|\Phi_{f_1, \dots, f_n} \rangle := \phi(f_1) \cdots \phi(f_n) |0\rangle.
+\]
+Define an inner product on $\mathscr{V}$ by:
+\[
+\langle \Phi_{g_1, \dots, g_m} | \Phi_{f_1, \dots, f_n} \rangle := W_{m+n}(g_m, \dots, g_1, f_1, \dots, f_n).
+\]
+Using positive definiteness of the $W_n$, this defines a semi-inner product. Let $\mathscr{N} = \{ \Psi \in \mathscr{V} : \langle \Psi | \Psi \rangle = 0 \}$ be the null space. The Hilbert space $\mathcal{H}$ is the completion of $\mathscr{V}/\mathscr{N}$.
+
+\subsubsection{2. Definition of Field Operators}
+
+For any test function $f$, define $\phi(f)$ by:
+\[
+\phi(f) |\Phi_{f_1, \dots, f_n}\rangle := |\Phi_{f, f_1, \dots, f_n}\rangle.
+\]
+These operators act on the dense domain spanned by the field-generated vectors. The map $f \mapsto \phi(f)$ extends to an operator-valued tempered distribution $\phi(x)$.
+
+\subsubsection{3. Implementation of Poincaré Symmetry}
+
+Define $U(a, \Lambda)$ on $\mathscr{V}$ by:
+\[
+U(a, \Lambda) |\Phi_{f_1, \dots, f_n}\rangle := |\Phi_{f_1^{(a,\Lambda)}, \dots, f_n^{(a,\Lambda)}}\rangle,
+\]
+where $f^{(a,\Lambda)}(x) = f(\Lambda^{-1}(x - a))$. Poincaré invariance of $W_n$ ensures this is isometric. Extend to a unitary operator on $\mathcal{H}$.
+
+Then:
+\[
+U(a, \Lambda) \phi(x) U(a, \Lambda)^{-1} = \phi(\Lambda x + a).
+\]
+
+\subsubsection{4. Locality and Spectrum Condition}
+
+Locality follows from the symmetry (or antisymmetry) of $W_n$ under spacelike-separated arguments:
+\[
+[\phi(f_1), \phi(f_2)]_\pm = 0 \quad \text{if } \text{supp}(f_1) \text{ spacelike to } \text{supp}(f_2).
+\]
+The spectral condition ensures the joint spectrum of the energy-momentum operator lies in $\bar{V}_+$.
+
+\subsection*{Conclusion}
+
+All Wightman axioms are satisfied by the constructed theory, and the $n$-point functions match the original $W_n$. Thus, the Wightman reconstruction theorem is established.
+
+
+\section{Osterwalder--Schrader Reconstruction Theorem (Glimm--Jaffe Version)}
+
+\subsection*{Axioms}
+
+Let $S: \mathcal{F}_+ \to \mathbb{C}$ be the Schwinger functional defined on the algebra of Euclidean test function sequences with support in positive time. The following axioms are assumed:
+
+\begin{enumerate}
+  \item[(OS0)] \textbf{Functional Analyticity:}  
+  For any finite set of test functions $\{f_j\}_{j=1}^N \subset \mathcal{F}_+$ and any $Z = (z_1, \dots, z_N) \in \mathbb{C}^N$, the map
+  \[
+  Z \mapsto S\left( \sum_{j=1}^N z_j f_j \right)
+  \]
+  is entire in $\mathbb{C}^N$.
+
+  \item[(OS1)] \textbf{Euclidean Invariance:}  
+  $S$ is invariant under the Euclidean group $E(d) = O(d) \ltimes \mathbb{R}^d$.
+
+  \item[(OS2)] \textbf{Symmetry:}  
+  The $n$-point Schwinger functions are symmetric under permutations of arguments.
+
+  \item[(OS3)] \textbf{Reflection Positivity:}  
+  Let $\theta$ be the Euclidean time reflection: $\theta(t, \vec{x}) = (-t, \vec{x})$. Define the involution on $\mathcal{F}_+$ by
+  \[
+  \theta(f_1 \otimes \cdots \otimes f_n) := \overline{f_n \circ \theta} \otimes \cdots \otimes \overline{f_1 \circ \theta}.
+  \]
+  Then for all $F \in \mathcal{F}_+$,
+  \[
+  S(\theta(F) \cdot F) \geq 0.
+  \]
+
+  \item[(OS4)] \textbf{Cluster Property:}  
+  For spacelike translations $a \in \mathbb{R}^d$ and $F, G \in \mathcal{F}_+$,
+  \[
+  \lim_{\lambda \to \infty} S(\theta(F) \cdot T(\lambda a) G) = S(\theta(F)) S(G),
+  \]
+  where $T(a)$ is the translation operator.
+\end{enumerate}
+
+\subsection*{Theorem (Osterwalder--Schrader Reconstruction)}
+
+Under assumptions (OS0)--(OS4), there exists a relativistic quantum field theory $(\mathcal{H}, \phi(x), \Omega)$ satisfying the Wightman axioms, such that the Wightman $n$-point functions are obtained from $S_n$ via analytic continuation from Euclidean to Minkowski time.
+
+\subsubsection*{Step 1: Construct the Pre-Hilbert Space}
+
+\begin{enumerate}
+  \item Define $\mathscr{D} := \mathcal{F}_+$, the space of sequences of test functions with support in positive Euclidean time.
+
+  \item Define the involution $\theta$ on $\mathscr{D}$ as:
+  \[
+  \theta(f_1 \otimes \cdots \otimes f_n) = \overline{f_n \circ \theta} \otimes \cdots \otimes \overline{f_1 \circ \theta}.
+  \]
+
+  \item Define the sesquilinear form:
+  \[
+  \langle F, G \rangle := S(\theta(F) \cdot G).
+  \]
+
+  \item By OS3, this form is positive semi-definite: $\langle F, F \rangle \geq 0$.
+
+  \item Define the null space $\mathscr{N} := \{ F \in \mathscr{D} \mid \langle F, F \rangle = 0 \}$.
+
+  \item Let $\mathcal{H}_0 := \mathscr{D} / \mathscr{N}$ and define the inner product:
+  \[
+  \langle [F], [G] \rangle := \langle F, G \rangle.
+  \]
+
+  \item Let $\mathcal{H}$ be the Hilbert space completion of $\mathcal{H}_0$.
+
+  \item Define the vacuum vector $\Omega := [1]$ as the class of the unit element.
+\end{enumerate}
+
+\subsubsection*{Step 2: Define Time Evolution}
+
+\begin{enumerate}
+  \item Let $T(t)$ be the Euclidean time-translation operator acting on test functions:
+  \[
+  (T(t) f)(x) := f(x - t e_0),
+  \]
+  where $e_0$ is the unit vector in the Euclidean time direction.
+
+  \item $T(t)$ preserves $\mathscr{D}$ and descends to a contraction semigroup on $\mathcal{H}$.
+
+  \item By the Hille--Yosida theorem, there exists a positive self-adjoint operator $H$ such that:
+  \[
+  T(t) = e^{-tH}.
+  \]
+\end{enumerate}
+
+\subsubsection*{Step 3: Construction of Field Operators}
+
+\begin{enumerate}
+  \item Define a class of field operators $\phi(f)$ for test functions $f \in \mathcal{S}(\mathbb{R}^d)$ supported in the Euclidean time-zero hyperplane $t = 0$.
+
+  \item For $[G] \in \mathcal{H}_0$ (where $G \in \mathscr{D} = \mathcal{F}_+$), define:
+  \[
+  \phi(f)[G] := [f \otimes G] \in \mathcal{H}_0.
+  \]
+  This map is well-defined on equivalence classes because if $[G] = [G']$ then $S(\theta(F) \cdot (f \otimes G - f \otimes G')) = 0$ for all $F$, due to OS0 and OS3.
+
+  \item The time-zero field $\phi(f)$ acts linearly and is closable on $\mathcal{H}$. These fields define operator-valued distributions with common invariant dense domain $\mathscr{D}_0$ generated by applying monomials in $\phi(f)$ to the vacuum.
+
+  \item To obtain fields at other Euclidean times, define:
+  \[
+  \phi_t(f) := e^{tH} \phi(f) e^{-tH},
+  \]
+  for $t \in \mathbb{R}$, where $H$ is the self-adjoint generator from Step 2.
+
+  \item These define a family of operator-valued distributions $\phi(x)$ for $x \in \mathbb{R}^d$, acting on a common dense domain.
+
+  \item The family $\{ \phi(x) \}$ satisfies the Wightman field axioms:
+  \begin{itemize}
+    \item $\phi(f)$ is closable and Hermitian for real $f$.
+    \item The vacuum $\Omega$ is cyclic for the algebra generated by the $\phi(f)$.
+    \item Poincaré covariance is recovered via analytic continuation of the time translation semigroup and spatial rotations.
+    \item \textbf{Locality:} The commutativity of fields at spacelike separation follows from the Euclidean symmetry (OS2) of the Schwinger functions. Under analytic continuation, permutation symmetry implies that spacelike-separated fields commute:
+    \[
+    [\phi(x), \phi(y)] = 0 \quad \text{for spacelike } x - y.
+    \]
+  \end{itemize}
+\end{enumerate}
+
+\subsubsection*{Step 4: Emergence of Wightman Functions}
+
+\begin{enumerate}
+  \item The analytic structure of the Schwinger functional $S$ (OS0) guarantees that the $n$-point functions
+  \[
+  W_n(x_1, \dots, x_n) := \langle \Omega | \phi(x_1) \cdots \phi(x_n) | \Omega \rangle
+  \]
+  are boundary values of analytic functions in the time variables (in strips).
+
+  \item After analytic continuation from Euclidean to Minkowski time, these Wightman functions are defined on open domains and satisfy:
+  \begin{itemize}
+    \item temperedness (due to strong bounds on $S$),
+    \item Lorentz covariance,
+    \item locality (from OS2),
+    \item spectrum condition (from positivity of $H$),
+    \item positive definiteness (inherited from OS3),
+    \item cyclicity (from the density of test function sequences).
+  \end{itemize}
+
+  \item The full tube domain analyticity of $W_n$ (in the sense of the Bargmann-Hall-Wightman theorem) is a \emph{consequence} of the above properties and the general structure of Wightman QFT. It is not needed as an assumption.
+\end{enumerate}
+
+\subsection{Lean translation from Gemini 2.5}
+
+\subsubsection*{Step 1: Construct the Pre-Hilbert Space}
+
+\begin{lstlisting}
+/-!
+### Assumed Context
+We assume the necessary mathematical objects are defined.
+- `d`: The dimension of spacetime.
+- `EuclideanAlgebra d`: The ℂ-algebra of test function sequences (the user's ��).
+- `star`: The involution `θ` on the algebra.
+- `S`: The Schwinger functional.
+- `os3`: The reflection positivity axiom.
+-/
+variable (d : ℕ) (hd : 1 ≤ d) (S : (EuclideanAlgebra d) → ℂ)
+variable [Ring (EuclideanAlgebra d)] [Algebra ℂ (EuclideanAlgebra d)] [StarRing (EuclideanAlgebra d)]
+variable (os3 : ∀ (F : EuclideanAlgebra d), 0 ≤ (S (star F * F)).re ∧ (S (star F * F)).im = 0)
+
+/-!
+## Step 1 in Lean 4
+-/
+
+def SpaceTime (d : ℕ) : Type := EuclideanSpace ℝ (Fin d)
+
+def HasPositiveTime (x : SpaceTime d) : Prop := x 0 > 0
+
+def PositiveTimeTestFunction (d : ℕ) : Type :=
+  { f : SchwartzSpace (SpaceTime d) ℂ // ∀ x, x ∈ tsupport f → HasPositiveTime d x }
+
+-- We can give this subtype a more convenient notation
+notation "��₊(" d ")" => PositiveTimeTestFunction d
+
+def EuclideanAlgebra (d : ℕ) : Type :=
+  TensorAlgebra ℂ (��₊(d))
+
+#check EuclideanAlgebra d -- Represents the space ��
+
+-- Step 1.2: Define the involution θ
+-- This is captured by the `StarRing` typeclass instance on the algebra.
+-- The `star` operation in Lean corresponds to the involution `θ`.
+
+def timeReflection (x : SpaceTime d) : SpaceTime d :=
+  Function.update x 0 (-(x 0))
+
+noncomputable instance : Star (SchwartzSpace (SpaceTime d) ℂ) where
+  star f := {
+    toFun := fun x ↦ star (f (timeReflection d x)), -- `star` on ℂ is complex conjugation
+    -- Proofs that the result is still a Schwartz function would follow
+    smooth' := by sorry,
+    decay' := by sorry
+  }
+  
+#check (star : EuclideanAlgebra d → EuclideanAlgebra d) -- Represents the map θ
+
+-- Step 1.3: Define the sesquilinear form
+-- We define a function for the sesquilinear form ⟨F, G⟩ := S(θ(F) * G).
+def osSesqForm (F G : EuclideanAlgebra d) : ℂ := S (star F * G)
+
+-- Step 1.4: State Reflection Positivity (OS3)
+-- The axiom `os3` ensures the form is positive semi-definite. The result is a theorem.
+lemma osSesqForm_nonneg_real (F : EuclideanAlgebra d) : 0 ≤ (osSesqForm S F F).re ∧ (osSesqForm S F F).im = 0 :=
+  os3 F
+
+-- Step 1.5: Define the null space ��
+-- The null space is the submodule of elements F where ⟨F, F⟩ = 0.
+def nullSpace : Submodule ℂ (EuclideanAlgebra d) where
+  carrier := { F | osSesqForm S F F = 0 }
+  add_mem' := by sorry -- Proof that if ⟨F,F⟩=0 and ⟨G,G⟩=0, then ⟨F+G,F+G⟩=0 (uses Cauchy-Schwarz)
+  zero_mem' := by sorry -- Proof that ⟨0,0⟩=0
+  smul_mem' := by sorry -- Proof that if ⟨F,F⟩=0, then ⟨c*F,c*F⟩=0
+
+-- Step 1.6: Let ��₀ := �� / �� and define the inner product
+-- ��₀ is the quotient space, which can be given an inner product.
+-- The `noncomputable` keyword is used because the definitions rely on the axiom of choice.
+def ��₀ := (EuclideanAlgebra d) ⧸ (nullSpace S os3)
+
+noncomputable instance : InnerProductSpace ℂ (��₀ S os3) := {
+  inner := fun F G ↦ Quotient.lift₂ (osSesqForm S) (by sorry) F G,
+  -- Proofs that this definition satisfies the inner product axioms would follow
+  norm_sq_eq_inner_self := by sorry,
+  conj_symm := by sorry,
+  add_left := by sorry,
+  smul_left := by sorry
+}
+
+-- Step 1.7: Let �� be the Hilbert space completion of ��₀
+-- Mathlib provides a generic `Completion` for any uniform space.
+-- The completion of an inner product space is a Hilbert space.
+noncomputable def �� := UniformSpace.Completion (��₀ S os3)
+
+noncomputable instance : HilbertSpace ℂ (�� S os3) :=
+  UniformSpace.Completion.hilbertSpace (��₀ S os3)
+
+-- Step 1.8: Define the vacuum vector Ω
+-- The vacuum is the equivalence class of the algebra's unit `1`,
+-- embedded into the completed Hilbert space.
+noncomputable def vacuum : �� S os3 :=
+  UniformSpace.Completion.coe (Submodule.Quotient.mk (1 : EuclideanAlgebra d))
+\end{lstlisting}
+
+
+\bibliography{airefs,trans,mathrefs,mathqft}
+
+\end{document}
