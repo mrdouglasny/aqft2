@@ -263,3 +263,29 @@ noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunction�
     sorry
 
   exact SchwartzMap.compCLM (𝕜 := ℂ) (hg := h_temp_growth) (hg_upper := hg_upper) f
+
+/-- The Euclidean action as a continuous linear map on test functions.
+    For any g ∈ E, the map f ↦ euclidean_action g f is a continuous linear map on TestFunctionℂ.
+    This captures the linearity and continuity of the Euclidean action on the Schwartz space. -/
+noncomputable def euclidean_action_CLM (g : E) : TestFunctionℂ →L[ℂ] TestFunctionℂ := by
+  -- The Euclidean action should be:
+  -- 1. Linear: euclidean_action g (a • f + b • h) = a • euclidean_action g f + b • euclidean_action g h
+  -- 2. Continuous: respects the Schwartz space topology
+  -- This follows from the fact that:
+  -- - The underlying spacetime transformation act g⁻¹ is smooth and has temperate growth
+  -- - SchwartzMap.compCLM gives us the continuous linear map structure
+  -- - Composition with smooth maps preserves Schwartz space structure
+  sorry
+
+/-- The Euclidean action is invertible as a continuous linear map.
+    This expresses that Euclidean transformations act as invertible transformations
+    on the space of test functions. -/
+lemma euclidean_action_isInvertible (g : E) :
+    ∃ (h : TestFunctionℂ →L[ℂ] TestFunctionℂ),
+      (euclidean_action_CLM g).comp h = ContinuousLinearMap.id ℂ TestFunctionℂ ∧
+      h.comp (euclidean_action_CLM g) = ContinuousLinearMap.id ℂ TestFunctionℂ := by
+  -- The invertibility follows from:
+  -- - The Euclidean group structure: g has an inverse g⁻¹
+  -- - euclidean_action_CLM g⁻¹ should be the inverse of euclidean_action_CLM g
+  -- - This reflects the group action property on test functions
+  sorry
