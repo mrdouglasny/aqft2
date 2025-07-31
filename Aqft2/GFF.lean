@@ -221,8 +221,10 @@ lemma GFF_pdf_eq_exp_action
 
 
 /-- The generating functional satisfies the expected exponential form.
-For a Gaussian Free Field, this should be the characteristic function of a Gaussian distribution:
-exp(-½⟨f, CovOp f⟩ + i⟨μ, f⟩) where μ is the mean and CovOp is the covariance operator. -/
+Note: The use of RCLike.re is mathematically necessary for the Gaussian characteristic function,
+but creates a tension with complex analyticity. In practice, for real test functions or when
+working over ℝ, this gives the correct Gaussian form. For complex analyticity, one would need
+a more sophisticated treatment of the analytic continuation. -/
 lemma GFF_generating_functional_form
   {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
   {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
@@ -312,13 +314,14 @@ lemma GFF_analyticity
   -- The function is of the form z ↦ exp(az² + bz) where a, b are constants
   -- This is analytic everywhere as a composition of polynomial and exponential functions
 
-  -- Use the fact that GFF_generating_functional_form gives us the explicit exponential form
-  have h_form : ∀ z : ℝ, GFF_generating_functional abstract_field GFF ((z : 𝕜) • f) =
-    Complex.exp (-(1/2 : ℂ) * RCLike.re ⟪(z : 𝕜) • f, abstract_field.CovOp ((z : 𝕜) • f)⟫_𝕜 +
-                 Complex.I * (-RCLike.re ⟪abstract_field.CovOp abstract_field.J, (z : 𝕜) • f⟫_𝕜)) := by
-    intro z
+  -- Convert to explicit exponential form using function extensionality
+  have h_eq : (fun z : ℝ ↦ GFF_generating_functional abstract_field GFF ((z : 𝕜) • f)) =
+              (fun z : ℝ ↦ Complex.exp (-(1/2 : ℂ) * RCLike.re ⟪(z : 𝕜) • f, abstract_field.CovOp ((z : 𝕜) • f)⟫_𝕜 +
+                                        Complex.I * (-RCLike.re ⟪abstract_field.CovOp abstract_field.J, (z : 𝕜) • f⟫_𝕜))) := by
+    funext z
     exact GFF_generating_functional_form abstract_field GFF ((z : 𝕜) • f)
 
+  rw [h_eq]
   -- By linearity of inner products, this simplifies to a quadratic polynomial in z
   -- The exponent becomes: -(1/2)z²⟪f, CovOp f⟫ + iz⟪CovOp(J), f⟫
   -- Since this is a polynomial in z and exp is analytic, the composition is analytic
