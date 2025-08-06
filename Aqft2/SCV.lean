@@ -101,10 +101,13 @@ lemma sumSquares_analytic {n : ℕ} :
       AnalyticOnNhd ℂ
         (fun x : ℂn n ↦ ∑ i ∈ (Finset.univ : Finset (Fin n)), (x i) ^ 2)
         Set.univ := by
-          have foo := Finset.analyticOnNhd_sum
-             (N := (Finset.univ : Finset (Fin n)))
-              (f := fun i ↦ fun x : ℂn n ↦ (x i) ^ 2)
-             (λ i _hi ↦ h_sq i)
-          simpa using sorry
+          have : (fun x : ℂn n ↦ ∑ i ∈ (Finset.univ : Finset (Fin n)), (x i) ^ 2) =
+                 ∑ i ∈ (Finset.univ : Finset (Fin n)), (fun x : ℂn n ↦ (x i) ^ 2) := by
+            ext x
+            simp only [Finset.sum_apply]
+          rw [this]
+          apply Finset.analyticOnNhd_sum
+          intro i _hi
+          exact h_sq i
 
   simpa [Finset.sum_apply] using h_sum_aux.analyticOn
