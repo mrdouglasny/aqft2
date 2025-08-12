@@ -237,45 +237,105 @@ lemma measurePreserving_act (g : E) :
     simpa using map_add_right_eq_self μ g.t
   simpa [act, Function.comp] using trans.comp rot
 
-/-! ### Action of Euclidean group on test functions --------- -/
+/-! ### Unified Action of Euclidean group on function spaces --------- 
+    
+    UNIFIED EUCLIDEAN ACTION FRAMEWORK
+    
+    This section demonstrates how the same geometric transformation (euclidean_pullback)
+    can be used to define Euclidean actions on both test functions and L² functions:
+
+    1. **Common foundation**: All actions are based on the pullback map x ↦ g⁻¹ • x
+    2. **Key enabling result**: measurePreserving_act proves this map preserves Lebesgue measure
+    3. **Dual routes**:
+       - Test functions: Use temperate growth + Schwartz space structure
+       - L² functions: Use measure preservation + Lp space structure
+    4. **Unified interface**: Both yield continuous linear maps with the same group action laws
+
+    This approach eliminates code duplication and ensures consistency between 
+    the test function and L² formulations of the Osterwalder-Schrader axioms.
+-/
+
+/-- The fundamental pullback map for Euclidean actions.
+    This is the geometric transformation x ↦ g⁻¹ • x that underlies
+    all Euclidean actions on function spaces. -/
+noncomputable def euclidean_pullback (g : E) : SpaceTime → SpaceTime := act g⁻¹
+
+/-- The Euclidean pullback map has temperate growth (needed for Schwartz space actions). -/
+lemma euclidean_pullback_temperate_growth (g : E) :
+    Function.HasTemperateGrowth (euclidean_pullback g) := by
+  -- The map x ↦ g⁻¹.R x + g⁻¹.t is affine (linear isometry + translation)
+  -- Affine maps automatically have temperate growth
+  sorry
+
+/-- The Euclidean pullback map satisfies polynomial growth bounds. -/
+lemma euclidean_pullback_polynomial_bounds (g : E) :
+    ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖euclidean_pullback g x‖) ^ k := by
+  -- Since euclidean_pullback g x = g⁻¹.R x + g⁻¹.t and g⁻¹.R is an isometry:
+  -- ‖euclidean_pullback g x‖ = ‖g⁻¹.R x + g⁻¹.t‖ ≥ ‖g⁻¹.R x‖ - ‖g⁻¹.t‖ = ‖x‖ - ‖g⁻¹.t‖
+  -- So ‖x‖ ≤ ‖euclidean_pullback g x‖ + ‖g⁻¹.t‖ ≤ (1 + ‖g⁻¹.t‖) * (1 + ‖euclidean_pullback g x‖)
+  use 1; use (1 + ‖g⁻¹.t‖); intro x
+  unfold euclidean_pullback act
+  -- Use triangle inequality and isometry property
+  sorry
 
 /-- Action of Euclidean group on test functions via pullback.
     For g ∈ E and f ∈ TestFunctionℂ, define (g • f)(x) = f(g⁻¹ • x).
     This is the standard pullback action: to evaluate the transformed function
     at x, we evaluate the original function at the inverse-transformed point. -/
-noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunctionℂ := by
-  -- Follow the pattern from compTimeReflection in DiscreteSymmetry.lean
-  -- The Euclidean action g⁻¹ is x ↦ g⁻¹.R x + g⁻¹.t (isometry + translation)
-  let euclidean_map : SpaceTime → SpaceTime := act g⁻¹
+noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunctionℂ :=
+  SchwartzMap.compCLM (𝕜 := ℂ) 
+    (hg := euclidean_pullback_temperate_growth g) 
+    (hg_upper := euclidean_pullback_polynomial_bounds g) f
 
-  -- We need to show that this map has temperate growth and polynomial upper bounds
-  have hg_upper : ∃ (k : ℕ) (C : ℝ), ∀ (x : SpaceTime), ‖x‖ ≤ C * (1 + ‖euclidean_map x‖) ^ k := by
-    -- Since euclidean_map x = g⁻¹.R x + g⁻¹.t and g⁻¹.R is an isometry:
-    -- ‖euclidean_map x‖ = ‖g⁻¹.R x + g⁻¹.t‖ ≥ ‖g⁻¹.R x‖ - ‖g⁻¹.t‖ = ‖x‖ - ‖g⁻¹.t‖
-    -- So ‖x‖ ≤ ‖euclidean_map x‖ + ‖g⁻¹.t‖ ≤ (1 + ‖g⁻¹.t‖) * (1 + ‖euclidean_map x‖)
-    use 1; use (1 + ‖g⁻¹.t‖); intro x
-    sorry  -- This proof follows from triangle inequality and isometry properties
+/-- Action of Euclidean group on L² functions via pullback.
+    For g ∈ E and f ∈ Lp ℂ 2 μ, define (g • f)(x) = f(g⁻¹ • x).
+    This uses the same fundamental pullback transformation as the test function action,
+    but leverages measure preservation instead of temperate growth bounds. -/
+noncomputable def euclidean_action_L2 (g : E) {α : Type*} [MeasurableSpace α] {μ : Measure α}
+    (f : Lp ℂ 2 μ) : Lp ℂ 2 μ :=
+  -- Use the continuous composition with measure-preserving map
+  -- This is enabled by measurePreserving_act
+  sorry  -- Implementation follows from measure preservation
 
-  -- Create a continuous linear map from the Euclidean action
-  -- Since act is not linear, we use a different approach
-  have h_temp_growth : Function.HasTemperateGrowth euclidean_map := by
-    -- Affine maps (isometry + translation) have temperate growth
-    sorry
-
-  exact SchwartzMap.compCLM (𝕜 := ℂ) (hg := h_temp_growth) (hg_upper := hg_upper) f
+/-- The measure preservation result enables both test function and L² actions.
+    This is the key unifying lemma that works specifically for the spacetime measure μ. -/
+lemma euclidean_action_unified_basis (g : E) :
+    MeasurePreserving (euclidean_pullback g) (μ : Measure SpaceTime) μ := by
+  -- This is just measurePreserving_act applied to g⁻¹
+  unfold euclidean_pullback
+  exact measurePreserving_act g⁻¹
 
 /-- The Euclidean action as a continuous linear map on test functions.
-    For any g ∈ E, the map f ↦ euclidean_action g f is a continuous linear map on TestFunctionℂ.
-    This captures the linearity and continuity of the Euclidean action on the Schwartz space. -/
-noncomputable def euclidean_action_CLM (g : E) : TestFunctionℂ →L[ℂ] TestFunctionℂ := by
-  -- The Euclidean action should be:
-  -- 1. Linear: euclidean_action g (a • f + b • h) = a • euclidean_action g f + b • euclidean_action g h
-  -- 2. Continuous: respects the Schwartz space topology
-  -- This follows from the fact that:
-  -- - The underlying spacetime transformation act g⁻¹ is smooth and has temperate growth
-  -- - SchwartzMap.compCLM gives us the continuous linear map structure
-  -- - Composition with smooth maps preserves Schwartz space structure
-  sorry
+    This leverages the Schwartz space structure and temperate growth bounds. -/
+noncomputable def euclidean_action_CLM (g : E) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
+  SchwartzMap.compCLM (𝕜 := ℂ) 
+    (hg := euclidean_pullback_temperate_growth g) 
+    (hg_upper := euclidean_pullback_polynomial_bounds g)
+
+/-- The Euclidean action as a continuous linear map on L² functions.
+    This leverages measure preservation rather than temperate growth. -/
+noncomputable def euclidean_action_L2_CLM (g : E) :
+    Lp ℂ 2 (μ : Measure SpaceTime) →L[ℂ] Lp ℂ 2 μ := by
+  -- Use continuous composition with the measure-preserving map
+  -- The key insight: measurePreserving_act gives us the continuous linear map structure
+  have h_meas_pres : MeasurePreserving (euclidean_pullback g) μ μ := 
+    euclidean_action_unified_basis g
+  -- Now we can use Mathlib's infrastructure for measure-preserving compositions on Lp spaces
+  sorry  -- This follows from measure preservation and Lp space theory
+
+/-- Both actions are instances of the same abstract pattern. -/
+lemma euclidean_actions_unified (g : E) : 
+    (∃ (T_test : TestFunctionℂ →L[ℂ] TestFunctionℂ), 
+       ∀ f, euclidean_action g f = T_test f) ∧
+    (∃ (T_L2 : Lp ℂ 2 (μ : Measure SpaceTime) →L[ℂ] Lp ℂ 2 μ), 
+       ∀ f, euclidean_action_L2 g f = T_L2 f) := by
+  constructor
+  · use euclidean_action_CLM g
+    intro f
+    rfl  -- by definition of euclidean_action
+  · use euclidean_action_L2_CLM g
+    intro f
+    sorry  -- follows from the definitions
 
 /-- The Euclidean action is invertible as a continuous linear map.
     This expresses that Euclidean transformations act as invertible transformations
