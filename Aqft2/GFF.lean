@@ -74,16 +74,16 @@ def IsEuclideanInvariant {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [
   ∀ (g : F →L[𝕜] F), IsEuclideanTransformation g → [Invertible g] → T ∘L g = g ∘L T
 
 /-- The quadratic action functional for the free field.
-    
+
     Mathematical note: This represents the "Euclidean action" S_E[φ] = (1/2)⟪φ, A φ⟫ + ⟪J, φ⟫
     which appears in the path integral weight exp(-S_E[φ]).
-    
+
     For Gaussian Free Fields, the generating functional is:
     S(f) = ∫ exp(i ⟨φ, f⟩) exp(-S_E[φ]) Dφ
          = exp(-(1/2)⟪f, C f⟫ + i⟪m, f⟫)
-    
+
     where C = A^(-1) is the covariance and m = -C J is the mean.
-    
+
     The real-valued action is compatible with OS axioms because:
     1. The generating functional itself maintains complex analyticity
     2. The action appears in the measure, not directly in the generating functional
@@ -340,7 +340,7 @@ lemma GFF_real_analyticity
   -- Since this is a polynomial in z and exp is analytic, the composition is analytic
 
   -- The function is of the form z ↦ exp(az² + bz + c) where a, b, c are constants
-  -- By linearity of inner products: ⟪z•f, CovOp(z•f)⟫ = z²⟪f, CovOp f⟫ and ⟪J, z•f⟫ = z⟪J, f⟫  
+  -- By linearity of inner products: ⟪z•f, CovOp(z•f)⟫ = z²⟪f, CovOp f⟫ and ⟪J, z•f⟫ = z⟪J, f⟫
   -- So the exponent becomes: -(1/2)z²⟪f, CovOp f⟫ + iz⟪CovOp(J), f⟫
   -- This is a polynomial in z, and exp ∘ polynomial is analytic
   -- Use AnalyticAt.comp with Complex.analyticAt_exp and polynomial analyticity
@@ -353,7 +353,7 @@ theorem GFF_satisfies_OS0
   (GFF : GaussianFreeField Ω abstract_field)
   (dμ : ProbabilityMeasure FieldSpace) :
   -- We need to prove the generating functional is entire in complex linear combinations
-  -- This requires showing: ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), 
+  -- This requires showing: ∀ (n : ℕ) (J : Fin n → TestFunctionℂ),
   --   Entire (fun z : ℂn n => generatingFunctionalℂ dμ (weightedSumCLM z))
   OS0_Analyticity dμ := by
   unfold OS0_Analyticity Entire
