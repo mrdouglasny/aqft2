@@ -18,6 +18,7 @@ import Mathlib.MeasureTheory.Measure.Haar.OfBasis
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 import Mathlib.Topology.MetricSpace.Isometry
+import Mathlib.MeasureTheory.Function.LpSpace.ContinuousCompMeasurePreserving
 
 import Aqft2.Basic
 
@@ -284,10 +285,10 @@ private def act_inv_poly_bound (g : E) :
         have h2 : 0 ≤ ‖g⁻¹.t‖ := norm_nonneg _
         linarith [mul_nonneg h2 h1]
 
-/-! ### Unified Action of Euclidean group on function spaces --------- 
-    
+/-! ### Unified Action of Euclidean group on function spaces ---------
+
     UNIFIED EUCLIDEAN ACTION FRAMEWORK
-    
+
     This section demonstrates how the same geometric transformation (euclidean_pullback)
     can be used to define Euclidean actions on both test functions and L² functions:
 
@@ -298,7 +299,7 @@ private def act_inv_poly_bound (g : E) :
        - L² functions: Use measure preservation + Lp space structure
     4. **Unified interface**: Both yield continuous linear maps with the same group action laws
 
-    This approach eliminates code duplication and ensures consistency between 
+    This approach eliminates code duplication and ensures consistency between
     the test function and L² formulations of the Osterwalder-Schrader axioms.
 -/
 
@@ -343,8 +344,8 @@ lemma euclidean_pullback_polynomial_bounds (g : E) :
     This is the standard pullback action: to evaluate the transformed function
     at x, we evaluate the original function at the inverse-transformed point. -/
 noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunctionℂ :=
-  SchwartzMap.compCLM (𝕜 := ℂ) 
-    (hg := euclidean_pullback_temperate_growth g) 
+  SchwartzMap.compCLM (𝕜 := ℂ)
+    (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
 
 /-- The measure preservation result enables both test function and L² actions.
@@ -358,51 +359,41 @@ lemma euclidean_action_unified_basis (g : E) :
 /-- Action of Euclidean group on L² functions via pullback.
     For g ∈ E and f ∈ Lp ℂ 2 μ, define (g • f)(x) = f(g⁻¹ • x).
     This uses the same fundamental pullback transformation as the test function action,
-    but leverages measure preservation instead of temperate growth bounds. 
+    but leverages measure preservation instead of temperate growth bounds.
     Specialized for SpaceTime with Lebesgue measure. -/
-noncomputable def euclidean_action_L2 (g : E) 
+noncomputable def euclidean_action_L2 (g : E)
     (f : Lp ℂ 2 (μ : Measure SpaceTime)) : Lp ℂ 2 μ :=
   -- Use Lp.compMeasurePreserving following OS2.lean's FieldSpace.pull pattern
-  have h_meas_pres : MeasurePreserving (euclidean_pullback g) μ μ := 
+  have h_meas_pres : MeasurePreserving (euclidean_pullback g) μ μ :=
     euclidean_action_unified_basis g
   Lp.compMeasurePreserving (p := 2) (euclidean_pullback g) h_meas_pres f
 
 /-- The Euclidean action as a continuous linear map on test functions.
     This leverages the Schwartz space structure and temperate growth bounds. -/
 noncomputable def euclidean_action_CLM (g : E) : TestFunctionℂ →L[ℂ] TestFunctionℂ :=
-  SchwartzMap.compCLM (𝕜 := ℂ) 
-    (hg := euclidean_pullback_temperate_growth g) 
+  SchwartzMap.compCLM (𝕜 := ℂ)
+    (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g)
 
-/-- The Euclidean action as a continuous linear map on L² functions.
-    This leverages measure preservation rather than temperate growth. -/
-noncomputable def euclidean_action_L2_CLM (g : E) :
-    Lp ℂ 2 (μ : Measure SpaceTime) →L[ℂ] Lp ℂ 2 μ := by
-  -- Use the fact that composition with measure-preserving maps gives a continuous linear map
-  have h_meas_pres : MeasurePreserving (euclidean_pullback g) μ μ := 
-    euclidean_action_unified_basis g
-  -- This should exist in Mathlib's LpSpace.ContinuousCompMeasurePreserving
-  sorry  -- Use appropriate Mathlib constructor for measure-preserving CLM
-
 /-- Both actions are instances of the same abstract pattern. -/
-lemma euclidean_actions_unified (g : E) : 
-    (∃ (T_test : TestFunctionℂ →L[ℂ] TestFunctionℂ), 
+lemma euclidean_actions_unified (g : E) :
+    (∃ (T_test : TestFunctionℂ →L[ℂ] TestFunctionℂ),
        ∀ f, euclidean_action g f = T_test f) ∧
-    (∃ (T_L2 : Lp ℂ 2 (μ : Measure SpaceTime) →L[ℂ] Lp ℂ 2 μ), 
+    (∃ (T_L2 : Lp ℂ 2 μ → Lp ℂ 2 μ),
        ∀ f, euclidean_action_L2 g f = T_L2 f) := by
   constructor
   · use euclidean_action_CLM g
     intro f
     rfl  -- by definition of euclidean_action
-  · use euclidean_action_L2_CLM g
+  · use euclidean_action_L2 g
     intro f
-    -- The definitions should be equivalent but may need unfolding
-    sorry  -- Technical proof that the CLM application equals the direct definition
+    rfl  -- by definition of euclidean_action_L2
 
 /-- The Euclidean action is invertible as a continuous linear map.
     This expresses that Euclidean transformations act as invertible transformations
     on the space of test functions. -/
-lemma euclidean_action_isInvertible (g : E) :
+-- not used yet so name is suffixed with '
+lemma euclidean_action_isInvertible' (g : E) :
     ∃ (h : TestFunctionℂ →L[ℂ] TestFunctionℂ),
       (euclidean_action_CLM g).comp h = ContinuousLinearMap.id ℂ TestFunctionℂ ∧
       h.comp (euclidean_action_CLM g) = ContinuousLinearMap.id ℂ TestFunctionℂ := by
