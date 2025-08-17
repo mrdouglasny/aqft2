@@ -56,7 +56,7 @@ def S (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) : ℂ := generati
 
 -- OS0: The analyticity axiom - the generating functional is entire in complex linear combinations
 def OS0_Analyticity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), Entire (fun z : ℂn n =>
+  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), Entire (fun z : SCV.ℂn n =>
     generatingFunctionalℂ dμ (weightedSumCLM (n := n) (J := J) z))
 
 -- OS1: The regularity bound on the generating functional
