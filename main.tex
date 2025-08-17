@@ -8,6 +8,38 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}\newtheorem{sentence}{Sentence}
 \newtheorem{para}{Paragraph}
+
+\usepackage{amsmath, amssymb, amsthm, mathtools, mathrsfs, bbm}
+\usepackage[margin=1in]{geometry}
+
+% ---------- Notation ----------
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Rd}{\mathbb{R}^4}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\ip}[2]{\left\langle #1,\, #2 \right\rangle}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\1}{\mathbbm{1}}
+\newcommand{\Sch}{\mathscr{S}}
+\newcommand{\LP}{\mathrm{L}}
+\newcommand{\Leb}{\lambda}
+\newcommand{\id}{\mathrm{id}}
+\newcommand{\push}{\mathrm{push}}
+\newcommand{\pull}{\mathrm{pull}}
+\newcommand{\Char}{\Phi}
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{prop}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{cor}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{axiomenv}[theorem]{Axiom}
+\newtheorem{remark}[theorem]{Remark}
+
+\numberwithin{equation}{section}
+
 % SSG structure - we might redefine these
 \def\ssgbegin{\begin{itemize}}
 \def\entity#1{\item {[#1] =~}}
@@ -183,7 +215,7 @@ for which these methods would be suitable are:
 Of course, these are very ambitious goals. We believe that they are achievable in principle with our present day understanding of mathematical physics, but are far out of reach due to the vast amount of work they require.
 We are optimistic that the development of AI and theorem proving could bring them within range.
 
-\SH{ Some additional goals related to major fields of interest at the time of writing this include: Defining string theory non-perturbatively, formalizing near extremal Black holes have $AdS_2 \times S_{d-2}$ geometry beyond \cite{Upamanyu Moitra, Sandip P. Trivedi, V. Vishal}, formalizing that adding observers of a specific type turn you from a type III von Neumann algebra to a type II vN algebra and conjecturally that adding a finite lived observer reduces our type II algebra to a type I factor, formalizing that the dimension of a closed Hilbert space = 1 }
+\SH{ Some additional goals related to major fields of interest at the time of writing this include: Defining string theory non-perturbatively, formalizing near extremal Black holes have $AdS_2 \times S_{d-2}$ geometry beyond \cite{Upamanyu Moitra, Sandip P. Trivedi, V. Vishal}, formalizing that adding observers of a specific type turn you from a type III von Neumann algebra to a type II vN algebra and conjecturally that adding a finite lived observer reduces our type II algebra to a type I factor, formalizing that the dimension of a closed Hilbert space = 1, corrections to inner product calculations getting rid of null states in theories beyond JT gravity, }
 
 \subsection{Nearer term goals}
 \SH{Our near term goals: prove free theory satisfies OS, and reconstruction theorem}
@@ -281,7 +313,7 @@ Euclidean correlation functions and the OS axioms.  One of the main reasons for 
 defining a functional measure (a path integral), which in many interesting cases (scalar fields with a real action, pure Yang-Mills theory) is a
 probability measure (real and non-negative), and this has many advantages.  The real time path integral with its
 indefinite signed or complex measure generally involves drastic cancellations which are difficult for both mathematicians and physicists to deal with.
-This is not the case for probability measures, and thus their mathematical theory is much more developed.
+This is not the case for probability measures, and thus their mathematical theory is much more developed.  In particular, measure theory and probability are relatively well covered by Lean mathlib.
 
 Thus, we set ourselves the goal of formalizing the OS axioms, in the slightly modified form given in Glimm and Jaffe \cite{GJ1987Axioms}.
 To show that this is correctly done, we also formalize and prove some basic results which use them.
@@ -321,6 +353,8 @@ abbrev μ : Measure RSpaceTime := volume
 abbrev FieldSpace := Lp (p := 2) (μ := μ) ℝ
 variable (dμ : ProbabilityMeasure FieldSpace)
 \end{lstlisting}
+Generalizing to other values $d$ of the spacetime dimension requires implementing
+the symmetry groups $SO(d)$, which we intend to do in future.
 
 The generating function of correlation functions is a standard definition both in physics
 and in probability theory (where it is called the characteristic function):
@@ -358,7 +392,7 @@ is entire on $C^N$. An entire function is a complex valued function of one compl
 
     
     \item OS1: Regularity-
-There exist a real number \(p\) with \(1\le p\le 2\) and a constant \(c>0\) such that, for every test function \(f\in\mathcal{C}^{\infty}_{\mathrm c}(\mathbb{R}^{d})\), where $C_c^{\infty} (U)$ is the set of all real or complex-valued functions. Said more simply for some p and c that meet the above conditions the below inequality holds for all test functions f
+There exists a real number \(p\) with \(1\le p\le 2\) and a constant \(c>0\) such that, for every test function \(f\in\mathcal{C}^{\infty}_{\mathrm c}(\mathbb{R}^{d})\), where $C_c^{\infty} (U)$ is the set of all real or complex-valued functions. Said more simply for some p and c that meet the above conditions the below inequality holds for all test functions f
 \begin{equation}\label{eq:OS1}
 \bigl|S\{f\}\bigr|
 \;\le\;
@@ -407,7 +441,7 @@ is locally integrable in \((x,y)\in\mathbb{R}^{d}\times\mathbb{R}^{d}\).Note tha
          < \theta A, A >_{L_2(d \mu)}\geq 0 
      \end{equation}
      
-    \item OS4: Ergodicity- The time translation subgroup $T(t)$ acts ergotically, meaning it upholds the uniqueness of the vacuum, on the measure $D'(R^d), d\mu$. The time translation subgroup in Euclidean space is the one parameter group of pure time shifts 
+    \item OS4: Ergodicity- The time translation subgroup $T(t)$ acts ergodically, meaning it upholds the uniqueness of the vacuum, on the measure $D'(R^d), d\mu$. The time translation subgroup in Euclidean space is the one parameter group of pure time shifts 
     \begin{equation}
         T(t) : x = (t, \vec{x})\rightarrow (t+ t', \vec{x}) \qquad t'\in R 
     \end{equation}
@@ -1260,6 +1294,345 @@ noncomputable instance : HilbertSpace ℂ (�� S os3) :=
 noncomputable def vacuum : �� S os3 :=
   UniformSpace.Completion.coe (Submodule.Quotient.mk (1 : EuclideanAlgebra d))
 \end{lstlisting}
+
+\subsection{OS2 Lean Code Detailed explaination}
+
+
+\section{Ambient space, measures, and function spaces}
+
+Let $d:=4$ and let $\Rd$ be Euclidean space with its standard inner product and norm $\norm{\cdot}$. Let $\mu$ denote Lebesgue measure on $\Rd$.
+
+Define the real field space
+\[
+\mathrm{FieldSpace} \;=\; \LP^2(\Rd,\mu;\R)
+\]
+as the Hilbert space of $\mu$-square-integrable real functions modulo almost everywhere equality. Define the complex field space
+\[
+\mathrm{ComplexFieldSpace} \;=\; \LP^2(\Rd,\mu;\C).
+\]
+Let $\Sch(\Rd;\R)$ and $\Sch(\Rd;\C)$ denote the real and complex Schwartz spaces. Elements of $\Sch(\Rd;\R)$ will be called test functions and denoted $J$.
+
+\section{The Euclidean group and its action}
+
+\subsection{Orthogonal group and linear isometries}
+
+Let $O(4)$ denote the group of orthogonal linear isometries $R:\Rd\to\Rd$, that is $R$ is linear and $\norm{Rx}=\norm{x}$ for all $x\in\Rd$. Equivalently $R^\top R=I$ and $|\det R|=1$.
+
+\begin{lemma}[Inverses and composition in $O(4)$]\label{lem:O4group}
+If $R,H\in O(4)$ then $R\circ H\in O(4)$, $I\in O(4)$, and $R^{-1}\in O(4)$ with $R^{-1}=R^\top$. Moreover
+\[
+(R\circ H)(x)=R(Hx), \qquad R^{-1}(Rx)=x.
+\]
+\end{lemma}
+
+\begin{proof}
+$\norm{(R\circ H)x}=\norm{H x}=\norm{x}$ gives $R\circ H\in O(4)$. Trivially $I\in O(4)$. If $R\in O(4)$ then $R^\top R=I$ so $R$ is invertible with inverse $R^{-1}=R^\top$, and $\norm{R^{-1}x}=\norm{x}$ follows from $\norm{x}^2=\ip{x}{x}=\ip{RR^{-1}x}{RR^{-1}x}=\norm{R^{-1}x}^2$.
+\end{proof}
+
+\subsection{Euclidean motions as a semidirect product}
+
+\begin{definition}[Euclidean group]\label{def:E}
+Define the Euclidean group
+\[
+\mathsf{E}\;=\;\{(R,t): R\in O(4),\ t\in\Rd\}
+\]
+with multiplication
+\begin{equation}\label{eq:E-mul}
+(R,t)\cdot(H,s)\;=\;(R\circ H,\; R s + t),
+\end{equation}
+identity $e=(I,0)$, and inverse
+\begin{equation}\label{eq:E-inv}
+(R,t)^{-1}\;=\;(R^{-1},\; - R^{-1} t).
+\end{equation}
+\end{definition}
+
+\begin{lemma}[Group axioms]\label{lem:Egroup}
+$\mathsf{E}$ with \eqref{eq:E-mul}, \eqref{eq:E-inv} is a group.
+\end{lemma}
+
+\begin{proof}
+Associativity: for $(F,u),(R,t),(H,s)\in\mathsf{E}$,
+\[
+\bigl((F,u)\cdot(R,t)\bigr)\cdot(H,s)
+=(F\circ R, Ft + u)\cdot(H,s)
+=(F\circ R \circ H,\; F(R s) + Ft + u),
+\]
+and
+\[
+(F,u)\cdot\bigl((R,t)\cdot(H,s)\bigr)
+=(F,u)\cdot(R\circ H, Rs+t)
+=(F\circ R\circ H,\; F(R s + t)+u)
+=(F\circ R\circ H,\; F(R s)+Ft+u).
+\]
+Identity: $(I,0)\cdot(R,t)=(I\circ R, It+0)=(R,t)$ and $(R,t)\cdot(I,0)=(R\circ I, Rs+t)=(R,t)$ with $s=0$. Inverse:
+\[
+(R,t)\cdot(R^{-1},-R^{-1}t)=(I, R(-R^{-1}t)+t)=(I, -t+t)=(I,0),
+\]
+and similarly on the other side. We used Lemma \ref{lem:O4group}.
+\end{proof}
+
+\subsection{Action on spacetime}
+
+\begin{definition}[Action on $\Rd$]\label{def:act}
+For $g=(R,t)\in\mathsf{E}$ and $x\in\Rd$ set
+\[
+\mathrm{act}(g,x) \;=\; R x + t.
+\]
+\end{definition}
+
+\begin{lemma}[Action laws]\label{lem:action-laws}
+For all $g,h\in\mathsf{E}$ and $x\in\Rd$:
+\[
+\mathrm{act}(e,x)=x,\qquad
+\mathrm{act}(g h,x)=\mathrm{act}\bigl(g,\mathrm{act}(h,x)\bigr),\qquad
+\mathrm{act}\bigl(g^{-1},\mathrm{act}(g,x)\bigr)=x.
+\]
+\end{lemma}
+
+\begin{proof}
+First identity: $\mathrm{act}((I,0),x)=Ix+0=x$. Second:
+\[
+\mathrm{act}(gh,x)=(R\circ H)x+R s+t = R(Hx+s)+t = \mathrm{act}(g,\mathrm{act}(h,x)).
+\]
+Third: with $g^{-1}=(R^{-1},-R^{-1}t)$,
+\[
+\mathrm{act}\bigl(g^{-1},\mathrm{act}(g,x)\bigr)
+=R^{-1}(Rx+t)-R^{-1}t = x.
+\]
+\end{proof}
+
+\section{Measure preservation, smoothness, and growth}
+
+\subsection{Measure preservation}
+
+\begin{lemma}[Rotations and translations preserve Lebesgue]\label{lem:rot+trans}
+Fix $R\in O(4)$ and $t\in\Rd$. For any Borel $A\subset\Rd$,
+\[
+\mu(RA)=\mu(A), \qquad \mu(A+t)=\mu(A).
+\]
+\end{lemma}
+
+\begin{proof}
+For $R\in O(4)$, change of variables with Jacobian $|\det R|=1$ gives $\mu(RA)=\int \1_{RA} \,d\mu=\int \1_A \,|\det R|\, d\mu=\mu(A)$. For translation, by definition of Lebesgue measure, $\mu(A+t)=\mu(A)$ for all $t$.
+\end{proof}
+
+\begin{prop}[Every Euclidean motion is measure preserving]\label{prop:measure-preserving}
+For $g=(R,t)\in \mathsf{E}$ the map $x\mapsto \mathrm{act}(g,x)=Rx+t$ is measure preserving:
+\[
+\mu\circ \mathrm{act}(g)^{-1}=\mu.
+\]
+\end{prop}
+
+\begin{proof}
+The map factors as translation by $t$ after the linear isometry $R$. Apply Lemma \ref{lem:rot+trans} twice. Equivalently, for every integrable $f$,
+\[
+\int_{\Rd} f(Rx+t)\,d\mu(x)
+=\int_{\Rd} f(y+t)\,d\mu(y)
+=\int_{\Rd} f(z)\,d\mu(z).
+\]
+\end{proof}
+
+\subsection{Smoothness and derivative of the inverse action}
+
+\begin{lemma}[Smoothness]\label{lem:contdiff}
+For fixed $g=(R,t)\in\mathsf{E}$ the map $F:\Rd\to\Rd$ given by
+\[
+F(x)=\mathrm{act}(g^{-1},x)=R^{-1}x - R^{-1}t
+\]
+is $C^\infty$. Its Fréchet derivative at every $x$ equals the constant linear map $R^{-1}$:
+\[
+\mathrm{D}F(x)=R^{-1}.
+\]
+\end{lemma}
+
+\begin{proof}
+$F$ is an affine map, hence smooth of all orders. Linearity of the derivative gives
+\[
+\mathrm{D}F(x)\cdot v
+=\lim_{h\to 0}\frac{F(x+hv)-F(x)}{h}
+=\lim_{h\to 0}\frac{R^{-1}(x+hv)-R^{-1}x}{h}
+=R^{-1}v.
+\]
+Thus $\mathrm{D}F(x)=R^{-1}$ for all $x$.
+\end{proof}
+
+\subsection{Polynomial bounds and temperate growth}
+
+\begin{lemma}[Two-sided linear bounds]\label{lem:poly-bounds}
+Fix $g=(R,t)\in\mathsf{E}$ and set $F(x)=\mathrm{act}(g^{-1},x)=R^{-1}x-R^{-1}t$. Then for all $x\in\Rd$:
+\begin{align}
+\norm{x} &\le (1+\norm{t})\,(1+\norm{F(x)}), \label{eq:bound1}\\
+\norm{F(x)} &\le (1+\norm{R^{-1}t})\,(1+\norm{x}). \label{eq:bound2}
+\end{align}
+\end{lemma}
+
+\begin{proof}
+Since $R^{-1}$ is an isometry, $\norm{x}=\norm{R^{-1}x}$. Write $R^{-1}x = F(x)+R^{-1}t$. Triangle inequality yields
+\[
+\norm{R^{-1}x} \le \norm{F(x)}+\norm{R^{-1}t} = \norm{F(x)}+\norm{t}.
+\]
+Hence
+\[
+\norm{x}\le \norm{F(x)}+\norm{t} \le (1+\norm{t})(1+\norm{F(x)}),
+\]
+which is \eqref{eq:bound1}. For \eqref{eq:bound2},
+\[
+\norm{F(x)}\le \norm{R^{-1}x}+\norm{R^{-1}t}=\norm{x}+\norm{R^{-1}t}\le (1+\norm{R^{-1}t})(1+\norm{x}).
+\]
+\end{proof}
+
+\begin{remark}
+Lemma \ref{lem:poly-bounds} implies $F$ and $F^{-1}$ have at most linear growth, hence temperate growth in the classical sense used for composition on the Schwartz space.
+\end{remark}
+
+\section{Induced actions on test functions and fields}
+
+\subsection{Action on Schwartz test functions}
+
+\begin{definition}[Push of a test function]\label{def:push}
+For $g\in\mathsf{E}$ and $J\in\Sch(\Rd;\R)$ define
+\[
+(\push_g J)(x) \;=\; J\bigl(\mathrm{act}(g^{-1},x)\bigr)
+=J\bigl(R^{-1}x-R^{-1}t\bigr).
+\]
+\end{definition}
+
+\begin{prop}[Well defined on $\Sch$]\label{prop:push-is-schwartz}
+For every $g\in\mathsf{E}$ and $J\in\Sch(\Rd;\R)$ one has $\push_g J\in\Sch(\Rd;\R)$. Moreover the map $J\mapsto \push_g J$ is a continuous linear automorphism of $\Sch$.
+\end{prop}
+
+\begin{proof}
+Translation and composition with an invertible linear map preserve $\Sch(\Rd)$ and its seminorms. Concretely, let $\alpha,\beta$ be multi-indices. Using the chain rule and Lemma \ref{lem:contdiff}, for the derivative we have
+\[
+\partial^\alpha\bigl(\push_g J\bigr)(x)
+=\sum_{|\gamma|=|\alpha|} c_{\alpha,\gamma} \, (\partial^\gamma J)\bigl(R^{-1}x-R^{-1}t\bigr)
+\]
+for appropriate constants $c_{\alpha,\gamma}$ depending only on $\alpha$ and $R^{-1}$. By Lemma \ref{lem:poly-bounds},
+\[
+(1+\norm{x})^m\,\bigl|\partial^\alpha(\push_g J)(x)\bigr|
+\;\lesssim_{m,\alpha,g}\;
+\sum_{|\gamma|=|\alpha|} \sup_{y\in\Rd} (1+\norm{y})^{m'}\,\bigl|\partial^\gamma J(y)\bigr|
+\]
+for a suitable $m'$ depending on $m$ and $g$. The right hand side is a finite Schwartz seminorm of $J$. Hence $\push_g J\in\Sch$ and continuity follows from the seminorm bound. Invertibility holds because $\push_{g^{-1}}$ is the inverse of $\push_g$.
+\end{proof}
+
+\subsection{Action on $\LP^2$ fields}
+
+\begin{definition}[Pull of a field]\label{def:pull}
+For $g\in\mathsf{E}$ and $\varphi\in \LP^2(\Rd,\mu;\R)$ define
+\[
+(\pull_g \varphi)(x)\;=\;\varphi\bigl(\mathrm{act}(g^{-1},x)\bigr)
+=\varphi\bigl(R^{-1}x-R^{-1}t\bigr).
+\]
+\end{definition}
+
+\begin{prop}[Well defined on $\LP^2$ and isometric]\label{prop:pull-L2}
+For each $g\in\mathsf{E}$, $\pull_g:\LP^2(\mu;\R)\to\LP^2(\mu;\R)$ is a linear isometry:
+\[
+\|\pull_g \varphi\|_{L^2(\mu)}=\|\varphi\|_{L^2(\mu)}.
+\]
+\end{prop}
+
+\begin{proof}
+By Proposition \ref{prop:measure-preserving},
+\[
+\int_{\Rd} \bigl|(\pull_g\varphi)(x)\bigr|^2\, d\mu(x)
+=\int_{\Rd} |\varphi(y)|^2\, d(\mu\circ \mathrm{act}(g)) (y)
+=\int_{\Rd} |\varphi(y)|^2\, d\mu(y).
+\]
+Linearity is clear.
+\end{proof}
+
+\subsection{Pairings and generating functionals}
+
+Fix a probability measure $\mathbb{P}$ on $\mathrm{FieldSpace}=\LP^2(\mu;\R)$.
+
+\begin{definition}[Linear pairing]\label{def:pairing}
+For $J\in\Sch(\Rd;\R)$ and $\varphi\in\mathrm{FieldSpace}$ define the continuous linear functional
+\[
+\langle \varphi, J\rangle
+\;=\;\int_{\Rd} \varphi(x)\, J(x)\, d\mu(x).
+\]
+\end{definition}
+
+\begin{definition}[Generating functional]\label{def:genfun}
+The generating functional (characteristic functional) associated with $\mathbb{P}$ is
+\[
+\Char(J)\;=\;\mathbb{E}_{\varphi\sim\mathbb{P}}\!\left[ \exp\bigl( i \,\langle \varphi, J\rangle \bigr)\right],
+\qquad J\in\Sch(\Rd;\R).
+\]
+\end{definition}
+
+\begin{definition}[Local polynomial observables]\label{def:polyobs}
+For $p\in\R[X]$ and $\varphi\in\mathrm{FieldSpace}$ set
+\[
+\mathcal{O}_p(\varphi)\;=\;\int_{\Rd} p\bigl(\varphi(x)\bigr)\, d\mu(x).
+\]
+\end{definition}
+
+\section{Euclidean invariance}
+
+\begin{definition}[Euclidean invariance of the law]\label{def:EuclInv}
+We say that $\mathbb{P}$ is Euclidean invariant if for every $g\in\mathsf{E}$ the pushforward of $\mathbb{P}$ under $\pull_g$ equals $\mathbb{P}$:
+\[
+(\pull_g)_\# \mathbb{P} \;=\; \mathbb{P}.
+\]
+Equivalently, for every bounded measurable $F:\mathrm{FieldSpace}\to\R$,
+\[
+\int F\bigl(\pull_g \varphi\bigr)\, d\mathbb{P}(\varphi)
+= \int F(\varphi)\, d\mathbb{P}(\varphi).
+\]
+\end{definition}
+
+\begin{axiomenv}[OS2]\label{ax:OS2}
+The chosen probability measure $\mathbb{P}$ on $\mathrm{FieldSpace}$ is Euclidean invariant in the sense of Definition \ref{def:EuclInv}.
+\end{axiomenv}
+
+\begin{remark}
+Under OS2 one immediately obtains invariance identities such as
+\[
+\Char(\push_g J) \;=\; \Char(J),\qquad
+\mathbb{E}\bigl[\mathcal{O}_p(\pull_g \varphi)\bigr]
+=\mathbb{E}\bigl[\mathcal{O}_p(\varphi)\bigr].
+\]
+\end{remark}
+
+\section{Sanity check of the pull definition}
+
+\begin{prop}[Pointwise identity behind the pull]\label{prop:check}
+Fix $g=(R,t)\in\mathsf{E}$, $\varphi\in\mathrm{FieldSpace}$, and $x\in\Rd$. Then
+\[
+(\pull_g \varphi)(x)
+=\varphi\bigl(\mathrm{act}(g^{-1},x)\bigr).
+\]
+\end{prop}
+
+\begin{proof}
+This is just Definition \ref{def:pull}.
+\end{proof}
+
+\begin{remark}[Concrete example]
+Let $g=(I,\mathbf{1})$ with $\mathbf{1}=(1,1,1,1)\in\Rd$. Then $(\pull_g\varphi)(x)=\varphi(x-\mathbf{1})$ and $(\push_g J)(x)=J(x-\mathbf{1})$. All identities above specialize accordingly.
+\end{remark}
+
+\section{Summary of correspondences with the Lean development}
+
+We list the Lean constructs and their LaTeX translations.
+
+\begin{itemize}
+\item \texttt{STDimension := 4}, \texttt{RSpaceTime := EuclideanSpace $\R$ (Fin 4)} corresponds to $\Rd$.
+\item \texttt{μ := volume} corresponds to Lebesgue measure $\mu$.
+\item \texttt{O4 := LinearIsometry $\R$ $\Rd$ $\Rd$} corresponds to $O(4)$ and Lemma \ref{lem:O4group}.
+\item \texttt{structure E \{ R : O4, t : \Rd\}} with \texttt{mul}, \texttt{one}, \texttt{inv} corresponds to Definitions \ref{def:E} and Lemma \ref{lem:Egroup}.
+\item \texttt{act g x := g.R x + g.t} corresponds to Definition \ref{def:act} and Lemma \ref{lem:action-laws}.
+\item \texttt{measurePreserving\_act} corresponds to Proposition \ref{prop:measure-preserving}.
+\item Smoothness \texttt{contDiff\_act\_inv}, derivative \texttt{fderiv\_...}, and temperate growth helpers correspond to Lemma \ref{lem:contdiff} and Lemma \ref{lem:poly-bounds}.
+\item \texttt{TestFunction.push} as \texttt{SchwartzMap.compCLM} corresponds to Definition \ref{def:push} and Proposition \ref{prop:push-is-schwartz}.
+\item \texttt{FieldSpace.pull} via \texttt{Lp.compMeasurePreserving} corresponds to Definition \ref{def:pull} and Proposition \ref{prop:pull-L2}.
+\item \texttt{EuclideanInvariant} and \texttt{axiom OS2} correspond to Definition \ref{def:EuclInv} and Axiom \ref{ax:OS2}.
+\item \texttt{check\_implementation} corresponds to Proposition \ref{prop:check}.
+\end{itemize}
+
 
 
 \bibliography{airefs,trans,mathrefs,mathqft}

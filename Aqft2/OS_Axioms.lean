@@ -33,12 +33,16 @@ import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Analysis.NormedSpace.RCLike
 import Mathlib.Analysis.NormedSpace.Real
 
+import Mathlib.Topology.Basic
+import Mathlib.Order.Filter.Basic
+
 import Aqft2.FunctionalAnalysis
 import Aqft2.Basic
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
 import Aqft2.PositiveTimeTestFunction
+import Aqft2.OS4
 
 /- These are the O-S axioms in the form given in Glimm and Jaffe, Quantum Physics, pp. 89-90 -/
 
@@ -84,30 +88,9 @@ def OS3_ReflectionPositivity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
         (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).im = 0
 
 -- OS4: The ergodicity axiom
-def OS4_Ergodicity (_ : ProbabilityMeasure FieldSpace) : Prop :=
-  -- This axiom states that time averages of dynamical quantities converge to
-  -- their ensemble averages (given by the generating functional).
-  --
-  -- The CORRECT formulation should involve:
-  -- - Left side: Time average of some DYNAMICAL quantity (not involving dμ)
-  --   Examples might include:
-  --   * lim_{T→∞} (1/T) ∫₀ᵀ ⟨φ(t·e₀), f⟩ dt  (field expectation)
-  --   * lim_{T→∞} (1/T) ∫₀ᵀ F[T_t φ] dt  (some functional of translated fields)
-  -- - Right side: Ensemble average = generating functional with respect to dμ
-  --
-  -- The key insight is that the left side should involve the DYNAMICS of the field
-  -- (time evolution, field correlations, etc.) while the right side involves the
-  -- STATISTICS (probability measure dμ).
-  --
-  -- This captures the fundamental principle: Dynamical averages = Statistical averages
-  --
-  -- However, the exact form of the dynamical quantity on the left depends on
-  -- the specific formulation of the field theory and requires a proper dynamical
-  -- framework which we haven't established yet.
-  --
-  -- TODO: Replace with correct formulation once we have:
-  -- 1. A proper dynamical system on field space (Hamiltonian, time evolution, etc.)
-  -- 2. Field observables/functionals that don't depend on the measure dμ
-  -- 3. The correct mathematical machinery for field dynamics and time evolution
-  -- 4. Clarification from the literature on the exact form of OS4
-  True  -- Placeholder for now
+def OS4_Ergodicity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
+  ∃ (φ : QFT.Flow FieldSpace),
+    QFT.invariant_under (dμ : Measure FieldSpace) φ ∧
+    QFT.ergodic_action (dμ : Measure FieldSpace) φ ∧
+    (∀ (A : FieldSpace → ℝ), Integrable A (dμ : Measure FieldSpace) →
+      ∀ᵐ _ ∂(dμ : Measure FieldSpace), True) -- Simplified for now
