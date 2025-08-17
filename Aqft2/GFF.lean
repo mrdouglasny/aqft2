@@ -73,7 +73,21 @@ instance isometry_invertible {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup 
 def IsEuclideanInvariant {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] (T : F →L[𝕜] F) : Prop :=
   ∀ (g : F →L[𝕜] F), IsEuclideanTransformation g → [Invertible g] → T ∘L g = g ∘L T
 
-/-- The quadratic action functional for the free field -/
+/-- The quadratic action functional for the free field.
+    
+    Mathematical note: This represents the "Euclidean action" S_E[φ] = (1/2)⟪φ, A φ⟫ + ⟪J, φ⟫
+    which appears in the path integral weight exp(-S_E[φ]).
+    
+    For Gaussian Free Fields, the generating functional is:
+    S(f) = ∫ exp(i ⟨φ, f⟩) exp(-S_E[φ]) Dφ
+         = exp(-(1/2)⟪f, C f⟫ + i⟪m, f⟫)
+    
+    where C = A^(-1) is the covariance and m = -C J is the mean.
+    
+    The real-valued action is compatible with OS axioms because:
+    1. The generating functional itself maintains complex analyticity
+    2. The action appears in the measure, not directly in the generating functional
+    3. Complex analyticity comes from the Gaussian integral, not the action -/
 def quadratic_action {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] (A : F →L[𝕜] F) (J f : F) : ℝ :=
   (1 / 2) * RCLike.re (⟪f, A f⟫_𝕜) + RCLike.re (⟪J, f⟫_𝕜)
 
@@ -297,14 +311,13 @@ lemma GFF_generating_functional_form
   -- This follows from symmetry of CovOp and basic complex arithmetic
   sorry
 
-/-- Analyticity property needed for OS0 -/
-lemma GFF_analyticity
+/-- Real analyticity property (weaker than OS0 which requires complex analyticity) -/
+lemma GFF_real_analyticity
   {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
   {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
   (abstract_field : AbstractFreeField 𝕜 F)
   (GFF : GaussianFreeField Ω abstract_field) :
-  -- The generating functional is analytic in the test function f
-  -- For simplicity, we consider analyticity in real parameters z
+  -- The generating functional is analytic in real parameters z (weaker than OS0)
   ∀ f : F, AnalyticAt ℝ (fun z : ℝ => GFF_generating_functional abstract_field GFF ((z : 𝕜) • f)) 0 := by
   intro f
   -- Use the explicit form from GFF_generating_functional_form
@@ -326,18 +339,32 @@ lemma GFF_analyticity
   -- The exponent becomes: -(1/2)z²⟪f, CovOp f⟫ + iz⟪CovOp(J), f⟫
   -- Since this is a polynomial in z and exp is analytic, the composition is analytic
 
-  -- Apply standard analyticity results for compositions
-  sorry -- This follows from standard complex analysis: polynomials are analytic,
-        -- exponential is analytic, and composition preserves analyticity
+  -- The function is of the form z ↦ exp(az² + bz + c) where a, b, c are constants
+  -- By linearity of inner products: ⟪z•f, CovOp(z•f)⟫ = z²⟪f, CovOp f⟫ and ⟪J, z•f⟫ = z⟪J, f⟫  
+  -- So the exponent becomes: -(1/2)z²⟪f, CovOp f⟫ + iz⟪CovOp(J), f⟫
+  -- This is a polynomial in z, and exp ∘ polynomial is analytic
+  -- Use AnalyticAt.comp with Complex.analyticAt_exp and polynomial analyticity
+  sorry -- Apply: exp is analytic, polynomials are analytic, composition preserves analyticity
 
 theorem GFF_satisfies_OS0
   {𝕜 : Type*} {F : Type*} [RCLike 𝕜] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [IsHilbert 𝕜 F]
   {Ω : Type*} [TopologicalSpace Ω] [MeasurableSpace Ω]
   (abstract_field : AbstractFreeField 𝕜 F)
-  (GFF : GaussianFreeField Ω abstract_field) :
-  -- The generating functional is analytic
-  ∀ f : F, AnalyticAt ℝ (fun z : ℝ => GFF_generating_functional abstract_field GFF ((z : 𝕜) • f)) 0 :=
-  GFF_analyticity abstract_field GFF
+  (GFF : GaussianFreeField Ω abstract_field)
+  (dμ : ProbabilityMeasure FieldSpace) :
+  -- We need to prove the generating functional is entire in complex linear combinations
+  -- This requires showing: ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), 
+  --   Entire (fun z : ℂn n => generatingFunctionalℂ dμ (weightedSumCLM z))
+  OS0_Analyticity dμ := by
+  unfold OS0_Analyticity Entire
+  intro n J
+  -- We need to show: AnalyticOn ℂ (fun z : ℂn n => generatingFunctionalℂ dμ (weightedSumCLM z)) Set.univ
+  -- The generating functional has the form: exp(quadratic_form) where quadratic_form is polynomial in z
+  -- Since exp ∘ polynomial is entire, this follows from standard complex analysis
+  sorry -- This is much more involved than the previous real analyticity case
+        -- Need to show: 1) weightedSumCLM gives polynomial dependence on z
+        --               2) generatingFunctionalℂ ∘ polynomial is entire
+        --               3) Apply composition rules for entire functions
 
 /-- Positivity property needed for OS1 -/
 lemma GFF_positivity
@@ -662,32 +689,34 @@ lemma complete_OS3_connection
     -- The exponent is real, so imaginary part of exp is 0
     sorry
 
-/-- Summary: The complete path from HasReflectionPositivity to OS3_ReflectionPositivity.
+/-
 
-    This section establishes the theoretical framework connecting our L2-based
-    reflection positivity condition to the OS3 axiom. The key steps are:
+## Summary: The complete path from HasReflectionPositivity to OS3_ReflectionPositivity
 
-    1. **HasReflectionPositivity**: Defines reflection positivity on L2-embedded test functions
-       ∀ F ∈ PositiveTimeTestFunction: 0 ≤ Re⟪star F, CovOp F⟫ in L2 space
+This section establishes the theoretical framework connecting our L2-based
+reflection positivity condition to the OS3 axiom. The key steps are:
 
-    2. **Gaussian Form Assumption**: The generating functional has the form
-       generatingFunctionalℂ(f) = exp(-(1/2)⟪f, CovOp f⟫_L2)
+1. **HasReflectionPositivity**: Defines reflection positivity on L2-embedded test functions
+   ∀ F ∈ PositiveTimeTestFunction: 0 ≤ Re⟪star F, CovOp F⟫ in L2 space
 
-    3. **SchwartzMul Connection**: The OS3 expression schwartzMul (star F) F
-       relates to the L2 inner product structure via the toLp embedding
+2. **Gaussian Form Assumption**: The generating functional has the form
+   generatingFunctionalℂ(f) = exp(-(1/2)⟪f, CovOp f⟫_L2)
 
-    4. **OS3_ReflectionPositivity**: Concludes that
-       0 ≤ Re(generatingFunctionalℂ(schwartzMul (star F) F)) and
-       0 = Im(generatingFunctionalℂ(schwartzMul (star F) F))
+3. **SchwartzMul Connection**: The OS3 expression schwartzMul (star F) F
+   relates to the L2 inner product structure via the toLp embedding
 
-    The mathematical insight is that Gaussian theories allow explicit computation
-    of the generating functional, reducing the reflection positivity condition to
-    a quadratic form positivity condition on the covariance operator.
+4. **OS3_ReflectionPositivity**: Concludes that
+   0 ≤ Re(generatingFunctionalℂ(schwartzMul (star F) F)) and
+   0 = Im(generatingFunctionalℂ(schwartzMul (star F) F))
 
-    This framework is specific to Gaussian Free Fields and leverages their
-    explicit exponential structure, which is not available for general QFTs.
+The mathematical insight is that Gaussian theories allow explicit computation
+of the generating functional, reducing the reflection positivity condition to
+a quadratic form positivity condition on the covariance operator.
+
+This framework is specific to Gaussian Free Fields and leverages their
+explicit exponential structure, which is not available for general QFTs.
+
 -/
-
 
 /-! ## Main Goal: OS Axioms -/
 
@@ -712,7 +741,7 @@ Approach (2) is mathematically equivalent but computationally more tractable for
 theories since the covariance operator acts naturally on L2 spaces.
 
 Progress:
-- OS0 (Analyticity): ✓ Proven using GFF_satisfies_OS0
+- OS0 (Analyticity): ⚠️  GFF_satisfies_OS0 started but requires complex analyticity (entireness), not just real analyticity
 - OS2 (Euclidean Invariance): ✓ Proven using GFF_satisfies_OS2 (for J=0 case)
 - OS3 (Reflection Positivity): ✓ Framework established with concrete L2 formulation
 - OS1 (Regularity): ⏳ Still need to be proven
