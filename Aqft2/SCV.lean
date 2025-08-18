@@ -116,16 +116,16 @@ lemma sumSquares_analytic {n : ℕ} :
 /-- Key theorem: The L2 bilinear form on test functions gives polynomial dependence in complex coefficients.
     This is exactly what we need for complex analyticity of the generating functional! -/
 theorem L2BilinearForm_polynomial_in_coefficients (n : ℕ) (J : Fin n → TestFunctionℂ) :
-  AnalyticOn ℂ (fun z : ℂn n => 
-    Complex.exp (-(1/2 : ℂ) * L2BilinearForm 
-      ((∑ i, z i • J i).toLp (p := 2) (μ := μ)) 
+  AnalyticOn ℂ (fun z : ℂn n =>
+    Complex.exp (-(1/2 : ℂ) * L2BilinearForm
+      ((∑ i, z i • J i).toLp (p := 2) (μ := μ))
       ((∑ i, z i • J i).toLp (p := 2) (μ := μ)))) Set.univ := by
-  -- Strategy: 
-  -- 1. The L2BilinearForm expands to ∑ᵢ ∑ⱼ zᵢ * zⱼ * L2BilinearForm(Jᵢ, Jⱼ) 
+  -- Strategy:
+  -- 1. The L2BilinearForm expands to ∑ᵢ ∑ⱼ zᵢ * zⱼ * L2BilinearForm(Jᵢ, Jⱼ)
   -- 2. This is a polynomial in z (quadratic form with NO conjugation)
   -- 3. exp(polynomial) is entire
   -- 4. The key insight: TRUE bilinear form ⇒ no conjugation ⇒ analyticity preserved
-  
+
   apply AnalyticOn.cexp
   apply AnalyticOn.mul
   · -- The constant -(1/2) is analytic

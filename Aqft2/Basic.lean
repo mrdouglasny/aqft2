@@ -118,20 +118,20 @@ def schwartzMul (g : TestFunctionℂ) : TestFunctionℂ →L[ℂ] TestFunction�
 The key insight for complex analyticity (OS0) is to use symmetric bilinear forms
 instead of sesquilinear inner products for the quadratic terms in generating functionals.
 
-**Mathematical reason**: 
+**Mathematical reason**:
 - Sesquilinear inner products: ⟪·,·⟫_ℂ are conjugate-linear in the first argument
 - This introduces conjugation: ⟪z•f, g⟫ = conj(z) * ⟪f, g⟫
 - Conjugation breaks complex analyticity!
 
-**Solution**: 
-- Symmetric bilinear forms: B : F →L[ℂ] F →L[ℂ] ℂ are linear in both arguments  
+**Solution**:
+- Symmetric bilinear forms: B : F →L[ℂ] F →L[ℂ] ℂ are linear in both arguments
 - No conjugation: B(z•f, g) = z * B(f, g)
 - Preserves complex analyticity: polynomial in z gives entire functions
 
 This approach enables the proof of OS0 analyticity for Gaussian Free Fields.
 -/
 
-/-- The L2 bilinear form: ∫ f(x) * g(x) dμ(x) 
+/-- The L2 bilinear form: ∫ f(x) * g(x) dμ(x)
     This is the correct bilinear form for complex analyticity on L2 spaces.
     Unlike the sesquilinear inner product ⟪f,g⟫ = ∫ conj(f(x)) * g(x) dμ(x),
     this bilinear form has no conjugation: B(z•f, g) = z * B(f, g). -/
@@ -147,7 +147,7 @@ lemma L2BilinearForm_symm (f g : FieldSpace𝕜 ℂ) :
   ext x
   ring
 
-/-- L2BilinearForm is homogeneous in the first argument (key for analyticity!) 
+/-- L2BilinearForm is homogeneous in the first argument (key for analyticity!)
     This is the crucial property: B(z•f, g) = z * B(f, g) with NO conjugation -/
 lemma L2BilinearForm_smul_left (c : ℂ) (f g : FieldSpace𝕜 ℂ) :
   L2BilinearForm (c • f) g = c * L2BilinearForm f g := by
@@ -171,7 +171,7 @@ lemma L2BilinearForm_add_left (f₁ f₂ g : FieldSpace𝕜 ℂ) :
 /-- The key property: L2BilinearForm expands bilinearly for linear combinations.
     This is what preserves complex analyticity! -/
 lemma L2BilinearForm_linear_combination (n : ℕ) (z : Fin n → ℂ) (J : Fin n → FieldSpace𝕜 ℂ) :
-  L2BilinearForm (∑ i, z i • J i) (∑ j, z j • J j) = 
+  L2BilinearForm (∑ i, z i • J i) (∑ j, z j • J j) =
   ∑ i, ∑ j, z i * z j * L2BilinearForm (J i) (J j) := by
   -- This is the crucial expansion that shows the quadratic form is polynomial in z
   -- No conjugation means z i * z j (not z i * conj(z j))

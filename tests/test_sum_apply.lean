@@ -11,7 +11,7 @@ noncomputable section
 -- (∑ x, z x • B (f x)) (∑ j, z j • C (f j)) = ∑ i, (z i • B (f i)) (∑ j, z j • C (f j))
 
 -- Let's make the simplest possible example of this pattern
-example (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E] 
+example (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
         (B : E →L[ℂ] E →L[ℂ] ℂ) (f : Fin 2 → E) (z : Fin 2 → ℂ) (v : E) :
   (∑ x, z x • B (f x)) v = ∑ i, (z i • B (f i)) v := by
   -- Let's try a more direct approach: expand the finite sum explicitly
@@ -22,7 +22,7 @@ example (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
   rw [h3]
 
 -- Even simpler: just two terms explicitly
-example (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E] 
+example (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
         (B₁ B₂ : E →L[ℂ] ℂ) (a₁ a₂ : ℂ) (v : E) :
   (a₁ • B₁ + a₂ • B₂) v = (a₁ • B₁) v + (a₂ • B₂) v := by
   rw [ContinuousLinearMap.add_apply]
@@ -33,14 +33,14 @@ example (f g : ℂ →L[ℂ] ℂ) (x : ℂ) :
   rfl  -- This should work by definition
 
 -- Let's make it work for general Fin n
-example (n : ℕ) (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E] 
+example (n : ℕ) (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
         (B : E →L[ℂ] E →L[ℂ] ℂ) (f : Fin n → E) (z : Fin n → ℂ) (v : E) :
   (∑ x, z x • B (f x)) v = ∑ i, (z i • B (f i)) v := by
   -- Use induction on the finite sum
   simp only [← ContinuousLinearMap.sum_apply]
 
 -- Test the exact pattern from MVGaussianAbstract with two arguments
-example (n : ℕ) (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E] 
+example (n : ℕ) (E : Type*) [NormedAddCommGroup E] [InnerProductSpace ℂ E]
         (B : E →L[ℂ] E →L[ℂ] ℂ) (f : Fin n → E) (z : Fin n → ℂ) (u : E) :
   (∑ x, z x • B (f x)) u = ∑ i, (z i • B (f i)) u := by
   simp only [← ContinuousLinearMap.sum_apply]
