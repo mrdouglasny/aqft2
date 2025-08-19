@@ -6,3 +6,4 @@ import «Aqft2».Euclidean
 import «Aqft2».DiscreteSymmetry
 import «Aqft2».SCV
 import «Aqft2».OS_Axioms
+import «Aqft2».GFF3
