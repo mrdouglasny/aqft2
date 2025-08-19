@@ -245,7 +245,7 @@ def GJMean (dμ_config : ProbabilityMeasure FieldConfiguration)
   (φ : TestFunction) : ℝ :=
   ∫ ω, distributionPairing ω φ ∂dμ_config.toMeasure
 
-/-- For a centered measure (zero mean), we can define the Gaussian generating functional 
+/-- For a centered measure (zero mean), we can define the Gaussian generating functional
     This assumes the measure has zero mean - we'll add the constraint later -/
 def GJGaussianGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfigurationℂ)
   (J : TestFunctionℂ) : ℂ :=
@@ -255,16 +255,16 @@ def GJGaussianGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfigu
 
 The Glimm-Jaffe framework provides the rigorous foundation for proving the OS axioms:
 
-- **OS0 (Analyticity)**: GJGeneratingFunctionalℂ is analytic in J when the measure 
+- **OS0 (Analyticity)**: GJGeneratingFunctionalℂ is analytic in J when the measure
   is supported on distributions with appropriate growth conditions.
 
-- **OS1 (Normalization)**: GJGeneratingFunctional dμ_config 0 = 1 follows from 
+- **OS1 (Normalization)**: GJGeneratingFunctional dμ_config 0 = 1 follows from
   ∫ 1 dμ = 1 for any probability measure.
 
-- **OS2 (Euclidean Invariance)**: If dμ_config is Euclidean invariant, then 
+- **OS2 (Euclidean Invariance)**: If dμ_config is Euclidean invariant, then
   GJGeneratingFunctional respects the group action.
 
-- **OS3 (Reflection Positivity)**: For time-reflected test functions, 
+- **OS3 (Reflection Positivity)**: For time-reflected test functions,
   Re(GJGeneratingFunctional) ≥ 0 when the measure satisfies reflection positivity.
 
 - **OS4 (Ergodicity)**: Related to the clustering properties of the measure dμ_config.
@@ -272,7 +272,7 @@ The Glimm-Jaffe framework provides the rigorous foundation for proving the OS ax
 
 /-- The key insight: the L2 approach can be embedded into the distribution approach
     via the canonical embedding L2 ↪ Distributions -/
-lemma L2_embedding_generates_same_functional (dμ : ProbabilityMeasure FieldSpace) 
+lemma L2_embedding_generates_same_functional (dμ : ProbabilityMeasure FieldSpace)
   (J : TestFunction) :
   generatingFunctional dμ J = sorry := by
   -- This should show that the L2-based generating functional
@@ -284,6 +284,6 @@ variable (dμ_config : ProbabilityMeasure FieldConfiguration)
 variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
 
 #check GJGeneratingFunctional dμ_config
-#check GJGeneratingFunctionalℂ dμ_configℂ  
+#check GJGeneratingFunctionalℂ dμ_configℂ
 #check GJCovariance dμ_config
 #check GJGaussianGeneratingFunctional dμ_configℂ
