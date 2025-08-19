@@ -145,40 +145,6 @@ def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfigurat
 def GJ_OS4_Clustering (_ : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (_ _ : SchwartzMap SpaceTime ℝ), True
 
-/-! ## Gaussian Measures and OS Axioms
-
-For Gaussian measures, the OS axioms can be verified more explicitly.
-A centered Gaussian measure is determined by its covariance, and if the covariance
-satisfies the appropriate properties, then the OS axioms hold.
--/
-
-/-- A measure is centered (has zero mean) -/
-def isCenteredMeasure (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (f : SchwartzMap SpaceTime ℝ), GJMean dμ_config f = 0
-
-/-- A measure is Gaussian if it's completely determined by its first two moments.
-    The generating functional should match the Gaussian form when evaluated
-    on complex test functions via complexification. -/
-def isGaussianMeasure (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (J : TestFunctionℂ),
-    -- The generating functional evaluated on complex test functions should match Gaussian form
-    -- GJGeneratingFunctional_complex dμ_config J = GJGaussianGeneratingFunctional dμ_config J
-    sorry -- Need proper complexification
-
-/-- Main theorem: A centered Gaussian measure with positive definite covariance
-    satisfies the OS axioms (statement only, proof would be substantial) -/
-theorem gaussian_satisfies_OS_axioms
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (h_centered : isCenteredMeasure dμ_config)
-  (h_gaussian : isGaussianMeasure dμ_config)
-  (h_covariance_properties : sorry) -- covariance has the right properties
-  : GJ_OS0_Analyticity dμ_config ∧
-    GJ_OS1_Regularity dμ_config ∧
-    GJ_OS2_EuclideanInvariance dμ_config ∧
-    GJ_OS3_ReflectionPositivity dμ_config ∧
-    GJ_OS4_Clustering dμ_config := by
-  sorry
-
 /-! ## Comparison and Relationship Between Frameworks
 
 The relationship between the L2-based and distribution-based OS axioms.

@@ -214,8 +214,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
 To complete these proofs, we need to:
 
 1. **Implement missing definitions:**
-   - `GJCovarianceℂ_real` (complex covariance for real field configurations)
-   - `QFT.euclidean_action_real` (Euclidean action on real test functions)
+   - `euclidean_action_real` (Euclidean action on real test functions)
    - `translate_test_function` (spatial translations)
 
 2. **Prove key lemmas:**
@@ -234,6 +233,11 @@ To complete these proofs, we need to:
    - Use results from `GFF.lean` and `GFF2.lean` where applicable
    - Translate L2-based proofs to distribution framework
    - Leverage the explicit Gaussian form of the generating functional
+
+Note: The definitions `isCenteredGJ` and `isGaussianGJ` in this file provide the
+mathematical characterization of Gaussian measures needed for the OS axiom proofs.
+The main theorem `gaussian_satisfies_all_GJ_OS_axioms` shows that such measures
+satisfy all the OS axioms under appropriate assumptions on the covariance.
 -/
 
 end

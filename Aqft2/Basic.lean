@@ -276,14 +276,6 @@ def GJMean (dμ_config : ProbabilityMeasure FieldConfiguration)
   (φ : TestFunction) : ℝ :=
   ∫ ω, distributionPairing ω φ ∂dμ_config.toMeasure
 
-/-- For a centered measure (zero mean), we can define the Gaussian generating functional
-    This assumes the measure has zero mean - we'll add the constraint later -/
-def GJGaussianGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (J : TestFunctionℂ) : ℂ :=
-  -- For Gaussian measures, Z[J] = exp(-½⟨J, CJ⟩) where C is the covariance
-  -- We need to define the complex covariance properly
-  sorry -- Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ dμ_config J J)
-
 -- Test the new definitions work correctly
 variable (dμ_config : ProbabilityMeasure FieldConfiguration)
 variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
@@ -291,6 +283,5 @@ variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
 #check GJGeneratingFunctional dμ_config
 #check GJGeneratingFunctionalℂ dμ_config
 #check GJCovariance dμ_config
-#check GJGaussianGeneratingFunctional dμ_config
 
 end
