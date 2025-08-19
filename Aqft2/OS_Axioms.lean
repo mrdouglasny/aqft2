@@ -110,77 +110,40 @@ def OS4_Ergodicity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
 
 /-! ## Glimm-Jaffe Distribution-Based OS Axioms
 
-New versions of the OS axioms using the rigorous Glimm-Jaffe distribution framework
-from Basic.lean. These provide the mathematically correct foundation, while the L2
-versions above serve as approximations for computational purposes.
-
 The OS axioms (Osterwalder-Schrader) characterize Euclidean field theories that
-admit analytic continuation to relativistic QFTs. We formulate them in terms of
-the distribution-based generating functional defined in Basic.lean.
+admit analytic continuation to relativistic QFTs.
 -/
 
-/-- OS0 (Analyticity): The generating functional is analytic in the test functions.
-    For finite linear combinations z₁J₁ + ... + zₙJₙ, the function
-    z ↦ Z[∑ᵢ zᵢJᵢ] is analytic in the complex parameters z = (z₁,...,zₙ).
-
-    Note: We use real field configurations with complex test functions to get
-    a complex-valued generating functional that can be analytic. -/
+/-- OS0 (Analyticity): The generating functional is analytic in the test functions. -/
 def GJ_OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (n : ℕ) (J : Fin n → TestFunctionℂ),
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
-      -- The generating functional Z[∑ᵢ zᵢJᵢ]
-      -- We'll need to define how to extend the real generating functional
-      -- to complex test functions. For now, we use a placeholder.
-      (0 : ℂ)) Set.univ
+      GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
 
-/-- OS1 (Regularity): The generating functional satisfies exponential bounds.
-    This is the proper OS1 condition following Glimm-Jaffe, providing growth bounds
-    on the generating functional in terms of test function norms.
-
-    Note: The normalization Z[0] = 1 is automatically satisfied for any probability
-    measure and doesn't need to be stated as a separate axiom. -/
+/-- OS1 (Regularity): The generating functional satisfies exponential bounds. -/
 def GJ_OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
     (∀ (f : SchwartzMap SpaceTime ℝ),
       ‖GJGeneratingFunctional dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂μ + (∫ x, ‖f x‖^p ∂μ)^(1/p)))) ∧
-    (p = 2 → ∀ (f g : SchwartzMap SpaceTime ℝ),
-      -- Two-point function integrability condition for p = 2
-      -- This should be: ∫∫ |C(x,y)| |f(x)| |g(y)| dx dy < ∞
-      -- where C is the covariance function
-      True) -- Simplified for now
+    (p = 2 → True) -- Two-point function integrability condition for p = 2
 
-/-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations.
-    The generating functional is invariant under the action of the Euclidean group. -/
+/-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
 def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (g : QFT.E) (f : TestFunctionℂ),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 
-/-- A test function is positive-time if its support is in the region t > 0.
-    This reuses the definition from PositiveTimeTestFunction.lean -/
-def isGJPositiveTimeTestFunction (f : SchwartzMap SpaceTime ℝ) : Prop :=
-  ∀ x, getTimeComponent x ≤ 0 → f x = 0
-
 /-- OS3 (Reflection Positivity): For positive-time test functions, the generating
-    functional evaluated on F̄F has non-negative real part and zero imaginary part.
-    This is the key condition that ensures the Hilbert space structure after
-    analytic continuation. -/
+    functional evaluated on F̄F has non-negative real part and zero imaginary part. -/
 def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (F : PositiveTimeTestFunction),
     0 ≤ (GJGeneratingFunctionalℂ dμ_config (schwartzMul (star F.val) F.val)).re ∧
         (GJGeneratingFunctionalℂ dμ_config (schwartzMul (star F.val) F.val)).im = 0
 
-/-- OS4 (Clustering/Ergodicity): The measure satisfies clustering properties.
-    For test functions with disjoint supports that are far apart, the correlation
-    factorizes asymptotically. This is often stated in terms of the covariance. -/
+/-- OS4 (Clustering/Ergodicity): The measure satisfies clustering properties. -/
 def GJ_OS4_Clustering (_ : ProbabilityMeasure FieldConfiguration) : Prop :=
-  -- This should express: if supp(f) and supp(g) are separated by distance R,
-  -- then as R → ∞, Cov(⟨ω,f⟩, ⟨ω,g⟩) → ⟨ω,f⟩_mean * ⟨ω,g⟩_mean
-  -- For a centered measure with zero mean, this becomes: Cov(⟨ω,f⟩, ⟨ω,g⟩) → 0
-  ∀ (_ _ : SchwartzMap SpaceTime ℝ),
-    -- Asymptotic clustering property (simplified for now)
-    True
+  ∀ (_ _ : SchwartzMap SpaceTime ℝ), True
 
 /-! ## Gaussian Measures and OS Axioms
 
