@@ -27,6 +27,9 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 
 import Mathlib.LinearAlgebra.UnitaryGroup
+import Mathlib.LinearAlgebra.GeneralLinearGroup
+import Mathlib.LinearAlgebra.Matrix.SpecialLinearGroup
+import Mathlib.GroupTheory.GroupAction.Basic
 
 -- Import our functional analysis utilities
 import Aqft2.FunctionalAnalysis
@@ -42,8 +45,19 @@ noncomputable instance : InnerProductSpace ℝ SpaceTime := by infer_instance
 abbrev getTimeComponent (x : SpaceTime) : ℝ :=
  x ⟨0, by simp +arith⟩
 
+/-- Time reflection operator: (t, x) ↦ (-t, x) -/
+def timeReflection (x : SpaceTime) : SpaceTime :=
+  fun i => if i = 0 then -x i else x i
+
+/-- Action of time reflection on test functions: (Rf)(x) = f(R⁻¹x) = f(timeReflection x) -/
+def reflectTestFunction (f : TestFunction) : TestFunction :=
+  sorry -- f.comp timeReflection -- Need proper composition for SchwartzMap
+
 open MeasureTheory NNReal ENNReal Complex
 open TopologicalSpace Measure
+
+-- Also open FunLike for SchwartzMap function application
+open DFunLike (coe)
 
 noncomputable section
 
@@ -270,15 +284,6 @@ The Glimm-Jaffe framework provides the rigorous foundation for proving the OS ax
 - **OS4 (Ergodicity)**: Related to the clustering properties of the measure dμ_config.
 -/
 
-/-- The key insight: the L2 approach can be embedded into the distribution approach
-    via the canonical embedding L2 ↪ Distributions -/
-lemma L2_embedding_generates_same_functional (dμ : ProbabilityMeasure FieldSpace)
-  (J : TestFunction) :
-  generatingFunctional dμ J = sorry := by
-  -- This should show that the L2-based generating functional
-  -- equals the distribution-based one when we embed L2 into distributions
-  sorry
-
 -- Test the new definitions work correctly
 variable (dμ_config : ProbabilityMeasure FieldConfiguration)
 variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
@@ -287,3 +292,5 @@ variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
 #check GJGeneratingFunctionalℂ dμ_configℂ
 #check GJCovariance dμ_config
 #check GJGaussianGeneratingFunctional dμ_configℂ
+
+end
