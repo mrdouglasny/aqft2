@@ -151,14 +151,11 @@ def GJ_OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Pro
       True) -- Simplified for now
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations.
-    For now we state this as an abstract condition - it means the distribution μ
-    transforms covariantly under the Euclidean group. -/
-def GJ_OS2_EuclideanInvariance (_ : ProbabilityMeasure FieldConfiguration) : Prop :=
-  -- The measure is Euclidean invariant: for any orthogonal transformation of spacetime,
-  -- the pushforward measure equals the original measure
-  -- This should be: ∀ (O : Matrix (Fin STDimension) (Fin STDimension) ℝ), O ∈ OrthogonalGroup → ...
-  -- but we need to define the group action on FieldConfiguration first
-  ∀ (_ : Matrix (Fin STDimension) (Fin STDimension) ℝ), True
+    The generating functional is invariant under the action of the Euclidean group. -/
+def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (g : QFT.E) (f : TestFunctionℂ),
+    GJGeneratingFunctionalℂ dμ_config f =
+    GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 
 /-- A test function is positive-time if its support is in the region t > 0.
     This reuses the definition from PositiveTimeTestFunction.lean -/
@@ -166,12 +163,13 @@ def isGJPositiveTimeTestFunction (f : SchwartzMap SpaceTime ℝ) : Prop :=
   ∀ x, getTimeComponent x ≤ 0 → f x = 0
 
 /-- OS3 (Reflection Positivity): For positive-time test functions, the generating
-    functional has non-negative real part when evaluated at real test functions.
+    functional evaluated on F̄F has non-negative real part and zero imaginary part.
     This is the key condition that ensures the Hilbert space structure after
     analytic continuation. -/
 def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (f : SchwartzMap SpaceTime ℝ), isGJPositiveTimeTestFunction f →
-    0 ≤ (GJGeneratingFunctional dμ_config f).re
+  ∀ (F : PositiveTimeTestFunction),
+    0 ≤ (GJGeneratingFunctionalℂ dμ_config (schwartzMul (star F.val) F.val)).re ∧
+        (GJGeneratingFunctionalℂ dμ_config (schwartzMul (star F.val) F.val)).im = 0
 
 /-- OS4 (Clustering/Ergodicity): The measure satisfies clustering properties.
     For test functions with disjoint supports that are far apart, the correlation

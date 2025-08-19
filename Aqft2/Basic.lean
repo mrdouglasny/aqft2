@@ -249,10 +249,27 @@ def GJGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration)
   (J : TestFunction) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairing ω J : ℂ)) ∂dμ_config.toMeasure
 
-/-- Complex version of the generating functional -/
-def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure FieldConfigurationℂ)
+/-- Helper lemma: The real part of a complex test function is a real test function -/
+lemma complex_testfunction_re (f : TestFunctionℂ) : ∃ (g : TestFunction), ∀ x, g x = (f x).re :=
+  sorry -- This should follow from SchwartzMap.compCLM with Complex.reCLM
+
+/-- Helper lemma: The imaginary part of a complex test function is a real test function -/
+lemma complex_testfunction_im (f : TestFunctionℂ) : ∃ (g : TestFunction), ∀ x, g x = (f x).im :=
+  sorry -- This should follow from SchwartzMap.compCLM with Complex.imCLM
+
+/-- Complex version of the pairing: real field configuration with complex test function
+    We extend the pairing by treating the complex test function as f(x) = f_re(x) + i*f_im(x)
+    and defining ⟨ω, f⟩ = ⟨ω, f_re⟩ + i*⟨ω, f_im⟩ -/
+def distributionPairingℂ_real (ω : FieldConfiguration) (f : TestFunctionℂ) : ℂ :=
+  -- Extract real and imaginary parts using the helper lemmas
+  let f_re := (complex_testfunction_re f).choose
+  let f_im := (complex_testfunction_im f).choose
+  -- Pair with the real field configuration and combine
+  (ω f_re : ℂ) + Complex.I * (ω f_im : ℂ)/-- Complex version of the generating functional -/
+
+def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure FieldConfiguration)
   (J : TestFunctionℂ) : ℂ :=
-  ∫ ω, Complex.exp (Complex.I * (distributionPairingℂ ω J)) ∂dμ_config.toMeasure
+  ∫ ω, Complex.exp (Complex.I * (distributionPairingℂ_real ω J)) ∂dμ_config.toMeasure
 
 /-- The mean field in the Glimm-Jaffe framework -/
 def GJMean (dμ_config : ProbabilityMeasure FieldConfiguration)
@@ -261,36 +278,19 @@ def GJMean (dμ_config : ProbabilityMeasure FieldConfiguration)
 
 /-- For a centered measure (zero mean), we can define the Gaussian generating functional
     This assumes the measure has zero mean - we'll add the constraint later -/
-def GJGaussianGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfigurationℂ)
+def GJGaussianGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration)
   (J : TestFunctionℂ) : ℂ :=
-  Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ dμ_config J J)
-
-/-! ## Relationship to OS Axioms
-
-The Glimm-Jaffe framework provides the rigorous foundation for proving the OS axioms:
-
-- **OS0 (Analyticity)**: GJGeneratingFunctionalℂ is analytic in J when the measure
-  is supported on distributions with appropriate growth conditions.
-
-- **OS1 (Normalization)**: GJGeneratingFunctional dμ_config 0 = 1 follows from
-  ∫ 1 dμ = 1 for any probability measure.
-
-- **OS2 (Euclidean Invariance)**: If dμ_config is Euclidean invariant, then
-  GJGeneratingFunctional respects the group action.
-
-- **OS3 (Reflection Positivity)**: For time-reflected test functions,
-  Re(GJGeneratingFunctional) ≥ 0 when the measure satisfies reflection positivity.
-
-- **OS4 (Ergodicity)**: Related to the clustering properties of the measure dμ_config.
--/
+  -- For Gaussian measures, Z[J] = exp(-½⟨J, CJ⟩) where C is the covariance
+  -- We need to define the complex covariance properly
+  sorry -- Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ dμ_config J J)
 
 -- Test the new definitions work correctly
 variable (dμ_config : ProbabilityMeasure FieldConfiguration)
 variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
 
 #check GJGeneratingFunctional dμ_config
-#check GJGeneratingFunctionalℂ dμ_configℂ
+#check GJGeneratingFunctionalℂ dμ_config
 #check GJCovariance dμ_config
-#check GJGaussianGeneratingFunctional dμ_configℂ
+#check GJGaussianGeneratingFunctional dμ_config
 
 end
