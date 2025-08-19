@@ -16,6 +16,7 @@ import Mathlib.Analysis.NormedSpace.Extend
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Normed.Group.Uniform
 import Mathlib.Analysis.Analytic.Basic
+import Mathlib.Topology.Algebra.Module.WeakDual
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis
@@ -176,3 +177,113 @@ lemma L2BilinearForm_linear_combination (n : ℕ) (z : Fin n → ℂ) (J : Fin n
   -- This is the crucial expansion that shows the quadratic form is polynomial in z
   -- No conjugation means z i * z j (not z i * conj(z j))
   sorry -- Follows from bilinearity and distributivity of sums
+
+/-! ## Glimm-Jaffe Distribution Framework
+
+The proper mathematical foundation for quantum field theory uses
+tempered distributions as field configurations, following Glimm and Jaffe.
+This section adds the distribution-theoretic definitions alongside
+the existing L2 framework for comparison and gradual transition.
+-/
+
+/-- Field configurations as tempered distributions (dual to Schwartz space).
+    This follows the Glimm-Jaffe approach where the field measure is supported
+    on the space of distributions, not L2 functions.
+
+    Using WeakDual gives the correct weak-* topology on the dual space. -/
+abbrev FieldConfiguration := WeakDual ℝ (SchwartzMap SpaceTime ℝ)
+
+/-- Complex-valued field configurations for the generating functional -/
+abbrev FieldConfigurationℂ := WeakDual ℂ (SchwartzMap SpaceTime ℂ)
+
+-- Measurable space instances for distribution spaces
+-- WeakDual already has the correct weak-* topology, we use the Borel σ-algebra
+instance : MeasurableSpace FieldConfiguration := borel _
+instance : MeasurableSpace FieldConfigurationℂ := borel _
+
+/-- The fundamental pairing between a field configuration (distribution) and a test function.
+    This is ⟨ω, f⟩ in the Glimm-Jaffe notation.
+
+    Note: FieldConfiguration = WeakDual ℝ (SchwartzMap SpaceTime ℝ) has the correct
+    weak-* topology, making evaluation maps x ↦ ω(x) continuous for each test function x. -/
+def distributionPairing (ω : FieldConfiguration) (f : TestFunction) : ℝ := ω f
+
+/-- Complex version of the pairing -/
+def distributionPairingℂ (ω : FieldConfigurationℂ) (f : TestFunctionℂ) : ℂ := ω f
+
+/-- The covariance in the Glimm-Jaffe framework: C(φ,ψ) = ∫ ⟨ω,φ⟩⟨ω,ψ⟩ dμ(ω)
+    where the integral is over field configurations ω, not spacetime points. -/
+def GJCovariance (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (φ ψ : TestFunction) : ℝ :=
+  ∫ ω, (distributionPairing ω φ) * (distributionPairing ω ψ) ∂dμ_config.toMeasure
+
+/-- Complex version for the generating functional -/
+def GJCovarianceℂ (dμ_config : ProbabilityMeasure FieldConfigurationℂ)
+  (φ ψ : TestFunctionℂ) : ℂ :=
+  ∫ ω, (distributionPairingℂ ω φ) * (distributionPairingℂ ω ψ) ∂dμ_config.toMeasure
+
+/-! ## Glimm-Jaffe Generating Functional
+
+The generating functional in the distribution framework:
+Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
+where the integral is over field configurations ω (distributions).
+-/
+
+/-- The Glimm-Jaffe generating functional: Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
+    This is the fundamental object in constructive QFT. -/
+def GJGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (J : TestFunction) : ℂ :=
+  ∫ ω, Complex.exp (Complex.I * (distributionPairing ω J : ℂ)) ∂dμ_config.toMeasure
+
+/-- Complex version of the generating functional -/
+def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure FieldConfigurationℂ)
+  (J : TestFunctionℂ) : ℂ :=
+  ∫ ω, Complex.exp (Complex.I * (distributionPairingℂ ω J)) ∂dμ_config.toMeasure
+
+/-- The mean field in the Glimm-Jaffe framework -/
+def GJMean (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (φ : TestFunction) : ℝ :=
+  ∫ ω, distributionPairing ω φ ∂dμ_config.toMeasure
+
+/-- For a centered measure (zero mean), we can define the Gaussian generating functional 
+    This assumes the measure has zero mean - we'll add the constraint later -/
+def GJGaussianGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfigurationℂ)
+  (J : TestFunctionℂ) : ℂ :=
+  Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ dμ_config J J)
+
+/-! ## Relationship to OS Axioms
+
+The Glimm-Jaffe framework provides the rigorous foundation for proving the OS axioms:
+
+- **OS0 (Analyticity)**: GJGeneratingFunctionalℂ is analytic in J when the measure 
+  is supported on distributions with appropriate growth conditions.
+
+- **OS1 (Normalization)**: GJGeneratingFunctional dμ_config 0 = 1 follows from 
+  ∫ 1 dμ = 1 for any probability measure.
+
+- **OS2 (Euclidean Invariance)**: If dμ_config is Euclidean invariant, then 
+  GJGeneratingFunctional respects the group action.
+
+- **OS3 (Reflection Positivity)**: For time-reflected test functions, 
+  Re(GJGeneratingFunctional) ≥ 0 when the measure satisfies reflection positivity.
+
+- **OS4 (Ergodicity)**: Related to the clustering properties of the measure dμ_config.
+-/
+
+/-- The key insight: the L2 approach can be embedded into the distribution approach
+    via the canonical embedding L2 ↪ Distributions -/
+lemma L2_embedding_generates_same_functional (dμ : ProbabilityMeasure FieldSpace) 
+  (J : TestFunction) :
+  generatingFunctional dμ J = sorry := by
+  -- This should show that the L2-based generating functional
+  -- equals the distribution-based one when we embed L2 into distributions
+  sorry
+
+-- Test the new definitions work correctly
+variable (dμ_config : ProbabilityMeasure FieldConfiguration)
+variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
+
+#check GJGeneratingFunctional dμ_config
+#check GJGeneratingFunctionalℂ dμ_configℂ  
+#check GJCovariance dμ_config
+#check GJGaussianGeneratingFunctional dμ_configℂ
