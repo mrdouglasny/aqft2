@@ -16,6 +16,7 @@ import Mathlib.Analysis.NormedSpace.Extend
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Normed.Group.Uniform
 import Mathlib.Analysis.Analytic.Basic
+import Mathlib.Analysis.Calculus.FDeriv.Basic
 import Mathlib.Topology.Algebra.Module.WeakDual
 
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
@@ -210,13 +211,9 @@ the existing L2 framework for comparison and gradual transition.
     Using WeakDual gives the correct weak-* topology on the dual space. -/
 abbrev FieldConfiguration := WeakDual ℝ (SchwartzMap SpaceTime ℝ)
 
-/-- Complex-valued field configurations for the generating functional -/
-abbrev FieldConfigurationℂ := WeakDual ℂ (SchwartzMap SpaceTime ℂ)
-
--- Measurable space instances for distribution spaces
+-- Measurable space instance for distribution spaces
 -- WeakDual already has the correct weak-* topology, we use the Borel σ-algebra
 instance : MeasurableSpace FieldConfiguration := borel _
-instance : MeasurableSpace FieldConfigurationℂ := borel _
 
 /-- The fundamental pairing between a field configuration (distribution) and a test function.
     This is ⟨ω, f⟩ in the Glimm-Jaffe notation.
@@ -225,19 +222,28 @@ instance : MeasurableSpace FieldConfigurationℂ := borel _
     weak-* topology, making evaluation maps x ↦ ω(x) continuous for each test function x. -/
 def distributionPairing (ω : FieldConfiguration) (f : TestFunction) : ℝ := ω f
 
-/-- Complex version of the pairing -/
-def distributionPairingℂ (ω : FieldConfigurationℂ) (f : TestFunctionℂ) : ℂ := ω f
-
 /-- The covariance in the Glimm-Jaffe framework: C(φ,ψ) = ∫ ⟨ω,φ⟩⟨ω,ψ⟩ dμ(ω)
     where the integral is over field configurations ω, not spacetime points. -/
 def GJCovariance (dμ_config : ProbabilityMeasure FieldConfiguration)
   (φ ψ : TestFunction) : ℝ :=
   ∫ ω, (distributionPairing ω φ) * (distributionPairing ω ψ) ∂dμ_config.toMeasure
 
-/-- Complex version for the generating functional -/
-def GJCovarianceℂ (dμ_config : ProbabilityMeasure FieldConfigurationℂ)
-  (φ ψ : TestFunctionℂ) : ℂ :=
-  ∫ ω, (distributionPairingℂ ω φ) * (distributionPairingℂ ω ψ) ∂dμ_config.toMeasure
+/-- The two-point function (field covariance) for translation-invariant measures
+    This represents ⟨φ(x)φ(0)⟩ for a centered measure.
+
+    For translation invariance, we use x as the argument (representing x - 0).
+
+    Implementation: Use the existing GJCovariance with Dirac delta functions:
+    ⟨φ(x)φ(0)⟩ = GJCovariance(δ_x, δ_0)
+    where δ_x is the Dirac delta distribution centered at spacetime point x.
+    -/
+
+def GJ_TwoPointFunction (dμ_config : ProbabilityMeasure FieldConfiguration) (x : SpaceTime) : ℝ :=
+  -- Use GJCovariance with Dirac delta test functions
+  -- This gives: ∫ ⟨ω, δ_x⟩ ⟨ω, δ_0⟩ dμ(ω) = ∫ ω(x) ω(0) dμ(ω) = ⟨φ(x)φ(0)⟩
+  -- Need: Dirac delta as elements of TestFunction (Schwartz space)
+  -- For now, placeholder until Dirac delta infrastructure is implemented
+  sorry -- GJCovariance dμ_config (DiracDelta x) (DiracDelta 0)
 
 /-! ## Glimm-Jaffe Generating Functional
 
@@ -252,24 +258,37 @@ def GJGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration)
   (J : TestFunction) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairing ω J : ℂ)) ∂dμ_config.toMeasure
 
-/-- Helper lemma: The real part of a complex test function is a real test function -/
-lemma complex_testfunction_re (f : TestFunctionℂ) : ∃ (g : TestFunction), ∀ x, g x = (f x).re :=
-  sorry -- This should follow from SchwartzMap.compCLM with Complex.reCLM
+/-- Helper function to create a Schwartz map from a complex test function by applying a continuous linear map.
+    This factors out the common pattern for extracting real/imaginary parts. -/
+private def schwartz_comp_clm (f : TestFunctionℂ) (L : ℂ →L[ℝ] ℝ) : TestFunction :=
+  SchwartzMap.mk (fun x => L (f x)) (by
+    -- L is a continuous linear map, hence smooth
+    exact ContDiff.comp L.contDiff f.smooth'
+  ) (by
+    -- Polynomial growth: since |L(z)| ≤ ||L|| * |z|, derivatives are controlled
+    intro k n
+    obtain ⟨C, hC⟩ := f.decay' k n
+    use C * (‖L‖ : ℝ)
+    intro x
+    -- |x|^k * |∂^n(L ∘ f)(x)| ≤ ||L|| * |x|^k * |∂^n f(x)| ≤ ||L|| * C
+    sorry -- Technical: derivatives of L ∘ f are controlled by ||L|| * derivatives of f
+  )
 
-/-- Helper lemma: The imaginary part of a complex test function is a real test function -/
-lemma complex_testfunction_im (f : TestFunctionℂ) : ∃ (g : TestFunction), ∀ x, g x = (f x).im :=
-  sorry -- This should follow from SchwartzMap.compCLM with Complex.imCLM
+/-- Decompose a complex test function into its real and imaginary parts as real test functions.
+    This is more efficient than separate extraction functions. -/
+def complex_testfunction_decompose (f : TestFunctionℂ) : TestFunction × TestFunction :=
+  (schwartz_comp_clm f Complex.reCLM, schwartz_comp_clm f Complex.imCLM)
 
 /-- Complex version of the pairing: real field configuration with complex test function
     We extend the pairing by treating the complex test function as f(x) = f_re(x) + i*f_im(x)
     and defining ⟨ω, f⟩ = ⟨ω, f_re⟩ + i*⟨ω, f_im⟩ -/
 def distributionPairingℂ_real (ω : FieldConfiguration) (f : TestFunctionℂ) : ℂ :=
-  -- Extract real and imaginary parts using the helper lemmas
-  let f_re := (complex_testfunction_re f).choose
-  let f_im := (complex_testfunction_im f).choose
+  -- Extract real and imaginary parts using our efficient decomposition
+  let ⟨f_re, f_im⟩ := complex_testfunction_decompose f
   -- Pair with the real field configuration and combine
-  (ω f_re : ℂ) + Complex.I * (ω f_im : ℂ)/-- Complex version of the generating functional -/
+  (ω f_re : ℂ) + Complex.I * (ω f_im : ℂ)
 
+/-- Complex version of the generating functional -/
 def GJGeneratingFunctionalℂ (dμ_config : ProbabilityMeasure FieldConfiguration)
   (J : TestFunctionℂ) : ℂ :=
   ∫ ω, Complex.exp (Complex.I * (distributionPairingℂ_real ω J)) ∂dμ_config.toMeasure
@@ -281,10 +300,36 @@ def GJMean (dμ_config : ProbabilityMeasure FieldConfiguration)
 
 -- Test the new definitions work correctly
 variable (dμ_config : ProbabilityMeasure FieldConfiguration)
-variable (dμ_configℂ : ProbabilityMeasure FieldConfigurationℂ)
 
 #check GJGeneratingFunctional dμ_config
 #check GJGeneratingFunctionalℂ dμ_config
 #check GJCovariance dμ_config
+#check GJ_TwoPointFunction dμ_config
+
+/-! ## Summary of Basic Framework
+
+This file provides the foundational definitions for the Glimm-Jaffe approach:
+
+### 1. Field Configurations as Distributions
+- `FieldConfiguration`: Tempered distributions (WeakDual of Schwartz space)
+- `distributionPairing`: Fundamental pairing ⟨ω, f⟩
+- Proper weak-* topology for measure theory
+
+### 2. Glimm-Jaffe Generating Functional
+- `GJGeneratingFunctional`: Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
+- Complex versions for analyticity
+- Connection to correlation functions
+
+### 3. Covariance and Two-Point Functions
+- `GJCovariance`: Field covariance C(φ,ψ) = ∫ ⟨ω,φ⟩⟨ω,ψ⟩ dμ(ω)
+- `GJ_TwoPointFunction`: Spacetime correlation ⟨φ(x)φ(0)⟩
+
+### 4. Complex Analyticity Framework
+- `L2BilinearForm`: Symmetric bilinear forms (no conjugation!)
+- Key for OS0 analyticity: B(z•f, g) = z * B(f, g)
+- Foundation for complex analytic generating functionals
+
+**Note**: Schwinger functions, distributions, and exponential series are now in `Aqft2.Schwinger`.
+-/
 
 end

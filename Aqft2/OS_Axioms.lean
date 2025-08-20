@@ -120,13 +120,17 @@ def GJ_OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Pr
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
       GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
 
-/-- OS1 (Regularity): The generating functional satisfies exponential bounds. -/
+/-- Two-point function integrability condition for p = 2 -/
+def GJ_TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  Integrable (fun x => (GJ_TwoPointFunction dμ_config x)^2) volume
+
+/-- OS1 (Regularity): The complex generating functional satisfies exponential bounds. -/
 def GJ_OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ (f : SchwartzMap SpaceTime ℝ),
-      ‖GJGeneratingFunctional dμ_config f‖ ≤
+    (∀ (f : TestFunctionℂ),
+      ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂μ + (∫ x, ‖f x‖^p ∂μ)^(1/p)))) ∧
-    (p = 2 → True) -- Two-point function integrability condition for p = 2
+    (p = 2 → GJ_TwoPointIntegrable dμ_config)
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
 def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
