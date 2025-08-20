@@ -239,14 +239,33 @@ def CovarianceEuclideanInvariant (dμ_config : ProbabilityMeasure FieldConfigura
     GJCovariance dμ_config (euclidean_action_real g f) (euclidean_action_real g h) =
     GJCovariance dμ_config f h
 
+/-- Assumption: The complex covariance is invariant under Euclidean transformations -/
+def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (g : QFT.E) (f h : TestFunctionℂ),
+    GJCovarianceℂ_real dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
+    GJCovarianceℂ_real dμ_config f h
+
 theorem gaussian_satisfies_GJ_OS2
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
-  (h_euclidean_invariant : CovarianceEuclideanInvariant dμ_config)
+  (h_euclidean_invariant : CovarianceEuclideanInvariantℂ dμ_config)
   : GJ_OS2_EuclideanInvariance dμ_config := by
-  -- Strategy: If C commutes with Euclidean transformations, then
-  -- Z[gf] = exp(-½⟨gf, C(gf)⟩) = exp(-½⟨f, g⁻¹Cgf⟩) = exp(-½⟨f, Cf⟩) = Z[f]
-  sorry
+  -- For Gaussian measures: Z[f] = exp(-½⟨f, Cf⟩)
+  -- If C commutes with Euclidean transformations g, then:
+  -- Z[gf] = exp(-½⟨gf, C(gf)⟩) = exp(-½⟨f, Cf⟩) = Z[f]
+  intro g f
+
+  -- Extract Gaussian form for both Z[f] and Z[gf]
+  have h_form := h_gaussian.2
+
+  -- Apply Gaussian form to both sides
+  rw [h_form f, h_form (QFT.euclidean_action g f)]
+
+  -- Show the exponents are equal: ⟨gf, C(gf)⟩ = ⟨f, Cf⟩
+  congr 2
+
+  -- This follows directly from Euclidean invariance of the complex covariance
+  exact (h_euclidean_invariant g f f).symm
 
 /-! ## OS3: Reflection Positivity for Gaussian Measures
 
@@ -303,6 +322,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   (h_continuous : CovarianceContinuous dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   (h_euclidean_invariant : CovarianceEuclideanInvariant dμ_config)
+  (h_euclidean_invariantℂ : CovarianceEuclideanInvariantℂ dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
   (h_clustering : CovarianceClustering dμ_config)
   : GJ_OS0_Analyticity dμ_config ∧
@@ -315,7 +335,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   constructor
   · exact gaussian_satisfies_GJ_OS1 dμ_config h_gaussian h_bounded
   constructor
-  · exact gaussian_satisfies_GJ_OS2 dμ_config h_gaussian h_euclidean_invariant
+  · exact gaussian_satisfies_GJ_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
   · exact gaussian_satisfies_GJ_OS3 dμ_config h_gaussian h_reflection_positive
   · exact gaussian_satisfies_GJ_OS4 dμ_config h_gaussian h_clustering
