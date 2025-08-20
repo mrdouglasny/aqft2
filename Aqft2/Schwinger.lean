@@ -93,56 +93,29 @@ def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure FieldConfiguration) (n
 
 /-! ## Exponential Series Connection to Generating Functional
 
-The key innovation: Instead of functional derivatives, we use the constructive exponential series:
+The key insight: Instead of functional derivatives, we use the constructive exponential series:
 Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω) = ∑_{n=0}^∞ (i)^n/n! * S_n(J,...,J)
 
 This approach is more elementary and constructive than functional derivatives.
 -/
-
--- Placeholder definitions
+/-- Placeholder for IsGaussianMeasure property -/
 def IsGaussianMeasure (dμ : ProbabilityMeasure FieldConfiguration) : Prop := sorry
-def extractCoefficient (n : ℕ) (Z : TestFunction → ℂ) (J : TestFunction) : ℂ := sorry
 
-/-- Relationship between generating functional and Schwinger functions via exponential series.
-    This is the fundamental theorem connecting the generating functional to correlation functions:
+/-- Placeholder for extractCoefficient function -/
+def extractCoefficient (n : ℕ) (f : TestFunction → ℂ) (J : TestFunction) : ℂ := sorry
 
-    Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω) = ∑_{n=0}^∞ (i)^n/n! * ∫ ⟨ω, J⟩^n dμ(ω)
-         = ∑_{n=0}^∞ (i)^n/n! * S_n(J, J, ..., J)
-
-    This gives: S_n(J,...,J) = (-i)^n * (coefficient of J^n in Z[J])
-    More generally: S_n(f₁,...,fₙ) = (-i)^n * (mixed partial derivatives)
-
-    The exponential series approach is more constructive than functional derivatives. -/
-theorem schwinger_from_generating_functional
-  (dμ_config : ProbabilityMeasure FieldConfiguration) (n : ℕ) (J : TestFunction) :
-  SchwingerFunction dμ_config n (fun _ => J) =
-  sorry -- Extract coefficient of (iJ)^n/n! from GJGeneratingFunctional dμ_config J
-  := by sorry
-
-/-- The generating functional as an exponential series of Schwinger functions.
-    Z[J] = ∑_{n=0}^∞ (i)^n/n! * S_n(J,...,J)
-
-    This is the constructive definition showing how correlation functions
-    build up the generating functional. -/
 theorem generating_functional_as_series (dμ_config : ProbabilityMeasure FieldConfiguration) (J : TestFunction) :
   GJGeneratingFunctional dμ_config J =
   ∑' n : ℕ, (Complex.I ^ n / (n.factorial : ℂ)) * (SchwingerFunction dμ_config n (fun _ => J) : ℂ) := by
-  unfold GJGeneratingFunctional SchwingerFunction
-  -- The key insight: exp(i⟨ω,J⟩) = ∑_{n=0}^∞ (i⟨ω,J⟩)^n/n!
-  -- When we integrate: ∫ exp(i⟨ω,J⟩) dμ(ω) = ∑_{n=0}^∞ (i)^n/n! * ∫ ⟨ω,J⟩^n dμ(ω)
-  -- And ∫ ⟨ω,J⟩^n dμ(ω) = S_n(J,...,J)
-  sorry -- Requires interchange of sum and integral + power series for complex exponential
+  sorry
 
 /-- For centered measures (zero mean), the generating functional starts with the quadratic term.
-    Z[J] = 1 + (i)²/2! * S₂(J,J) + (i)³/3! * S₃(J,J,J) + ...
+    Z[J] = 1 + (i)²/2! * S₂(J,J) + (i)³/3! * S₃(J,J,J) + ...,
          = 1 - ½S₂(J,J) - (i/6)S₃(J,J,J) + ... -/
 theorem generating_functional_centered (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_centered : ∀ f : TestFunction, GJMean dμ_config f = 0) (J : TestFunction) :
   GJGeneratingFunctional dμ_config J =
   1 + ∑' n : ℕ, if n = 0 then 0 else (Complex.I ^ n / (n.factorial : ℂ)) * (SchwingerFunction dμ_config n (fun _ => J) : ℂ) := by
-  rw [generating_functional_as_series]
-  -- Use h_centered to show S₁(J) = 0, so the n=1 term vanishes
-  -- For now, just state this follows from the series manipulation
   sorry
 
 /-- Gaussian case: only even Schwinger functions are non-zero.
@@ -151,9 +124,7 @@ theorem generating_functional_gaussian (dμ_config : ProbabilityMeasure FieldCon
   (h_gaussian : IsGaussianMeasure dμ_config) (J : TestFunction) :
   GJGeneratingFunctional dμ_config J =
   ∑' n : ℕ, ((-1)^n / ((2*n).factorial : ℂ)) * (SchwingerFunction dμ_config (2*n) (fun _ => J) : ℂ) := by
-  rw [generating_functional_as_series]
-  -- For Gaussian measures: S_{odd} = 0, and (i)^{2n} = (-1)^n
-  sorry -- Requires Wick's theorem and Gaussian measure properties
+  sorry
 
 /-- The fundamental inversion formula: extracting Schwinger functions from the generating functional.
     This shows how to compute correlation functions from the generating functional. -/
@@ -161,8 +132,6 @@ theorem schwinger_function_from_series_coefficient (dμ_config : ProbabilityMeas
   (n : ℕ) (J : TestFunction) :
   SchwingerFunction dμ_config n (fun _ => J) =
   (-Complex.I)^n * (n.factorial : ℂ) * (extractCoefficient n (GJGeneratingFunctional dμ_config) J) := by
-  -- This is the inverse of the series expansion
-  -- extractCoefficient n extracts the coefficient of J^n/n! in the power series
   sorry
 
 /-! ## Schwinger Functions as Distributions
@@ -193,12 +162,10 @@ abbrev TestFunctionProductℂ (n : ℕ) := SchwartzMap (SpaceTimeProduct n) ℂ
 
 /-- The tensor product of n test functions gives a test function on the product space.
     This represents f₁(x₁) ⊗ f₂(x₂) ⊗ ... ⊗ fₙ(xₙ) = f₁(x₁) * f₂(x₂) * ... * fₙ(xₙ) -/
-def tensorProductTestFunction (n : ℕ) (f : Fin n → TestFunction) : TestFunctionProduct n :=
-  sorry -- Need proper tensor product construction for Schwartz functions
+def tensorProductTestFunction (n : ℕ) (f : Fin n → TestFunction) : TestFunctionProduct n := sorry
 
 /-- Complex version of tensor product -/
-def tensorProductTestFunctionℂ (n : ℕ) (f : Fin n → TestFunctionℂ) : TestFunctionProductℂ n :=
-  sorry -- Need proper tensor product construction for complex Schwartz functions
+def tensorProductTestFunctionℂ (n : ℕ) (f : Fin n → TestFunctionℂ) : TestFunctionProductℂ n := sorry
 
 /-- Placeholder for Dirac delta as a test function (needed for distribution theory) -/
 def DiracDelta (x : SpaceTime) : TestFunction := sorry
@@ -243,9 +210,6 @@ theorem schwinger_distribution_tensor_property (dμ_config : ProbabilityMeasure 
   (n : ℕ) (f : Fin n → TestFunction) :
   SchwingerDistributionDirect dμ_config n (tensorProductTestFunction n f) =
   SchwingerFunction dμ_config n f := by
-  unfold SchwingerDistributionDirect tensorProductTestFunction SchwingerFunction
-  -- The key insight: ∫ (∏ᵢ fᵢ(xᵢ)) * (∏ᵢ δ(xᵢ)) dx = ∏ᵢ fᵢ(0) when integrated properly
-  -- This requires careful treatment of Dirac deltas and measure theory
   sorry
 
 /-- Complex version of the Schwinger distribution -/
@@ -263,11 +227,7 @@ lemma two_point_distribution_eq_covariance (dμ_config : ProbabilityMeasure Fiel
   (f g : TestFunction) :
   TwoPointSchwingerDistribution dμ_config (tensorProductTestFunction 2 ![f, g]) =
   SchwingerFunction₂ dμ_config f g := by
-  unfold TwoPointSchwingerDistribution
-  rw [schwinger_distribution_tensor_property]
-  -- Need to show SchwingerFunction dμ_config 2 ![f, g] = SchwingerFunction₂ dμ_config f g
-  -- This follows by definition
-  sorry -- This follows from the definition equivalence
+  sorry
 
 /-! ## Locality and Spacetime Properties
 
@@ -275,18 +235,17 @@ Properties related to causality, locality, and spacetime symmetries.
 -/
 
 /-- Placeholder definitions for geometric and measure-theoretic concepts -/
-def spacelike_separated (x y : SpaceTime) : Prop := sorry
 def translation_invariant_measure (dμ : ProbabilityMeasure FieldConfiguration) (a : SpaceTime) : Prop := sorry
 def translate_product_test_function {n : ℕ} (F : TestFunctionProduct n) (a : SpaceTime) : TestFunctionProduct n := sorry
 
-/-- Locality property: the support of S_n determines the causal structure.
-    This is a placeholder for the important locality properties of Schwinger functions. -/
-theorem schwinger_distribution_locality (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (n : ℕ) (F : TestFunctionProduct n)
-  (h_supp : ∀ x : SpaceTimeProduct n, F x ≠ 0 → ∀ i j, spacelike_separated (x i) (x j)) :
-  -- If F has support on spacelike separated points, then certain factorization properties hold
+/-- Euclidean locality property: correlation functions depend on relative distances.
+    In Euclidean QFT, locality is expressed through clustering and decay properties
+    rather than causal separation. -/
+theorem schwinger_distribution_euclidean_locality (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (n : ℕ) (F : TestFunctionProduct n) :
+  -- In Euclidean QFT, locality manifests as clustering: correlations decay with distance
+  -- This is a placeholder for proper Euclidean locality properties
   SchwingerDistributionDirect dμ_config n F = sorry := by
-  -- This will require proper implementation of causality and support properties
   sorry
 
 /-- Translation invariance: if the measure is translation invariant,
@@ -297,7 +256,6 @@ theorem schwinger_distribution_translation_invariance
   (n : ℕ) (F : TestFunctionProduct n) (a : SpaceTime) :
   SchwingerDistributionDirect dμ_config n F =
   SchwingerDistributionDirect dμ_config n (translate_product_test_function F a) := by
-  -- This requires proper implementation of translation actions
   sorry
 
 /-! ## Summary
