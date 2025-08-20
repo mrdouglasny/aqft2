@@ -1,6 +1,7 @@
 /-
 Copyright (c) 2025 MRD and SH. All rights reserved.
-Released under Apache 2.0 license as described in the file LICENSE.
+Released under Apache 2.0 license as described  ∃ (k : ℕ) (M : ℝ), M > 0 ∧ ∀ (f : TestFunction),
+    |SchwingerFunction₂ dμ_config f f| ≤ M * (SchwartzMap.seminorm ℝ k k f)^2n the file LICENSE.
 Authors:
 
 Gaussian Free Fields in the Glimm-Jaffe Distribution Framework
@@ -77,11 +78,11 @@ and prove that such measures satisfy the OS axioms.
 def isCenteredGJ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (f : TestFunction), GJMean dμ_config f = 0
 
-/-- The complex covariance for real field configurations with complex test functions.
-    This extends GJCovariance to complex test functions via the pairing distributionPairingℂ_real. -/
-def GJCovarianceℂ_real (dμ_config : ProbabilityMeasure FieldConfiguration)
+/-- The complex 2-point Schwinger function for complex test functions.
+    This is the natural extension of SchwingerFunction₂ to complex test functions. -/
+def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration)
   (φ ψ : TestFunctionℂ) : ℂ :=
-  ∫ ω, (distributionPairingℂ_real ω φ) * (distributionPairingℂ_real ω ψ) ∂dμ_config.toMeasure
+  SchwingerFunctionℂ dμ_config 2 ![φ, ψ]
 
 /-- A measure is Gaussian if its generating functional has the Gaussian form.
     For a centered Gaussian measure, Z[J] = exp(-½⟨J, CJ⟩) where C is the covariance. -/
@@ -89,7 +90,7 @@ def isGaussianGJ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   isCenteredGJ dμ_config ∧
   ∀ (J : TestFunctionℂ),
     GJGeneratingFunctionalℂ dμ_config J =
-    Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ_real dμ_config J J)
+    Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config J J)
 
 /-! ## OS1: Regularity for Gaussian Measures
 
@@ -100,7 +101,7 @@ of the generating functional and properties of the covariance operator.
 /-- Assumption: The covariance operator is bounded by Schwartz seminorms -/
 def CovarianceBounded (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (M : ℝ) (k : ℕ), M > 0 ∧ ∀ (f : TestFunction),
-    |GJCovariance dμ_config f f| ≤ M * (SchwartzMap.seminorm ℝ k k f)^2
+    |SchwingerFunction₂ dμ_config f f| ≤ M * (SchwartzMap.seminorm ℝ k k f)^2
 
 theorem gaussian_satisfies_GJ_OS1
   (dμ_config : ProbabilityMeasure FieldConfiguration)
@@ -122,29 +123,29 @@ is the exponential of a polynomial in the complex variables zᵢ, hence entire.
 /-- Assumption: The complex covariance is continuous bilinear -/
 def CovarianceContinuous (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (J K : TestFunctionℂ), Continuous (fun z : ℂ =>
-    GJCovarianceℂ_real dμ_config (z • J) K)
+    SchwingerFunctionℂ₂ dμ_config (z • J) K)
 
-/-- Assumption: GJCovarianceℂ_real is linear in both arguments -/
+/-- Assumption: SchwingerFunctionℂ₂ is linear in both arguments -/
 def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ),
-    GJCovarianceℂ_real dμ_config (c • φ₁) ψ = c * GJCovarianceℂ_real dμ_config φ₁ ψ ∧
-    GJCovarianceℂ_real dμ_config (φ₁ + φ₂) ψ = GJCovarianceℂ_real dμ_config φ₁ ψ + GJCovarianceℂ_real dμ_config φ₂ ψ ∧
-    GJCovarianceℂ_real dμ_config φ₁ (c • ψ) = c * GJCovarianceℂ_real dμ_config φ₁ ψ ∧
-    GJCovarianceℂ_real dμ_config φ₁ (ψ + φ₂) = GJCovarianceℂ_real dμ_config φ₁ ψ + GJCovarianceℂ_real dμ_config φ₁ φ₂
+    SchwingerFunctionℂ₂ dμ_config (c • φ₁) ψ = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config φ₁ (ψ + φ₂) = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₁ φ₂
 
 def GJcov_bilin (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_bilinear : CovarianceBilinear dμ_config) : LinearMap.BilinMap ℂ TestFunctionℂ ℂ :=
   LinearMap.mk₂ ℂ
-    (fun x y => GJCovarianceℂ_real dμ_config x y)
+    (fun x y => SchwingerFunctionℂ₂ dμ_config x y)
     (by intro x x' y  -- additivity in the 1st arg
         exact (h_bilinear 1 x x' y).2.1)
     (by intro a x y   -- homogeneity in the 1st arg
         exact (h_bilinear a x 0 y).1)
     (by intro x y y'  -- additivity in the 2nd arg
         have h := (h_bilinear 1 x y y').2.2.2
-        -- h: GJCovarianceℂ_real dμ_config x (y' + y) = GJCovarianceℂ_real dμ_config x y' + GJCovarianceℂ_real dμ_config x y
-        -- We need: GJCovarianceℂ_real dμ_config x (y + y') = GJCovarianceℂ_real dμ_config x y + GJCovarianceℂ_real dμ_config x y'
-        simp only [add_comm y' y, add_comm (GJCovarianceℂ_real dμ_config x y') _] at h
+        -- h: SchwingerFunctionℂ₂ dμ_config x (y' + y) = SchwingerFunctionℂ₂ dμ_config x y' + SchwingerFunctionℂ₂ dμ_config x y
+        -- We need: SchwingerFunctionℂ₂ dμ_config x (y + y') = SchwingerFunctionℂ₂ dμ_config x y + SchwingerFunctionℂ₂ dμ_config x y'
+        simp only [add_comm y' y, add_comm (SchwingerFunctionℂ₂ dμ_config x y') _] at h
         exact h)
     (by intro a x y   -- homogeneity in the 2nd arg
         exact (h_bilinear a x 0 y).2.2.1)
@@ -159,12 +160,12 @@ theorem gaussian_satisfies_GJ_OS0
 
   -- Extract the Gaussian form: Z[f] = exp(-½⟨f, Cf⟩)
   have h_form : ∀ (f : TestFunctionℂ),
-      GJGeneratingFunctionalℂ dμ_config f = Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ_real dμ_config f f) :=
+      GJGeneratingFunctionalℂ dμ_config f = Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config f f) :=
     h_gaussian.2
 
   -- Rewrite the generating functional using Gaussian form
   have h_rewrite : (fun z : Fin n → ℂ => GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) =
-                   (fun z => Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ_real dμ_config (∑ i, z i • J i) (∑ i, z i • J i))) := by
+                   (fun z => Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config (∑ i, z i • J i) (∑ i, z i • J i))) := by
     funext z
     exact h_form (∑ i, z i • J i)
 
@@ -179,10 +180,10 @@ theorem gaussian_satisfies_GJ_OS0
     let B := GJcov_bilin dμ_config h_bilinear
 
     -- Expand quadratic form: ⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJⱼ)⟩ = ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩
-    have h_expansion : (fun z : Fin n → ℂ => GJCovarianceℂ_real dμ_config (∑ i, z i • J i) (∑ i, z i • J i)) =
-                       (fun z => ∑ i, ∑ j, z i * z j * GJCovarianceℂ_real dμ_config (J i) (J j)) := by
+    have h_expansion : (fun z : Fin n → ℂ => SchwingerFunctionℂ₂ dμ_config (∑ i, z i • J i) (∑ i, z i • J i)) =
+                       (fun z => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
       funext z
-      have h_eq : B (∑ i, z i • J i) (∑ i, z i • J i) = GJCovarianceℂ_real dμ_config (∑ i, z i • J i) (∑ i, z i • J i) := rfl
+      have h_eq : B (∑ i, z i • J i) (∑ i, z i • J i) = SchwingerFunctionℂ₂ dμ_config (∑ i, z i • J i) (∑ i, z i • J i) := rfl
       rw [← h_eq]
       exact bilin_sum_sum B n J z
 
@@ -195,9 +196,9 @@ theorem gaussian_satisfies_GJ_OS0
     intro j
 
     -- Each monomial zᵢzⱼ is analytic
-    have h_monomial : AnalyticOn ℂ (fun z : Fin n → ℂ => z i * z j * GJCovarianceℂ_real dμ_config (J i) (J j)) Set.univ := by
-      have h_factor : (fun z : Fin n → ℂ => z i * z j * GJCovarianceℂ_real dμ_config (J i) (J j)) =
-                      (fun z => GJCovarianceℂ_real dμ_config (J i) (J j) * (z i * z j)) := by
+    have h_monomial : AnalyticOn ℂ (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
+      have h_factor : (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
+                      (fun z => SchwingerFunctionℂ₂ dμ_config (J i) (J j) * (z i * z j)) := by
         funext z; ring
       rw [h_factor]
 
@@ -236,14 +237,14 @@ def euclidean_action_real (g : QFT.E) (f : TestFunction) : TestFunction :=
 /-- Assumption: The covariance is invariant under Euclidean transformations -/
 def CovarianceEuclideanInvariant (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (g : QFT.E) (f h : TestFunction),
-    GJCovariance dμ_config (euclidean_action_real g f) (euclidean_action_real g h) =
-    GJCovariance dμ_config f h
+    SchwingerFunction₂ dμ_config (euclidean_action_real g f) (euclidean_action_real g h) =
+    SchwingerFunction₂ dμ_config f h
 
 /-- Assumption: The complex covariance is invariant under Euclidean transformations -/
 def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (g : QFT.E) (f h : TestFunctionℂ),
-    GJCovarianceℂ_real dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
-    GJCovarianceℂ_real dμ_config f h
+    SchwingerFunctionℂ₂ dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
+    SchwingerFunctionℂ₂ dμ_config f h
 
 theorem gaussian_satisfies_GJ_OS2
   (dμ_config : ProbabilityMeasure FieldConfiguration)
@@ -276,7 +277,7 @@ exponential form and properties of the covariance under time reflection.
 /-- Assumption: The covariance satisfies reflection positivity -/
 def CovarianceReflectionPositive (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (F : PositiveTimeTestFunction),
-    0 ≤ (GJCovarianceℂ_real dμ_config (star F.val) F.val).re
+    0 ≤ (SchwingerFunctionℂ₂ dμ_config (star F.val) F.val).re
 
 theorem gaussian_satisfies_GJ_OS3
   (dμ_config : ProbabilityMeasure FieldConfiguration)
@@ -302,7 +303,7 @@ def translate_test_function (sep : ℝ) (f : TestFunction) : TestFunction :=
 /-- Assumption: The covariance decays at large separations -/
 def CovarianceClustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (f g : TestFunction), ∀ ε > 0, ∃ R > 0, ∀ (sep : ℝ),
-    sep > R → |GJCovariance dμ_config f (translate_test_function sep g)| < ε
+    sep > R → |SchwingerFunction₂ dμ_config f (translate_test_function sep g)| < ε
 
 theorem gaussian_satisfies_GJ_OS4
   (dμ_config : ProbabilityMeasure FieldConfiguration)

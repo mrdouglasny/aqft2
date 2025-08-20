@@ -46,14 +46,6 @@ noncomputable instance : InnerProductSpace ℝ SpaceTime := by infer_instance
 abbrev getTimeComponent (x : SpaceTime) : ℝ :=
  x ⟨0, by simp +arith⟩
 
-/-- Time reflection operator: (t, x) ↦ (-t, x) -/
-def timeReflection (x : SpaceTime) : SpaceTime :=
-  fun i => if i = 0 then -x i else x i
-
-/-- Action of time reflection on test functions: (Rf)(x) = f(R⁻¹x) = f(timeReflection x) -/
-def reflectTestFunction (f : TestFunction) : TestFunction :=
-  sorry -- f.comp timeReflection -- Need proper composition for SchwartzMap
-
 open MeasureTheory NNReal ENNReal Complex
 open TopologicalSpace Measure
 
@@ -222,29 +214,6 @@ instance : MeasurableSpace FieldConfiguration := borel _
     weak-* topology, making evaluation maps x ↦ ω(x) continuous for each test function x. -/
 def distributionPairing (ω : FieldConfiguration) (f : TestFunction) : ℝ := ω f
 
-/-- The covariance in the Glimm-Jaffe framework: C(φ,ψ) = ∫ ⟨ω,φ⟩⟨ω,ψ⟩ dμ(ω)
-    where the integral is over field configurations ω, not spacetime points. -/
-def GJCovariance (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (φ ψ : TestFunction) : ℝ :=
-  ∫ ω, (distributionPairing ω φ) * (distributionPairing ω ψ) ∂dμ_config.toMeasure
-
-/-- The two-point function (field covariance) for translation-invariant measures
-    This represents ⟨φ(x)φ(0)⟩ for a centered measure.
-
-    For translation invariance, we use x as the argument (representing x - 0).
-
-    Implementation: Use the existing GJCovariance with Dirac delta functions:
-    ⟨φ(x)φ(0)⟩ = GJCovariance(δ_x, δ_0)
-    where δ_x is the Dirac delta distribution centered at spacetime point x.
-    -/
-
-def GJ_TwoPointFunction (dμ_config : ProbabilityMeasure FieldConfiguration) (x : SpaceTime) : ℝ :=
-  -- Use GJCovariance with Dirac delta test functions
-  -- This gives: ∫ ⟨ω, δ_x⟩ ⟨ω, δ_0⟩ dμ(ω) = ∫ ω(x) ω(0) dμ(ω) = ⟨φ(x)φ(0)⟩
-  -- Need: Dirac delta as elements of TestFunction (Schwartz space)
-  -- For now, placeholder until Dirac delta infrastructure is implemented
-  sorry -- GJCovariance dμ_config (DiracDelta x) (DiracDelta 0)
-
 /-! ## Glimm-Jaffe Generating Functional
 
 The generating functional in the distribution framework:
@@ -303,8 +272,6 @@ variable (dμ_config : ProbabilityMeasure FieldConfiguration)
 
 #check GJGeneratingFunctional dμ_config
 #check GJGeneratingFunctionalℂ dμ_config
-#check GJCovariance dμ_config
-#check GJ_TwoPointFunction dμ_config
 
 /-! ## Summary of Basic Framework
 
@@ -320,9 +287,8 @@ This file provides the foundational definitions for the Glimm-Jaffe approach:
 - Complex versions for analyticity
 - Connection to correlation functions
 
-### 3. Covariance and Two-Point Functions
-- `GJCovariance`: Field covariance C(φ,ψ) = ∫ ⟨ω,φ⟩⟨ω,ψ⟩ dμ(ω)
-- `GJ_TwoPointFunction`: Spacetime correlation ⟨φ(x)φ(0)⟩
+### 3. Field Correlations
+- Note: All correlation functions (2-point, n-point) are handled in `Aqft2.Schwinger` via the Schwinger function framework
 
 ### 4. Complex Analyticity Framework
 - `L2BilinearForm`: Symmetric bilinear forms (no conjugation!)

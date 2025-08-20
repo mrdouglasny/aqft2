@@ -72,10 +72,10 @@ lemma schwinger_eq_mean (dμ_config : ProbabilityMeasure FieldConfiguration) (f 
   -- The product over a singleton {0} is just the single element f 0 = f
   sorry
 
-/-- The Schwinger function equals the GJ covariance for n=2 -/
+/-- The Schwinger function equals the direct covariance integral for n=2 -/
 lemma schwinger_eq_covariance (dμ_config : ProbabilityMeasure FieldConfiguration) (f g : TestFunction) :
-  SchwingerFunction₂ dμ_config f g = GJCovariance dμ_config f g := by
-  unfold SchwingerFunction₂ SchwingerFunction GJCovariance
+  SchwingerFunction₂ dμ_config f g = ∫ ω, (distributionPairing ω f) * (distributionPairing ω g) ∂dμ_config.toMeasure := by
+  unfold SchwingerFunction₂ SchwingerFunction
   -- The product over {0, 1} expands to (f 0) * (f 1) = f * g
   sorry
 
@@ -262,10 +262,11 @@ def TwoPointSchwingerDistribution (dμ_config : ProbabilityMeasure FieldConfigur
 lemma two_point_distribution_eq_covariance (dμ_config : ProbabilityMeasure FieldConfiguration)
   (f g : TestFunction) :
   TwoPointSchwingerDistribution dμ_config (tensorProductTestFunction 2 ![f, g]) =
-  GJCovariance dμ_config f g := by
+  SchwingerFunction₂ dμ_config f g := by
   unfold TwoPointSchwingerDistribution
   rw [schwinger_distribution_tensor_property]
-  -- Need to show SchwingerFunction dμ_config 2 ![f, g] = GJCovariance dμ_config f g
+  -- Need to show SchwingerFunction dμ_config 2 ![f, g] = SchwingerFunction₂ dμ_config f g
+  -- This follows by definition
   sorry -- This follows from the definition equivalence
 
 /-! ## Locality and Spacetime Properties

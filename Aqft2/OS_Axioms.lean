@@ -38,6 +38,7 @@ import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic
 
 import Aqft2.Basic
+import Aqft2.Schwinger
 import Aqft2.FunctionalAnalysis
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
@@ -120,9 +121,15 @@ def GJ_OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Pr
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
       GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
 
+/-- Two-point correlation function using the proper Schwinger framework.
+    For translation-invariant measures, this represents ⟨φ(x)φ(0)⟩.
+    Uses the two-point Schwinger distribution with Dirac deltas. -/
+def SchwingerTwoPointFunction (dμ_config : ProbabilityMeasure FieldConfiguration) (x : SpaceTime) : ℝ :=
+  SchwingerFunction₂ dμ_config (DiracDelta x) (DiracDelta 0)
+
 /-- Two-point function integrability condition for p = 2 -/
 def GJ_TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  Integrable (fun x => (GJ_TwoPointFunction dμ_config x)^2) volume
+  Integrable (fun x => (SchwingerTwoPointFunction dμ_config x)^2) volume
 
 /-- OS1 (Regularity): The complex generating functional satisfies exponential bounds. -/
 def GJ_OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
