@@ -72,6 +72,9 @@ abbrev TestFunction : Type := SchwartzMap SpaceTime ℝ
 abbrev TestFunction𝕜 : Type := SchwartzMap SpaceTime 𝕜
 abbrev TestFunctionℂ := TestFunction𝕜 (𝕜 := ℂ)
 
+example : AddCommGroup TestFunctionℂ := by infer_instance
+example : Module ℂ TestFunctionℂ := by infer_instance
+
 /- Space of fields -/
 
 abbrev FieldSpace := Lp ℝ 2 μ

@@ -7,6 +7,8 @@ import Mathlib.Data.Complex.Basic
 import Mathlib.Data.Complex.Module
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Distribution.SchwartzSpace
+import Mathlib.Analysis.Analytic.Basic
+import Mathlib.Analysis.Analytic.Constructions
 
 import Mathlib.Topology.Algebra.Module.LinearMapPiProd
 
@@ -32,6 +34,29 @@ open MeasureTheory NNReal ENNReal Complex
 open TopologicalSpace Measure
 
 noncomputable section
+
+/-! ## Analyticity of finite sums -/
+
+/-- Double finite sums of analytic functions are analytic.
+    This is a key lemma for proving analyticity of quadratic forms in complex variables. -/
+lemma analyticOn_double_sum {n : ℕ} {f : Fin n → Fin n → (Fin n → ℂ) → ℂ} {s : Set (Fin n → ℂ)}
+  (h : ∀ i j, AnalyticOn ℂ (f i j) s) :
+  AnalyticOn ℂ (fun x => ∑ i, ∑ j, f i j x) s := by
+  -- Use the fact that finite sums of analytic functions are analytic
+  have h_outer : ∀ i, AnalyticOn ℂ (fun x => ∑ j, f i j x) s := by
+    intro i
+    have h_eq : (fun x => ∑ j, f i j x) = ∑ j, f i j := by
+      funext x
+      simp only [Finset.sum_apply]
+    rw [h_eq]
+    exact Finset.analyticOn_sum (Finset.univ) (fun j _ => h i j)
+  have h_main_eq : (fun x => ∑ i, ∑ j, f i j x) = ∑ i, (fun x => ∑ j, f i j x) := by
+    funext x
+    simp only [Finset.sum_apply]
+  rw [h_main_eq]
+  exact Finset.analyticOn_sum (Finset.univ) (fun i _ => h_outer i)
+
+/-! ## Schwartz function properties -/
 
 /- Multiplication of Schwarz functions
  -/

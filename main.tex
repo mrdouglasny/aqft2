@@ -53,6 +53,7 @@
 \def\True{$\mbox{True}$}
 \def\False{$\mbox{False}$}
 \newcommand{\cA}{\mathcal A}
+\newcommand{\cD}{\mathcal D}
 \newcommand{\cG}{\mathcal G}
 \newcommand{\cI}{\mathcal I}
 \newcommand{\cM}{\mathcal M}
@@ -455,7 +456,47 @@ This is equivalent to saying that for all $L_{1}$ functions $A(\phi)$,
 
 \end{itemize}
 
-\subsection{Rewritting of the Axioms to be AI friendly}
+\subsection{Technical details of the definitions}
+
+For now we restrict to Euclidean spacetime $M \equiv \IR^D$ in a general dimension $D$, and a single real scalar field $\phi$.
+One could take $\phi$ to be any local scalar operator, so one could treat YM by taking (say) $\phi=\tr F^2$.
+
+Mathematically, one cannot talk about ``general functions,'' every function has to live in some precise space.  
+We can't review all of the relevant functional analysis, but here are a few relevant function spaces:
+\begin{itemize}
+    \item $C^\infty(M)$ are the smooth functions on $M$. 
+    %They need not be bounded (if $M$ is not compact) but they must have finite values everywhere (this goes without saying in math).  So, $1/|x|$ for example is not in $C^\infty(M)$.
+    \item $C_0^\infty(M) \equiv \cD$ are the smooth functions with compact support, so zero for all $|x|>R$ for some $R$.
+    \item $L^2(M,\mu)$ are equivalence classes of functions which are square normalizable in the measure $\mu$.   The equivalence relation
+    is $f \sim g$ if their difference has support on a set of measure zero (almost everywhere).
+    \item $\cS \subset C^\infty(\IR^D)$ is the Schwartz space of functions which decrease rapidly at infinity, meaning that
+    $|x^m D^n f|$ stays bounded for every $m$ and $n$.
+    \item Sobolev spaces, used in nonlinear PDE.
+    \item Besov spaces, used in stochastic PDE and rigorous stochastic quantization.
+\end{itemize}
+One also has distributions (generalized functions).  Mathematically these are linear functionals
+on test function spaces which are continuous in certain norms, denoted by prime: 
+a test function space $\CD$ has dual space $\CD'$.  
+Relevant examples include 
+\begin{itemize}
+    \item $\cD'$ is the space of Schwartz distributions.
+    \item $\cS'$ is the space of tempered distributions.
+\end{itemize}
+\MRD{We may add some motivation for each, for example $L^2$ makes Fourier transform much easier to discuss.}
+
+
+While the space of normalizable classical spacetime fields is by definition $\phi \in L^2(M,\mu)$.  But, the
+QFT measure has support on more general objects.  In Glimm and Jaffe they are taken to live in
+$\cD'(\IR^D)$, and the test functions are in $\cD$.  Later once one has OS1 one can argue that the measure
+is supported on $\cS'$.
+
+Our current formalization uses $L^2$ as the field space, which looks different.  Presumably we would not
+see any problems until we actually define the functional measure with the correct covariance.
+
+
+
+
+\subsection{Rewriting of the Axioms to be AI friendly}
 
 Global definitions to carry through autoformalization:
 
@@ -865,6 +906,18 @@ that perturbation theory is asymptotic.  One can also conjecture nonperturbative
 conjectures be the basis for an interesting formal proof?
 
 \section{Conclusions}
+
+What we did.
+
+How much work was it, how much did AI help.
+
+Lessons -- could it be easier, could AI be more helpful.
+
+Even if this was a lot of work, it only needs to be done once (in principle).  We combine the work of finding the best
+rigorous definitions (here already done for us in the math literature), organizing them as is done in software engineering,
+and finding completely verifiable versions of the proofs.  Once we have this it will be far easier to build on previous work
+which uses it.
+
 
 \appendix
 

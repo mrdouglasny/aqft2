@@ -32,16 +32,40 @@ import Mathlib.Analysis.Analytic.Constructions
 import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 import Mathlib.Analysis.Distribution.SchwartzSpace
 import Mathlib.Topology.Algebra.Module.WeakDual
+import Mathlib.LinearAlgebra.BilinearMap
+import Mathlib.LinearAlgebra.BilinearForm.Basic
 
 import Aqft2.Basic
 import Aqft2.OS_Axioms
 import Aqft2.Euclidean
 import Aqft2.SCV
+import Aqft2.MVGaussianAbstract
+import Aqft2.FunctionalAnalysis
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
 
 noncomputable section
+
+open scoped BigOperators
+open Finset
+
+variable {E : Type*} [AddCommMonoid E] [Module ℂ E]
+
+/-- Helper lemma for bilinear expansion with finite sums -/
+lemma bilin_sum_sum {E : Type*} [AddCommMonoid E] [Module ℂ E]
+  (B : LinearMap.BilinMap ℂ E ℂ) (n : ℕ) (J : Fin n → E) (z : Fin n → ℂ) :
+  B (∑ i, z i • J i) (∑ j, z j • J j) = ∑ i, ∑ j, z i * z j * B (J i) (J j) := by
+  -- Use bilinearity: B is linear in both arguments
+  simp only [map_sum, map_smul, LinearMap.sum_apply, LinearMap.smul_apply]
+  -- Swap order of summation: ∑ x, z x * ∑ x_1, ... = ∑ i, ∑ j, ...
+  rw [Finset.sum_comm]
+  -- Convert smul to multiplication and use distributivity
+  simp only [smul_eq_mul]
+  -- Use distributivity for multiplication over sums
+  congr 1; ext x; rw [Finset.mul_sum]
+  -- Rearrange multiplication: z x * (z i * B ...) = z i * z x * B ...
+  congr 1; ext i; ring
 
 /-! ## Gaussian Measures on Field Configurations
 
@@ -100,17 +124,103 @@ def CovarianceContinuous (dμ_config : ProbabilityMeasure FieldConfiguration) : 
   ∀ (J K : TestFunctionℂ), Continuous (fun z : ℂ =>
     GJCovarianceℂ_real dμ_config (z • J) K)
 
+/-- Assumption: GJCovarianceℂ_real is linear in both arguments -/
+def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ),
+    GJCovarianceℂ_real dμ_config (c • φ₁) ψ = c * GJCovarianceℂ_real dμ_config φ₁ ψ ∧
+    GJCovarianceℂ_real dμ_config (φ₁ + φ₂) ψ = GJCovarianceℂ_real dμ_config φ₁ ψ + GJCovarianceℂ_real dμ_config φ₂ ψ ∧
+    GJCovarianceℂ_real dμ_config φ₁ (c • ψ) = c * GJCovarianceℂ_real dμ_config φ₁ ψ ∧
+    GJCovarianceℂ_real dμ_config φ₁ (ψ + φ₂) = GJCovarianceℂ_real dμ_config φ₁ ψ + GJCovarianceℂ_real dμ_config φ₁ φ₂
+
+def GJcov_bilin (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_bilinear : CovarianceBilinear dμ_config) : LinearMap.BilinMap ℂ TestFunctionℂ ℂ :=
+  LinearMap.mk₂ ℂ
+    (fun x y => GJCovarianceℂ_real dμ_config x y)
+    (by intro x x' y  -- additivity in the 1st arg
+        exact (h_bilinear 1 x x' y).2.1)
+    (by intro a x y   -- homogeneity in the 1st arg
+        exact (h_bilinear a x 0 y).1)
+    (by intro x y y'  -- additivity in the 2nd arg
+        have h := (h_bilinear 1 x y y').2.2.2
+        -- h: GJCovarianceℂ_real dμ_config x (y' + y) = GJCovarianceℂ_real dμ_config x y' + GJCovarianceℂ_real dμ_config x y
+        -- We need: GJCovarianceℂ_real dμ_config x (y + y') = GJCovarianceℂ_real dμ_config x y + GJCovarianceℂ_real dμ_config x y'
+        simp only [add_comm y' y, add_comm (GJCovarianceℂ_real dμ_config x y') _] at h
+        exact h)
+    (by intro a x y   -- homogeneity in the 2nd arg
+        exact (h_bilinear a x 0 y).2.2.1)
+
 theorem gaussian_satisfies_GJ_OS0
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_continuous : CovarianceContinuous dμ_config)
+  (h_bilinear : CovarianceBilinear dμ_config)
   : GJ_OS0_Analyticity dμ_config := by
-  -- Strategy: The function z ↦ exp(-½⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJⱼ)⟩) is entire
-  -- because it's the exponential of a polynomial:
-  -- -½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩
   intro n J
-  -- Need to show AnalyticOn ℂ (fun z => GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
-  sorry
+
+  -- Extract the Gaussian form: Z[f] = exp(-½⟨f, Cf⟩)
+  have h_form : ∀ (f : TestFunctionℂ),
+      GJGeneratingFunctionalℂ dμ_config f = Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ_real dμ_config f f) :=
+    h_gaussian.2
+
+  -- Rewrite the generating functional using Gaussian form
+  have h_rewrite : (fun z : Fin n → ℂ => GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) =
+                   (fun z => Complex.exp (-(1/2 : ℂ) * GJCovarianceℂ_real dμ_config (∑ i, z i • J i) (∑ i, z i • J i))) := by
+    funext z
+    exact h_form (∑ i, z i • J i)
+
+  rw [h_rewrite]
+
+  -- Show exp(-½ * quadratic_form) is analytic
+  apply AnalyticOn.cexp
+  apply AnalyticOn.mul
+  · exact analyticOn_const
+
+  · -- Show the quadratic form is analytic by expanding via bilinearity
+    let B := GJcov_bilin dμ_config h_bilinear
+
+    -- Expand quadratic form: ⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJⱼ)⟩ = ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩
+    have h_expansion : (fun z : Fin n → ℂ => GJCovarianceℂ_real dμ_config (∑ i, z i • J i) (∑ i, z i • J i)) =
+                       (fun z => ∑ i, ∑ j, z i * z j * GJCovarianceℂ_real dμ_config (J i) (J j)) := by
+      funext z
+      have h_eq : B (∑ i, z i • J i) (∑ i, z i • J i) = GJCovarianceℂ_real dμ_config (∑ i, z i • J i) (∑ i, z i • J i) := rfl
+      rw [← h_eq]
+      exact bilin_sum_sum B n J z
+
+    rw [h_expansion]
+
+    -- Double sum of monomials is analytic
+    apply analyticOn_finsum
+    intro i
+    apply analyticOn_finsum
+    intro j
+
+    -- Each monomial zᵢzⱼ is analytic
+    have h_monomial : AnalyticOn ℂ (fun z : Fin n → ℂ => z i * z j * GJCovarianceℂ_real dμ_config (J i) (J j)) Set.univ := by
+      have h_factor : (fun z : Fin n → ℂ => z i * z j * GJCovarianceℂ_real dμ_config (J i) (J j)) =
+                      (fun z => GJCovarianceℂ_real dμ_config (J i) (J j) * (z i * z j)) := by
+        funext z; ring
+      rw [h_factor]
+
+      apply AnalyticOn.mul
+      · exact analyticOn_const
+      · -- zᵢzⱼ = product of coordinate projections
+        have coord_i : AnalyticOn ℂ (fun z : Fin n → ℂ => z i) Set.univ := by
+          let proj : (Fin n → ℂ) →L[ℂ] ℂ := {
+            toFun := fun z => z i
+            map_add' := fun x y => by simp [Pi.add_apply]
+            map_smul' := fun c x => by simp [Pi.smul_apply]
+          }
+          exact ContinuousLinearMap.analyticOn proj Set.univ
+        have coord_j : AnalyticOn ℂ (fun z : Fin n → ℂ => z j) Set.univ := by
+          let proj : (Fin n → ℂ) →L[ℂ] ℂ := {
+            toFun := fun z => z j
+            map_add' := fun x y => by simp [Pi.add_apply]
+            map_smul' := fun c x => by simp [Pi.smul_apply]
+          }
+          exact ContinuousLinearMap.analyticOn proj Set.univ
+        exact AnalyticOn.mul coord_i coord_j
+
+    exact h_monomial
 
 /-! ## OS2: Euclidean Invariance for Translation-Invariant Gaussian Measures
 
@@ -191,6 +301,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bounded : CovarianceBounded dμ_config)
   (h_continuous : CovarianceContinuous dμ_config)
+  (h_bilinear : CovarianceBilinear dμ_config)
   (h_euclidean_invariant : CovarianceEuclideanInvariant dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
   (h_clustering : CovarianceClustering dμ_config)
@@ -200,7 +311,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
     GJ_OS3_ReflectionPositivity dμ_config ∧
     GJ_OS4_Clustering dμ_config := by
   constructor
-  · exact gaussian_satisfies_GJ_OS0 dμ_config h_gaussian h_continuous
+  · exact gaussian_satisfies_GJ_OS0 dμ_config h_gaussian h_continuous h_bilinear
   constructor
   · exact gaussian_satisfies_GJ_OS1 dμ_config h_gaussian h_bounded
   constructor
