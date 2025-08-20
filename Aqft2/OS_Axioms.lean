@@ -145,12 +145,46 @@ def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfigurati
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 
-/-- OS3 (Reflection Positivity): For positive-time test functions, the generating
-    functional evaluated on F̄F has non-negative real part and zero imaginary part. -/
+/-- OS3 (Reflection Positivity): Standard formulation (needs clarification).
+
+    WARNING: This formulation is not obviously correct and needs more careful analysis.
+    The proper Glimm-Jaffe formulation involves L2 expectations of exponentials of
+    the form exp(-½⟨F - CF', C(F - CF')⟩) where C is the covariance operator.
+
+    The matrix formulation below is more reliable and follows Glimm-Jaffe directly.
+    TODO: Reformulate this properly using the L2 framework. -/
 def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (F : PositiveTimeTestFunction),
-    0 ≤ (GJGeneratingFunctionalℂ dμ_config (schwartzMul (star F.val) F.val)).re ∧
-        (GJGeneratingFunctionalℂ dμ_config (schwartzMul (star F.val) F.val)).im = 0
+    let F_time_reflected := QFT.compTimeReflection F.val  -- ΘF (time reflection)
+    let test_function := schwartzMul (star F.val) F_time_reflected  -- F̄(ΘF)
+    0 ≤ (GJGeneratingFunctionalℂ dμ_config test_function).re ∧
+        (GJGeneratingFunctionalℂ dμ_config test_function).im = 0
+
+/-- OS3 Matrix Formulation (Glimm-Jaffe): The reflection positivity matrix is positive semidefinite.
+
+    This is the alternative formulation from Glimm-Jaffe where reflection positivity
+    is expressed as: for any finite collection of positive-time test functions f₁,...,fₙ,
+    the matrix M_{i,j} = Z[fᵢ - Θfⱼ] is positive semidefinite.
+
+    This means: ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 for all complex coefficients cᵢ. -/
+def GJ_OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℂ),
+    let reflection_matrix := fun i j =>
+      let fj_time_reflected := QFT.compTimeReflection (f j).val  -- Θfⱼ
+      let test_function := (f i).val - fj_time_reflected  -- fᵢ - Θfⱼ
+      GJGeneratingFunctionalℂ dμ_config test_function
+    0 ≤ (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * reflection_matrix i j).re
+
+/-- OS3 Reflection Invariance: The generating functional is invariant under time reflection.
+
+    For reflection-positive measures, the generating functional should be invariant
+    under time reflection: Z[Θf] = Z[f]. This ensures the consistency of the theory
+    under the reflection operation. -/
+def GJ_OS3_ReflectionInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (f : TestFunctionℂ),
+    -- The generating functional is exactly invariant under time reflection
+    GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection f) =
+    GJGeneratingFunctionalℂ dμ_config f
 
 /-- OS4 (Clustering/Ergodicity): The measure satisfies clustering properties. -/
 def GJ_OS4_Clustering (_ : ProbabilityMeasure FieldConfiguration) : Prop :=
@@ -169,3 +203,22 @@ lemma L2_embedding_generates_same_functional (dμ : ProbabilityMeasure FieldSpac
   -- This should show that the L2-based generating functional
   -- equals the distribution-based one when we embed L2 into distributions
   sorry
+
+/-! ## Matrix Formulation of OS3
+
+The matrix formulation is the most reliable form following Glimm-Jaffe directly.
+It avoids the complications of the standard formulation and provides a clear
+computational framework for verifying reflection positivity.
+-/
+
+/-- Reflection invariance implies certain properties for the standard OS3 formulation.
+    If Z[Θf] = Z[f], then the generating functional is stable under time reflection,
+    which is a natural consistency condition for reflection-positive theories. -/
+theorem reflection_invariance_supports_OS3 (dμ_config : ProbabilityMeasure FieldConfiguration) :
+  GJ_OS3_ReflectionInvariance dμ_config →
+  ∀ (F : PositiveTimeTestFunction),
+    GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection F.val) =
+    GJGeneratingFunctionalℂ dμ_config F.val := by
+  intro h_invariance F
+  -- Direct application of reflection invariance
+  exact h_invariance F.val

@@ -348,6 +348,14 @@ noncomputable def euclidean_action (g : E) (f : TestFunctionℂ) : TestFunction�
     (hg := euclidean_pullback_temperate_growth g)
     (hg_upper := euclidean_pullback_polynomial_bounds g) f
 
+/-- Action of Euclidean group on real test functions via pullback.
+    For g ∈ E and f ∈ TestFunction, define (g • f)(x) = f(g⁻¹ • x).
+    This is the real version of euclidean_action for TestFunction = SchwartzMap SpaceTime ℝ. -/
+noncomputable def euclidean_action_real (g : E) (f : TestFunction) : TestFunction :=
+  SchwartzMap.compCLM (𝕜 := ℝ)
+    (hg := euclidean_pullback_temperate_growth g)
+    (hg_upper := euclidean_pullback_polynomial_bounds g) f
+
 /-- The measure preservation result enables both test function and L² actions.
     This is the key unifying lemma that works specifically for the spacetime measure μ. -/
 lemma euclidean_action_unified_basis (g : E) :
