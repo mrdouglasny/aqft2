@@ -5,6 +5,7 @@ import «Aqft2».Basic
 import «Aqft2».Schwinger
 import «Aqft2».Euclidean
 import «Aqft2».DiscreteSymmetry
+import «Aqft2».Covariance
 import «Aqft2».SCV
 import «Aqft2».OS_Axioms
 import «Aqft2».GFF3
