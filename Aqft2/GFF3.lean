@@ -99,20 +99,77 @@ For Gaussian measures, the exponential bound follows directly from the exponenti
 of the generating functional and properties of the covariance operator.
 -/
 
-/-- Assumption: The covariance operator is bounded by Schwartz seminorms -/
-def CovarianceBounded (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∃ (M : ℝ) (k : ℕ), M > 0 ∧ ∀ (f : TestFunction),
-    |SchwingerFunction₂ dμ_config f f| ≤ M * (SchwartzMap.seminorm ℝ k k f)^2
+/-- Assumption: The covariance operator is bounded by L¹ and L² norms for complex test functions -/
+def CovarianceBoundedComplex (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∃ (M : ℝ), M > 0 ∧ ∀ (f : TestFunctionℂ),
+    ‖SchwingerFunctionℂ₂ dμ_config f f‖ ≤ M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2)
 
 theorem gaussian_satisfies_GJ_OS1
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
-  (h_bounded : CovarianceBounded dμ_config)
+  (h_bounded : CovarianceBoundedComplex dμ_config)
   : GJ_OS1_Regularity dμ_config := by
-  -- Strategy: For Gaussian measures, |Z[f]| = |exp(-½⟨f, Cf⟩)| = exp(-½ Re⟨f, Cf⟩)
-  -- Since C is positive semidefinite for a valid measure, Re⟨f, Cf⟩ ≥ 0
-  -- So |Z[f]| ≤ 1, which trivially satisfies the exponential bound
-  sorry
+  -- For complex test functions, the proof is more involved:
+  -- |Z[f]| = |exp(-½⟨f, Cf⟩)| = exp(-½ Re⟨f, Cf⟩)
+  --
+  -- The challenge: For complex f, ⟨f, Cf⟩ is generally complex, so we need:
+  -- 1) To bound Re⟨f, Cf⟩ in terms of ‖f‖₁ and ‖f‖₂
+  -- 2) To show this gives the required exponential bound
+  --
+  -- Strategy: Use the covariance bound and properties of complex inner products
+  -- to relate Re⟨f, Cf⟩ to the L¹ and L² norms of f
+
+  obtain ⟨M, hM_pos, hM_bound⟩ := h_bounded
+  use 2, M  -- p = 2, constant M
+  constructor
+  · norm_num  -- 1 ≤ 2
+  constructor
+  · norm_num  -- 2 ≤ 2
+  constructor
+  · exact hM_pos  -- M > 0
+  constructor
+  · -- Main bound: |Z[f]| ≤ exp(M * (‖f‖₁ + ‖f‖₂))
+    intro f
+
+    -- Apply Gaussian form: Z[f] = exp(-½⟨f, Cf⟩)
+    have h_form := h_gaussian.2 f
+    rw [h_form]
+
+    -- |exp(-½⟨f, Cf⟩)| = exp(-½ Re⟨f, Cf⟩)
+    rw [Complex.norm_exp]
+
+    -- The key step: bound -½ Re⟨f, Cf⟩
+    have h_re_bound : -(1/2 : ℝ) * (SchwingerFunctionℂ₂ dμ_config f f).re ≤
+                      (1/2) * M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2) := by
+      -- Use the covariance bound and properties of complex numbers
+      have h_covar_bound := hM_bound f
+      -- The proof requires careful analysis of complex inner products
+      -- For now, we use the bound via the absolute value
+      have h_abs_re : |(SchwingerFunctionℂ₂ dμ_config f f).re| ≤
+                      ‖SchwingerFunctionℂ₂ dμ_config f f‖ := Complex.abs_re_le_norm _
+      have h_neg_bound : -(1/2 : ℝ) * (SchwingerFunctionℂ₂ dμ_config f f).re ≤
+                        (1/2) * ‖SchwingerFunctionℂ₂ dμ_config f f‖ := by
+        have h_re_ge : (SchwingerFunctionℂ₂ dμ_config f f).re ≥
+                      -‖SchwingerFunctionℂ₂ dμ_config f f‖ := by
+          have h := Complex.abs_re_le_norm (SchwingerFunctionℂ₂ dμ_config f f)
+          rw [abs_le] at h
+          exact h.1
+        linarith
+      calc -(1/2 : ℝ) * (SchwingerFunctionℂ₂ dμ_config f f).re
+        _ ≤ (1/2) * ‖SchwingerFunctionℂ₂ dμ_config f f‖ := h_neg_bound
+        _ ≤ (1/2) * (M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2)) := by
+          apply mul_le_mul_of_nonneg_left h_covar_bound
+          norm_num
+        _ = (1/2) * M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2) := by
+          ring
+
+    -- For now, we need a more sophisticated bound to complete the proof
+    -- The key mathematical step is relating the L¹×L² bound to the required L¹+L² bound
+    sorry
+  · -- p = 2 case: two-point function integrability
+    intro h_p_eq_2
+    -- This follows from the boundedness assumption
+    sorry
 
 /-! ## OS0: Analyticity for Gaussian Measures
 
@@ -432,7 +489,7 @@ theorem gaussian_satisfies_GJ_OS4
 theorem gaussian_satisfies_all_GJ_OS_axioms
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
-  (h_bounded : CovarianceBounded dμ_config)
+  (h_bounded : CovarianceBoundedComplex dμ_config)
   (h_continuous : CovarianceContinuous dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   (h_euclidean_invariant : CovarianceEuclideanInvariant dμ_config)
@@ -458,7 +515,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
 theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
-  (h_bounded : CovarianceBounded dμ_config)
+  (h_bounded : CovarianceBoundedComplex dμ_config)
   (h_continuous : CovarianceContinuous dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   (h_euclidean_invariant : CovarianceEuclideanInvariant dμ_config)

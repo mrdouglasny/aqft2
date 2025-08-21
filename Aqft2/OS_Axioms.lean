@@ -71,7 +71,7 @@ def OS0_Analyticity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
 
 -- OS1: The regularity bound on the generating functional
 def OS1_bound (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) (p : ℝ) (c : ℝ) : Prop :=
-  ‖generatingFunctional dμ f‖ ≤ Real.exp (c * (∫ x, ‖f x‖ ∂μ + (∫ x, ‖f x‖^p ∂μ)^(1/p)))
+  ‖generatingFunctional dμ f‖ ≤ Real.exp (c * (∫ x, ‖f x‖ ∂volume + (∫ x, ‖f x‖^p ∂volume)^(1/p)))
 
 -- OS1: Additional condition when p = 2 for two-point function integrability
 def OS1_two_point_condition (_ : ProbabilityMeasure FieldSpace) : Prop :=
@@ -136,7 +136,7 @@ def GJ_OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Pro
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
     (∀ (f : TestFunctionℂ),
       ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
-        Real.exp (c * (∫ x, ‖f x‖ ∂μ + (∫ x, ‖f x‖^p ∂μ)^(1/p)))) ∧
+        Real.exp (c * (∫ x, ‖f x‖ ∂volume + (∫ x, ‖f x‖^p ∂volume)^(1/p)))) ∧
     (p = 2 → GJ_TwoPointIntegrable dμ_config)
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
