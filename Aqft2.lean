@@ -2,6 +2,7 @@
 -- Import modules here that should be built as part of the library.
 import «Aqft2».FunctionalAnalysis
 import «Aqft2».Basic
+import «Aqft2».QFTHilbertSpace
 import «Aqft2».Schwinger
 import «Aqft2».Euclidean
 import «Aqft2».DiscreteSymmetry

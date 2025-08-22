@@ -30,10 +30,43 @@ import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Density
 
+import Mathlib.Analysis.SpecialFunctions.Gamma.Basic
+import Mathlib.MeasureTheory.Measure.Lebesgue.VolumeOfBalls
+
 open MeasureTheory NNReal ENNReal Complex
 open TopologicalSpace Measure
 
 noncomputable section
+
+/-! ## Sphere Volume Formulas -/
+
+/-- Volume of the unit sphere S^{d-1} in d-dimensional space.
+    We use the standard formula: vol(S^{d-1}) = 2π^{d/2} / Γ(d/2)
+
+    This is mathematically equivalent to the Mathlib ball volume formulas:
+    - Volume of unit ball B^d = π^{d/2} / Γ(d/2 + 1)
+    - Volume of unit sphere S^{d-1} = d * Volume(unit ball) = 2π^{d/2} / Γ(d/2)
+
+    We provide explicit values for commonly used dimensions d=1,2,3,4,
+    and use the exact Gamma function formula for general d.
+-/
+def unitSphereVolume (d : ℕ) : ℝ :=
+  match d with
+  | 1 => 2  -- S⁰ = {-1, 1}
+  | 2 => 2 * Real.pi  -- S¹ = circle
+  | 3 => 4 * Real.pi  -- S² = sphere
+  | 4 => 2 * Real.pi^2  -- S³ = 3-sphere
+  | _ => 2 * Real.pi^((d : ℝ)/2) / Real.Gamma ((d : ℝ)/2)  -- General formula
+
+/-- The unit sphere volume matches the standard mathematical formula -/
+theorem unitSphereVolume_eq_formula (d : ℕ) :
+  unitSphereVolume d = 2 * Real.pi^((d : ℝ)/2) / Real.Gamma ((d : ℝ)/2) := by
+  -- This can be proven using the ball volume formulas from Mathlib:
+  -- InnerProductSpace.volume_ball shows volume(ball) = r^d * (√π)^d / Γ(d/2 + 1)
+  -- The sphere surface area is then vol(S^{d-1}) = d * vol(unit ball) = 2π^{d/2} / Γ(d/2)
+  -- For explicit cases d=1,2,3,4, we can use:
+  -- Real.Gamma_one_half_eq, Real.Gamma_one, Real.Gamma_nat_add_half, etc.
+  sorry
 
 /-! ## Analyticity of finite sums -/
 
