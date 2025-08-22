@@ -182,20 +182,44 @@ lemma E_squared {m : ℝ} [Fact (0 < m)] (k : SpatialCoords) :
 
 /-! ## Heat Kernel Functions for Glimm-Jaffe
 
-For the Glimm-Jaffe reflection positivity argument, we need operators of the form
-μ⁻¹ e^{-(s+t)μ} where μ = E(k) = √(‖k‖² + m²).
+For the Glimm-Jaffe reflection positivity argument, we need:
 
-These operators ARE bounded on L² because the exponential decay e^{-(s+t)μ}
-dominates the polynomial growth of μ⁻¹, making the overall function bounded.
+1. **Basic heat kernel**: e^{-tμ} where μ = E(k) = √(‖k‖² + m²)
+2. **Integrated heat kernel**: μ⁻¹ e^{-tμ} (from integrating ∫₀^∞ e^{-sμ} ds = μ⁻¹)
+
+The integrated version is bounded on L² because the exponential decay e^{-tμ}
+dominates the polynomial growth of μ⁻¹.
 -/
 
-/-- Heat kernel function: μ⁻¹ e^{-(s+t)μ} where μ = E(k) -/
+/-- Basic heat kernel function: e^{-tμ} where μ = E(k) -/
 def heatKernel (m : ℝ) (t : ℝ) (k : SpatialCoords) : ℝ :=
+  Real.exp (-(t * E m k))
+
+/-- Integrated heat kernel function: μ⁻¹ e^{-tμ} where μ = E(k)
+    This represents ∫₀^∞ e^{-sμ} ds * e^{-tμ} = μ⁻¹ e^{-tμ} -/
+def heatKernelInt (m : ℝ) (t : ℝ) (k : SpatialCoords) : ℝ :=
   (E m k)⁻¹ * Real.exp (-(t * E m k))
 
-/-- The heat kernel function is bounded for t ≥ 0 -/
+/-- The basic heat kernel function is bounded by 1 for t ≥ 0 -/
 lemma heatKernel_bounded {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t) :
   ∃ C > 0, ∀ k : SpatialCoords, |heatKernel m t k| ≤ C := by
+  -- For t ≥ 0, e^{-tμ} ≤ 1 since μ > 0
+  use 1
+  constructor
+  · norm_num
+  · intro k
+    unfold heatKernel
+    rw [Real.abs_exp]
+    -- exp(-t * E m k) ≤ exp(0) = 1 for t ≥ 0 and E m k > 0
+    rw [← Real.exp_zero]
+    apply Real.exp_monotone
+    have h_pos_E : 0 < E m k := E_pos k
+    have : t * E m k ≥ 0 := mul_nonneg ht (le_of_lt h_pos_E)
+    linarith
+
+/-- The integrated heat kernel function is bounded for t ≥ 0 -/
+lemma heatKernelInt_bounded {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t) :
+  ∃ C > 0, ∀ k : SpatialCoords, |heatKernelInt m t k| ≤ C := by
   -- For t ≥ 0, e^{-tμ}/μ is bounded because exponential decay dominates polynomial growth
   -- The key insight: μ⁻¹ ≤ m⁻¹ and e^{-tμ} ≤ 1 for t ≥ 0, so μ⁻¹e^{-tμ} ≤ m⁻¹
 
@@ -207,7 +231,7 @@ lemma heatKernel_bounded {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t) :
   · intro k
     have h_pos_E : 0 < E m k := E_pos k
 
-    unfold heatKernel
+    unfold heatKernelInt
     rw [abs_mul]
     -- Now we have |(E m k)⁻¹| * |Real.exp (-(t * E m k))| ≤ m⁻¹
 
@@ -246,10 +270,21 @@ lemma heatKernel_bounded {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t) :
       _ ≤ m⁻¹ * 1 := h_step2
       _ = m⁻¹ := h_step3
 
-/-- The heat kernel function is continuous for t ≥ 0 -/
+/-- The basic heat kernel function is continuous for t ≥ 0 -/
 lemma heatKernel_continuous {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t) :
   Continuous (heatKernel m t) := by
   unfold heatKernel
+  -- Real.exp (-(t * E m k)) is continuous
+  apply Continuous.comp Real.continuous_exp
+  apply Continuous.neg
+  apply Continuous.mul
+  · exact continuous_const
+  · exact E_continuous.comp continuous_id
+
+/-- The integrated heat kernel function is continuous for t ≥ 0 -/
+lemma heatKernelInt_continuous {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t) :
+  Continuous (heatKernelInt m t) := by
+  unfold heatKernelInt
   apply Continuous.mul
   · -- (E m k)⁻¹ is continuous where E m k > 0
     apply Continuous.inv₀
@@ -263,24 +298,41 @@ lemma heatKernel_continuous {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t) :
     · exact continuous_const
     · exact E_continuous.comp continuous_id
 
-/-- **Main Application**: Heat kernel as a bounded operator on spatial L².
+/-- **Application**: Basic heat kernel as a bounded operator on spatial L².
+
+This constructs the basic heat kernel operator e^{-tμ} as a bounded linear operator on L²(SpatialCoords).
+Uses the general `mulL2_of_boundedContinuous` framework for multiplication by bounded continuous functions. -/
+noncomputable def heatKernelOperator (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
+    SpatialL2 →L[ℝ] SpatialL2 :=
+  -- The basic heat kernel e^{-tμ} is bounded and continuous, so we can use mulL2_of_boundedContinuous
+  let ϕ_heat : BoundedContinuousFunction SpatialCoords ℝ := by
+    -- We construct the bounded continuous function from heatKernel
+    -- Continuity follows from heatKernel_continuous, boundedness from heatKernel_bounded
+    exact ⟨⟨heatKernel m t, heatKernel_continuous ht⟩, sorry⟩ -- bound proof to be filled later
+  @mulL2_BoundedContinuous SpatialCoords _ _ (volume : Measure SpatialCoords) (by infer_instance) ϕ_heat
+
+/-- The basic heat kernel operator has norm bound ≤ 1. -/
+lemma heatKernelOperator_norm_bound (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
+    ‖heatKernelOperator m t ht‖ ≤ 1 := by
+  -- This follows from heatKernel_bounded
+  sorry
+
+/-- **Main Application**: Integrated heat kernel as a bounded operator on spatial L².
 
 This uses our general multiplication lemma to construct the heat kernel operator
 μ⁻¹ e^{-(s+t)μ} as a bounded linear operator on L²(SpatialCoords). -/
-noncomputable def heatKernelOperator (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
+noncomputable def heatKernelIntOperator (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
     SpatialL2 →L[ℝ] SpatialL2 := by
   -- For now, we use the general multiplication lemma structure
-  -- The proof that the heat kernel gives a bounded continuous function
+  -- The proof that the integrated heat kernel gives a bounded continuous function
   -- will be completed when we prove the general lemmas
   sorry
 
-/-- The heat kernel operator has the expected norm bound. -/
-lemma heatKernelOperator_norm_bound (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
-    ‖heatKernelOperator m t ht‖ ≤ m⁻¹ := by
+/-- The integrated heat kernel operator has the expected norm bound. -/
+lemma heatKernelIntOperator_norm_bound (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
+    ‖heatKernelIntOperator m t ht‖ ≤ m⁻¹ := by
   -- This follows from our general norm bound and the heat kernel bound
-  sorry
-
-/-! ## Applications to Real-Valued Spatial L² -/
+  sorry/-! ## Applications to Real-Valued Spatial L² -/
 
 /-- **Application 1**: Multiplication by bounded continuous functions on spatial slices. -/
 def mulSpatialL2_BoundedContinuous (ϕ : BoundedContinuousFunction SpatialCoords ℝ) :
@@ -314,29 +366,3 @@ example (ϕ : BoundedContinuousFunction SpatialCoords ℝ) (f g : SpatialL2) (c 
     (mulSpatialL2_BoundedContinuous ϕ) (f + c • g) =
     (mulSpatialL2_BoundedContinuous ϕ) f + c • (mulSpatialL2_BoundedContinuous ϕ) g := by
   rw [map_add, map_smul]
-
-/-! ## Summary
-
-This file establishes the framework for multiplication operators on L² spaces:
-
-1. **General Lemmas**: `mulL2_of_boundedContinuous` and `mulL2_of_Linfty`
-   (to be proved in a functional analysis module)
-
-2. **Constructors**: `mulL2_BoundedContinuous` and `mulL2_Linfty`
-   that use the general lemmas
-
-3. **Applications**: Specific operators for spatial coordinates used in QFT:
-   - `mulSpatialL2_BoundedContinuous`: for bounded continuous functions on spatial slices
-   - `mulSpatialL2_Linfty`: for L∞ functions on spatial slices
-   - `spatialConstantMultiplication`: multiplication by constants
-
-4. **Properties**: Norm bounds and linearity
-
-The key insight is that bounded continuous functions are often more natural than L∞
-functions for QFT applications, while still providing the same operator norm bounds.
-
-For your QFT work, you can now use these multiplication operators on spatial slices
-for the Glimm-Jaffe reflection positivity argument.
--/
-
-end
