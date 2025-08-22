@@ -148,56 +148,56 @@ lemma mulL2_of_boundedContinuous (ϕ : BoundedContinuousFunction α ℝ) :
   -- FINAL STEP: Construct the actual operator T
   -- The construction principle: T f := [ϕ * f_rep] where [] means "L² equivalence class"
   -- For each f ∈ L², we:
-  -- 1. Get f_rep : α → ℝ (the AE representative of f)  
+  -- 1. Get f_rep : α → ℝ (the AE representative of f)
   -- 2. Form product_fun : α → ℝ := fun x => ϕ x * f_rep x
   -- 3. Use h_product_memLp to show product_fun ∈ L²
   -- 4. Convert product_fun back to L² equivalence class
-  
+
   let T_fun : Lp ℝ 2 μ → Lp ℝ 2 μ := fun f =>
     -- For each f ∈ L², get its representative, multiply by ϕ, and convert back to L²
     let f_rep : α → ℝ := f  -- AE representative of f
     let product_fun : α → ℝ := fun x => ϕ x * f_rep x  -- pointwise product
     -- Convert product_fun back to L² using the correct Mathlib constructor
     (h_product_memLp f).toLp product_fun
-  
+
   -- Show T_fun is linear
-  have h_linear : ∀ (f g : Lp ℝ 2 μ) (a b : ℝ), 
+  have h_linear : ∀ (f g : Lp ℝ 2 μ) (a b : ℝ),
     T_fun (a • f + b • g) = a • T_fun f + b • T_fun g := by
     intro f g a b
     -- Linearity follows from pointwise linearity of multiplication
     simp [T_fun]
     -- Use that ϕ x * (a * f_rep x + b * g_rep x) = a * (ϕ x * f_rep x) + b * (ϕ x * g_rep x)
     sorry -- Technical: Lp constructor linearity and pointwise multiplication linearity
-  
+
   -- Show T_fun is continuous with bound ‖ϕ‖
   have h_continuous : ∃ M, ∀ f : Lp ℝ 2 μ, ‖T_fun f‖ ≤ M * ‖f‖ := by
     use ‖ϕ‖
     intro f
     simp [T_fun]
     -- The bound follows from h_pointwise_bound and norm properties
-    -- ‖T_fun f‖ = ‖(h_product_memLp f).toLp product_fun‖ 
+    -- ‖T_fun f‖ = ‖(h_product_memLp f).toLp product_fun‖
     -- Using h_pointwise_bound: we can bound this by ‖ϕ‖ * ‖f‖
     -- Therefore: ‖T_fun f‖ ≤ ‖ϕ‖ * ‖f‖
     sorry -- Technical: use h_pointwise_bound and norm properties of toLp
-  
+
   -- Construct the continuous linear map
-  let T : Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ := 
-    LinearMap.mkContinuous 
+  let T : Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ :=
+    LinearMap.mkContinuous
       { toFun := T_fun
-        map_add' := fun f g => by 
+        map_add' := fun f g => by
           -- Use h_linear with a=1, b=1: T_fun (1•f + 1•g) = 1•T_fun f + 1•T_fun g
           -- This simplifies to: T_fun (f + g) = T_fun f + T_fun g
           sorry -- Technical: apply h_linear and simplify
-        map_smul' := fun a f => by 
+        map_smul' := fun a f => by
           -- Use h_linear with g=0, b=0: T_fun (a•f + 0•0) = a•T_fun f + 0•T_fun 0
           -- This simplifies to: T_fun (a•f) = a•T_fun f
           sorry -- Technical: apply h_linear and simplify
-      } 
-      ‖ϕ‖ 
+      }
+      ‖ϕ‖
       (fun f => by
         -- Need to convert h_continuous.choose_spec to the right form
         -- h_continuous says ‖T_fun f‖ ≤ h_continuous.choose * ‖f‖
-        -- We need ‖T_fun f‖ ≤ ‖ϕ‖ * ‖f‖ 
+        -- We need ‖T_fun f‖ ≤ ‖ϕ‖ * ‖f‖
         -- Since h_continuous.choose = ‖ϕ‖, this follows directly
         sorry -- Technical: use h_continuous.choose_spec with h_continuous.choose = ‖ϕ‖
       )
@@ -210,7 +210,7 @@ lemma mulL2_of_boundedContinuous (ϕ : BoundedContinuousFunction α ℝ) :
     -- By construction, T_fun f = (h_product_memLp f).toLp product_fun
     -- where product_fun x = ϕ x * f_rep x = ϕ x * (f : α → ℝ) x
     -- Using MemLp.coeFn_toLp: (h_product_memLp f).toLp =ᵐ[μ] product_fun
-    -- And product_fun x = ϕ x * (f : α → ℝ) x =ᵐ[μ] ϕ x * f x  
+    -- And product_fun x = ϕ x * (f : α → ℝ) x =ᵐ[μ] ϕ x * f x
     simp [T, LinearMap.mkContinuous_apply, T_fun]
     -- Use the AE equality from MemLp.coeFn_toLp
     exact (h_product_memLp f).coeFn_toLp
