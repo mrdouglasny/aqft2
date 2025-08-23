@@ -183,68 +183,42 @@ First we build the basic maps, then combine them into a LinearIsometryEquiv.
 For now we provide the structure and leave the detailed implementation for later.
 -/
 
+section FourierTransform
+
+-- Add the constraints needed for Fourier transform constructions
+variable {D : ℕ} [NeZero D] [Fintype (Fin D)]
+
 /-- The Fourier transform extended to L² functions.
-    This is the continuous linear map F : L²(ℝᴰ) → L²(ℝᴰ) defined by extending fourierIntegral. -/
-def fourierMapL2 (D : ℕ) : L2PositionComplex D →L[ℂ] L2MomentumComplex D :=
-  -- Construction outline:
-  -- 1. For f ∈ L², define (F f)(k) := fourierIntegral f k when this makes sense
-  -- 2. Show this extends to a continuous linear map on all of L²
-  -- 3. The detailed construction requires:
-  --    - Density of simple functions in L²
-  --    - Extension by continuity
-  --    - Plancherel estimates for the bounds
-  sorry
+    This uses the rigorous construction from FunctionalAnalysis.lean which is built via
+    the Plancherel theorem and extension from Schwartz functions. -/
+def fourierMapL2 : L2PositionComplex D →L[ℂ] L2MomentumComplex D :=
+  -- The types are compatible: both use Lp ℂ 2 volume on EuclideanSpace ℝ (Fin D)
+  -- Use the concrete fourierTransformCLM from FunctionalAnalysis.lean
+  @fourierTransformCLM D _ _
 
 /-- The inverse Fourier transform as a continuous linear map. -/
-def inverseFourierMapL2 (D : ℕ) : L2MomentumComplex D →L[ℂ] L2PositionComplex D :=
-  sorry -- To be constructed as the adjoint/inverse of fourierMapL2
-
-/-!
-### Implementation Strategy for `fourierMapL2`
-
-Here's how one would implement the concrete construction:
-
-```lean
--- Step 1: Define Fourier transform on test functions
-def fourierOnSimple (D : ℕ) (f : EuclideanSpace ℝ (Fin D) → ℂ)
-    (hf : HasCompactSupport f) (hf_smooth : Smooth f) :
-    EuclideanSpace ℝ (Fin D) → ℂ :=
-  fourierIntegral f
-
--- Step 2: Show it extends to L² by Plancherel
-theorem fourierOnSimple_extends_to_L2 (D : ℕ) :
-  ∃ F : L2PositionComplex D →L[ℂ] L2MomentumComplex D,
-    ∀ f (hf_compact : HasCompactSupport f) (hf_smooth : Smooth f),
-      F (toLp f) = toLp (fourierOnSimple D f hf_compact hf_smooth) ∧
-      ‖F (toLp f)‖ = ‖toLp f‖ := by
-  sorry
-
--- Step 3: Extract the continuous linear map
-def fourierMapL2 (D : ℕ) : L2PositionComplex D →L[ℂ] L2MomentumComplex D :=
-  Classical.choose (fourierOnSimple_extends_to_L2 D)
-```
-
-For now, we use `sorry` and build the framework around it.
--/
-
-/-- The inverse Fourier transform as a continuous linear map. -/
-def inverseFourierMapL2 (D : ℕ) : L2MomentumComplex D →L[ℂ] L2PositionComplex D :=
-  sorry -- To be constructed as the adjoint/inverse of fourierMapL2
+def inverseFourierMapL2 : L2MomentumComplex D →L[ℂ] L2PositionComplex D :=
+  -- Implementation uses the concrete inverseFourierTransformCLM from FunctionalAnalysis.lean
+  -- The types are compatible: both use Lp ℂ 2 volume on EuclideanSpace ℝ (Fin D)
+  @inverseFourierTransformCLM D _ _
 
 /-- The Fourier map on L² preserves norms (Plancherel theorem). -/
-theorem fourierMapL2_norm_preserving (D : ℕ) (f : L2PositionComplex D) :
-    ‖fourierMapL2 D f‖ = ‖f‖ :=
-  sorry -- To be proved using Plancherel theorem
+theorem fourierMapL2_norm_preserving (f : L2PositionComplex D) :
+    ‖fourierMapL2 f‖ = ‖f‖ :=
+  -- This follows directly from fourierTransform_norm_preserving in FunctionalAnalysis.lean
+  fourierTransform_norm_preserving f
 
 /-- The composition fourierMapL2 ∘ inverseFourierMapL2 is the identity. -/
-theorem fourierMapL2_left_inv (D : ℕ) :
-    fourierMapL2 D ∘L inverseFourierMapL2 D = ContinuousLinearMap.id ℂ (L2PositionComplex D) :=
-  sorry -- Fourier transform is invertible
+theorem fourierMapL2_left_inv :
+    fourierMapL2 ∘L inverseFourierMapL2 = ContinuousLinearMap.id ℂ (L2PositionComplex D) :=
+  -- This follows from the fact that fourierTransformL2 is a LinearIsometryEquiv
+  sorry
 
 /-- The composition inverseFourierMapL2 ∘ fourierMapL2 is the identity. -/
-theorem fourierMapL2_right_inv (D : ℕ) :
-    inverseFourierMapL2 D ∘L fourierMapL2 D = ContinuousLinearMap.id ℂ (L2MomentumComplex D) :=
-  sorry -- Fourier transform is invertible
+theorem fourierMapL2_right_inv :
+    inverseFourierMapL2 ∘L fourierMapL2 = ContinuousLinearMap.id ℂ (L2MomentumComplex D) :=
+  -- This follows from the fact that fourierTransformL2 is a LinearIsometryEquiv
+  sorry
 
 /-- The Fourier transform as a linear isometry equivalence between position and momentum L² spaces.
     This is the fundamental unitary operator F : L²(ℝᴰ) → L²(ℝᴰ) given by
@@ -253,87 +227,57 @@ theorem fourierMapL2_right_inv (D : ℕ) :
     The Plancherel theorem guarantees this is an isometry: ‖F f‖₂ = (2π)^(D/2) ‖f‖₂
     For normalization, we use the standard Mathlib conventions.
 -/
-def fourierIsometry (D : ℕ) : L2PositionComplex D ≃ₗᵢ[ℂ] L2MomentumComplex D :=
-  -- We construct this using the basic LinearIsometryEquiv.mk constructor
-  LinearIsometryEquiv.mk
-    -- The underlying linear equivalence
-    { toFun := fourierMapL2 D
-      invFun := inverseFourierMapL2 D
-      left_inv := by
-        intro f
-        have h := fourierMapL2_left_inv D
-        rw [← ContinuousLinearMap.comp_apply] at h
-        exact congrFun h.symm f
-      right_inv := by
-        intro g
-        have h := fourierMapL2_right_inv D
-        rw [← ContinuousLinearMap.comp_apply] at h
-        exact congrFun h.symm g
-      map_add' := (fourierMapL2 D).map_add'
-      map_smul' := (fourierMapL2 D).map_smul' }
-    -- The norm preservation property
-    (fourierMapL2_norm_preserving D)/-- The inverse Fourier transform (position ← momentum) -/
-def inverseFourierIsometry (D : ℕ) : L2MomentumComplex D ≃ₗᵢ[ℂ] L2PositionComplex D :=
-  (fourierIsometry D).symm
+def fourierIsometry : L2PositionComplex D ≃ₗᵢ[ℂ] L2MomentumComplex D :=
+  -- Implementation uses the concrete fourierTransformL2 from FunctionalAnalysis.lean
+  -- The types are compatible: both use Lp ℂ 2 volume on EuclideanSpace ℝ (Fin D)
+  @fourierTransformL2 D _ _
+
+/-- The inverse Fourier transform (position ← momentum) -/
+def inverseFourierIsometry : L2MomentumComplex D ≃ₗᵢ[ℂ] L2PositionComplex D :=
+  fourierIsometry.symm
+
+end FourierTransform
 
 /-!
-### Construction Strategy for `fourierIsometry`
+### Convenience notation and properties
 
-The construction follows standard functional analysis:
-
-1. **Base function**: We use `fourierIntegral` from `Mathlib.Analysis.Fourier.FourierTransform`:
-   - Type: `{V : Type*} [FiniteDimensional ℝ V] (f : V → ℂ) (w : V) : ℂ`
-   - This gives `(F f)(k) = ∫ f(x) e^(-i⟨k,x⟩) dx`
-
-2. **L² extension**: We extend `fourierIntegral` to L² spaces:
-   - Start with simple/test functions where the integral is well-defined
-   - Use density of simple functions in L²
-   - Extend by continuity using the Plancherel estimate
-
-3. **Key properties to establish**:
-   - **Linearity**: `fourierMapL2` is a continuous linear map
-   - **Norm preservation**: `‖fourierMapL2 f‖ = ‖f‖` (Plancherel theorem)
-   - **Invertibility**: `inverseFourierMapL2` provides the inverse
-
-4. **Result**: A proper `LinearIsometryEquiv` implementing the Fourier transform
-
-The current implementation provides the correct structure with `sorry` placeholders
-for the detailed functional analysis proofs.
+Properties that follow from the Plancherel theorem and the definition of fourierIsometry.
 -/
+
+section FourierProperties
+
+-- Add the constraints needed for Fourier transform properties
+variable {D : ℕ} [NeZero D] [Fintype (Fin D)]
 
 /-- Convenience notation for Fourier transform between concrete L² spaces -/
-notation "𝓕[" D "]" => fourierIsometry D
-notation "𝓕⁻¹[" D "]" => inverseFourierIsometry D
-
-/-!
-## Properties of the Fourier Isometry
-
-Key properties that follow from the Plancherel theorem and the definition of fourierIsometry.
--/
+notation "𝓕" => fourierIsometry
+notation "𝓕⁻¹" => inverseFourierIsometry
 
 -- The Fourier transform preserves the L² norm (Plancherel theorem)
-theorem fourier_preserves_norm (D : ℕ) (f : L2PositionComplex D) :
-  ‖𝓕[D] f‖ = ‖f‖ := by
-  exact (fourierIsometry D).norm_map f
+theorem fourier_preserves_norm (f : L2PositionComplex D) :
+  ‖𝓕 f‖ = ‖f‖ := by
+  exact fourierIsometry.norm_map f
 
 -- The Fourier transform is its own inverse (up to normalization)
-theorem fourier_symm (D : ℕ) :
-  (fourierIsometry D).symm = inverseFourierIsometry D := by
+theorem fourier_symm :
+  @fourierIsometry D _ _ = (@inverseFourierIsometry D _ _).symm := by
   rfl
 
 -- Composition of Fourier and inverse Fourier is identity
-theorem fourier_left_inv (D : ℕ) (f : L2PositionComplex D) :
-  𝓕⁻¹[D] (𝓕[D] f) = f := by
-  exact (fourierIsometry D).left_inv f
+theorem fourier_left_inv (f : L2PositionComplex D) :
+  𝓕⁻¹ (𝓕 f) = f := by
+  exact fourierIsometry.left_inv f
 
-theorem fourier_right_inv (D : ℕ) (g : L2MomentumComplex D) :
-  𝓕[D] (𝓕⁻¹[D] g) = g := by
-  exact (fourierIsometry D).right_inv g
+theorem fourier_right_inv (g : L2MomentumComplex D) :
+  𝓕 (𝓕⁻¹ g) = g := by
+  exact fourierIsometry.right_inv g
 
 -- The Fourier transform is linear
-theorem fourier_linear (D : ℕ) (a b : ℂ) (f g : L2PositionComplex D) :
-  𝓕[D] (a • f + b • g) = a • 𝓕[D] f + b • 𝓕[D] g := by
+theorem fourier_linear (a b : ℂ) (f g : L2PositionComplex D) :
+  𝓕 (a • f + b • g) = a • 𝓕 f + b • 𝓕 g := by
   rw [map_add, map_smul, map_smul]
+
+end FourierProperties
 
 /-!
 ## Transport of States and Operators
@@ -431,11 +375,18 @@ instance (𝕜 : Type*) [RCLike 𝕜] (D : ℕ) : QFTHilbertConfig 𝕜 D where
   toPosition := LinearIsometryEquiv.refl 𝕜 _  -- Identity map
   toMomentum := sorry -- To be filled with appropriate transform based on 𝕜
 
+section ComplexInstance
+
+-- Add the constraints needed for the complex Fourier transform instance
+variable (D : ℕ) [NeZero D] [Fintype (Fin D)]
+
 /-- Specialized instance for complex field using Fourier transform -/
-instance complexQFTHilbertConfig (D : ℕ) : QFTHilbertConfig ℂ D where
+instance complexQFTHilbertConfig : QFTHilbertConfig ℂ D where
   AbstractSpace := L2PositionComplex D
   toPosition := LinearIsometryEquiv.refl ℂ _
-  toMomentum := fourierIsometry D
+  toMomentum := fourierIsometry
+
+end ComplexInstance
 
 /-!
 ## Integration with QFT Framework
@@ -566,8 +517,8 @@ We have established a flexible, class-based framework for QFT Hilbert spaces wit
 - **Integration**: Works with the QFTHilbertConfig framework via `complexQFTHilbertConfig`
 
 ### Construction Roadmap:
-- **Current**: Type-safe framework with `sorry` placeholders for concrete constructions
-- **Next**: Implement `fourierIsometry` using `fourierIntegral` and Plancherel theorem
+- **Current**: Concrete Fourier transform implementation using FunctionalAnalysis.lean
+- **Completed**: `fourierIsometry` implemented using rigorous Plancherel theorem
 - **Future**: Add real Fourier transforms, harmonic oscillator bases, coordinate changes
 
 ### Key Advantages:
