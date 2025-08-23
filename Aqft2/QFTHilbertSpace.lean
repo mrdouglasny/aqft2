@@ -16,9 +16,10 @@ import Mathlib.Data.Complex.Basic
 
 -- Import our basic definitions
 import Aqft2.Basic
+import Aqft2.Operators
 
 open MeasureTheory Complex Real
-open TopologicalSpace
+open TopologicalSpace OperatorTheory
 
 noncomputable section
 
@@ -35,55 +36,37 @@ measure spaces, then applies them to QFT Hilbert spaces.
 -/
 
 -- General measure space setup
-variable {α : Type*} [MeasurableSpace α] [TopologicalSpace α]
+variable {α : Type*} [MeasurableSpace α] [TopologicalSpace α] [BorelSpace α]
 variable {μ : Measure α} [SigmaFinite μ]
 
-/-! ## General Multiplication Lemmas (to be proved elsewhere)
+/-! ## General Multiplication Lemmas
 
-These are the fundamental results for multiplication operators. We state them as lemmas
-and will prove them in a separate functional analysis file.
+These are imported from Aqft2.Operators and available via the OperatorTheory namespace.
+We can use them directly without redefinition.
 -/
 
-/-- **Lemma 1**: Bounded continuous functions give bounded multiplication operators.
+-- Note: mulL2_of_boundedContinuous and mulL2_of_Linfty are now available from OperatorTheory
+-- Example usage: OperatorTheory.mulL2_of_boundedContinuous ϕ
 
-If ϕ : α → ℝ is bounded and continuous, then pointwise multiplication by ϕ
-defines a bounded linear operator on L²(α, μ) with ‖T_ϕ‖ ≤ ‖ϕ‖∞. -/
-lemma mulL2_of_boundedContinuous (ϕ : BoundedContinuousFunction α ℝ) :
-  ∃ (T : Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ), ‖T‖ ≤ ‖ϕ‖ := by
-  sorry
+/-! ## Using OperatorTheory: Clean Calling Conventions
 
-/-- **Lemma 2**: L∞ functions give bounded multiplication operators.
-
-If ϕ ∈ L∞(α, μ), then pointwise multiplication by ϕ defines a bounded linear operator
-on L²(α, μ) with ‖T_ϕ‖ ≤ ‖ϕ‖∞. -/
-lemma mulL2_of_Linfty (ϕ : Lp ℝ ⊤ μ) :
-  ∃ (T : Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ), ‖T‖ ≤ ‖ϕ‖ := by
-  sorry
-
-/-! ## Constructors for Multiplication Operators
-
-Based on the general lemmas, we can construct multiplication operators.
+We import and use the operators from OperatorTheory directly. This demonstrates
+the clean calling convention and avoids redefining everything locally.
 -/
 
-/-- Multiplication operator from a bounded continuous function. -/
-noncomputable def mulL2_BoundedContinuous (ϕ : BoundedContinuousFunction α ℝ) :
-    Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ :=
-  Classical.choose (mulL2_of_boundedContinuous ϕ)
+-- Example: Direct use of the imported lemma
+example (ϕ : BoundedContinuousFunction α ℝ) :
+  ∃ (T : Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ), (∀ f : Lp ℝ 2 μ, T f =ᵐ[μ] fun x => ϕ x * f x) ∧ ‖T‖ ≤ ‖ϕ‖ :=
+  OperatorTheory.mulL2_of_boundedContinuous μ ϕ
 
-/-- Multiplication operator from an L∞ function. -/
-noncomputable def mulL2_Linfty (ϕ : Lp ℝ ⊤ μ) :
-    Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ :=
-  Classical.choose (mulL2_of_Linfty ϕ)
+-- Example: Direct use of the constructor
+example (ϕ : BoundedContinuousFunction α ℝ) : Lp ℝ 2 μ →L[ℝ] Lp ℝ 2 μ :=
+  OperatorTheory.mulL2_BoundedContinuous μ ϕ
 
-/-- The norm bound for bounded continuous function multiplication. -/
-lemma mulL2_BoundedContinuous_norm_le (ϕ : BoundedContinuousFunction α ℝ) :
-    ‖@mulL2_BoundedContinuous α _ _ μ _ ϕ‖ ≤ ‖ϕ‖ :=
-  Classical.choose_spec (mulL2_of_boundedContinuous ϕ)
-
-/-- The norm bound for L∞ function multiplication. -/
-lemma mulL2_Linfty_norm_le (ϕ : Lp ℝ ⊤ μ) :
-    ‖@mulL2_Linfty α _ _ μ _ ϕ‖ ≤ ‖ϕ‖ :=
-  Classical.choose_spec (mulL2_of_Linfty ϕ)
+-- Example: Direct use of the norm bound
+example (ϕ : BoundedContinuousFunction α ℝ) :
+  ‖OperatorTheory.mulL2_BoundedContinuous μ ϕ‖ ≤ ‖ϕ‖ :=
+  OperatorTheory.mulL2_BoundedContinuous_norm_le μ ϕ
 
 /-! ## Applications to QFT Hilbert Spaces
 
@@ -301,15 +284,15 @@ lemma heatKernelInt_continuous {m : ℝ} [Fact (0 < m)] {t : ℝ} (ht : 0 ≤ t)
 /-- **Application**: Basic heat kernel as a bounded operator on spatial L².
 
 This constructs the basic heat kernel operator e^{-tμ} as a bounded linear operator on L²(SpatialCoords).
-Uses the general `mulL2_of_boundedContinuous` framework for multiplication by bounded continuous functions. -/
+Uses the general `OperatorTheory.mulL2_of_boundedContinuous` framework. -/
 noncomputable def heatKernelOperator (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
     SpatialL2 →L[ℝ] SpatialL2 :=
-  -- The basic heat kernel e^{-tμ} is bounded and continuous, so we can use mulL2_of_boundedContinuous
+  -- The basic heat kernel e^{-tμ} is bounded and continuous, so we can use the operator theory
   let ϕ_heat : BoundedContinuousFunction SpatialCoords ℝ := by
     -- We construct the bounded continuous function from heatKernel
     -- Continuity follows from heatKernel_continuous, boundedness from heatKernel_bounded
     exact ⟨⟨heatKernel m t, heatKernel_continuous ht⟩, sorry⟩ -- bound proof to be filled later
-  @mulL2_BoundedContinuous SpatialCoords _ _ (volume : Measure SpatialCoords) (by infer_instance) ϕ_heat
+  OperatorTheory.mulL2_BoundedContinuous (volume : Measure SpatialCoords) ϕ_heat
 
 /-- The basic heat kernel operator has norm bound ≤ 1. -/
 lemma heatKernelOperator_norm_bound (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
@@ -332,17 +315,19 @@ noncomputable def heatKernelIntOperator (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht :
 lemma heatKernelIntOperator_norm_bound (m : ℝ) [Fact (0 < m)] (t : ℝ) (ht : 0 ≤ t) :
     ‖heatKernelIntOperator m t ht‖ ≤ m⁻¹ := by
   -- This follows from our general norm bound and the heat kernel bound
-  sorry/-! ## Applications to Real-Valued Spatial L² -/
+  sorry
+
+/-! ## Applications to Real-Valued Spatial L² -/
 
 /-- **Application 1**: Multiplication by bounded continuous functions on spatial slices. -/
 def mulSpatialL2_BoundedContinuous (ϕ : BoundedContinuousFunction SpatialCoords ℝ) :
     SpatialL2 →L[ℝ] SpatialL2 :=
-  @mulL2_BoundedContinuous SpatialCoords _ _ (volume : Measure SpatialCoords) (by infer_instance) ϕ
+  OperatorTheory.mulL2_BoundedContinuous (volume : Measure SpatialCoords) ϕ
 
 /-- **Application 2**: Multiplication by L∞ functions on spatial slices. -/
 def mulSpatialL2_Linfty (ϕ : Lp ℝ ⊤ (volume : Measure SpatialCoords)) :
     SpatialL2 →L[ℝ] SpatialL2 :=
-  @mulL2_Linfty SpatialCoords _ _ (volume : Measure SpatialCoords) (by infer_instance) ϕ
+  OperatorTheory.mulL2_Linfty (volume : Measure SpatialCoords) ϕ
 
 /-- **Example**: Constant function multiplication on spatial slices. -/
 def spatialConstantMultiplication (c : ℝ) :
@@ -350,8 +335,6 @@ def spatialConstantMultiplication (c : ℝ) :
   let ϕ_const : BoundedContinuousFunction SpatialCoords ℝ :=
     ⟨ContinuousMap.const SpatialCoords c, |c|, fun x => by simp⟩
   mulSpatialL2_BoundedContinuous ϕ_const
-
-/-! ## Properties and Examples -/
 
 /-! ## Properties and Examples -/
 

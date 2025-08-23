@@ -10,6 +10,7 @@ import Mathlib.MeasureTheory.Function.EssSup
 import Mathlib.MeasureTheory.Function.AEEqFun
 import Mathlib.Topology.ContinuousMap.Bounded.Basic
 import Mathlib.Analysis.Normed.Operator.BoundedLinearMaps
+import Mathlib.Analysis.Normed.Lp.lpSpace
 import Mathlib.Data.ENNReal.Basic
 
 open MeasureTheory Real
@@ -27,6 +28,8 @@ measure spaces. The key results are:
 
 These lemmas can then be applied to specific spaces in QFT and other applications.
 -/
+
+namespace OperatorTheory
 
 -- General measure space setup
 variable {α : Type*} [MeasurableSpace α] [TopologicalSpace α] [BorelSpace α]
@@ -79,6 +82,35 @@ lemma mulC0_of_boundedContinuous [CompactSpace α] (ϕ : BoundedContinuousFuncti
   · intro f x
     simp [T, LinearMap.mkContinuous_apply, L]
   · exact LinearMap.mkContinuous_norm_le L (norm_nonneg _) h_bound
+
+
+noncomputable section
+lemma ae_lin_of_coeLp
+    (ϕ : α → ℝ) (a b : ℝ) (f g : Lp ℝ 2 μ) :
+  (fun x => ϕ x * ((a • f + b • g : Lp ℝ 2 μ) x))
+    =ᵐ[μ] (fun x => a * (ϕ x * f x) + b * (ϕ x * g x)) := by
+  classical
+  -- coerce `(a • f + b • g)` to a function and linearize
+  have h₁ :
+      (fun x => ((a • f + b • g : Lp ℝ 2 μ) x))
+        =ᵐ[μ] (fun x => a • f x + b • g x) := by
+    refine (Lp.coeFn_add (a • f) (b • g)).trans ?_
+    -- rewrite each smul under the coercion
+    filter_upwards [Lp.coeFn_smul a f, Lp.coeFn_smul b g] with x hx hy
+    simp [hx, hy]
+  -- push `ϕ x * _` through that a.e. equality
+  have h₂ :
+      (fun x => ϕ x * ((a • f + b • g : Lp ℝ 2 μ) x))
+        =ᵐ[μ] (fun x => ϕ x * (a • f x + b • g x)) := by
+    refine h₁.mono ?_
+    intro x hx; simp only [hx]
+  -- pointwise algebra (true for all x)
+  have h₃ :
+      (fun x => ϕ x * (a • f x + b • g x))
+        = (fun x => a * (ϕ x * f x) + b * (ϕ x * g x)) := by
+    funext x; simp [mul_add, smul_eq_mul, mul_left_comm]
+  exact h₂.trans (Filter.EventuallyEq.of_eq h₃)
+end
 
 /-- **Lemma 1**: Bounded continuous functions give bounded multiplication operators.
 
@@ -164,10 +196,23 @@ lemma mulL2_of_boundedContinuous (ϕ : BoundedContinuousFunction α ℝ) :
   have h_linear : ∀ (f g : Lp ℝ 2 μ) (a b : ℝ),
     T_fun (a • f + b • g) = a • T_fun f + b • T_fun g := by
     intro f g a b
-    -- Linearity follows from pointwise linearity of multiplication
     simp [T_fun]
-    -- Use that ϕ x * (a * f_rep x + b * g_rep x) = a * (ϕ x * f_rep x) + b * (ϕ x * g_rep x)
-    sorry -- Technical: Lp constructor linearity and pointwise multiplication linearity
+    -- We need to show:
+    -- (h_product_memLp (a • f + b • g)).toLp (fun x => ϕ x * (a • f + b • g) x)
+    -- = a • (h_product_memLp f).toLp (fun x => ϕ x * f x) + b • (h_product_memLp g).toLp (fun x => ϕ x * g x)
+
+    -- Key insight: The coercion is linear: (a • f + b • g) x = a * f x + b * g x (a.e.)
+    -- And multiplication distributes: ϕ x * (a * f x + b * g x) = a * (ϕ x * f x) + b * (ϕ x * g x)
+
+    -- First show the functions are equal a.e.
+    have h_ae_eq : (fun x => ϕ x * (a • f + b • g) x) =ᵐ[μ]
+                   (fun x => a * (ϕ x * f x) + b * (ϕ x * g x)) := by
+      -- Use our helper lemma that handles Lp coercion linearity!
+      exact ae_lin_of_coeLp μ ϕ a b f g
+
+    -- Now use the fact that MemLp.toLp respects a.e. equality and linearity
+    -- This requires showing that toLp is linear, which should follow from Lp being a vector space
+    sorry -- Technical: use h_ae_eq and linearity properties of MemLp.toLp
 
   -- Show T_fun is continuous with bound ‖ϕ‖
   have h_continuous : ∃ M, ∀ f : Lp ℝ 2 μ, ‖T_fun f‖ ≤ M * ‖f‖ := by
@@ -332,3 +377,5 @@ like QFT heat kernel operators, without polluting those files with the general t
 The main lemmas `mulL2_of_boundedContinuous` and `mulL2_of_Linfty` use `sorry` and
 need to be proved. Once proved, all the constructors and applications will work.
 -/
+
+end OperatorTheory
