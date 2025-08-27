@@ -41,7 +41,6 @@ import Aqft2.OS_Axioms
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
-import Aqft2.MVGaussianAbstract
 import Aqft2.FunctionalAnalysis
 
 open MeasureTheory Complex
@@ -248,38 +247,50 @@ theorem gaussian_satisfies_GJ_OS0
     rw [h_expansion]
 
     -- Double sum of monomials is analytic
-    apply analyticOn_finsum
-    intro i
-    apply analyticOn_finsum
-    intro j
-
-    -- Each monomial zᵢzⱼ is analytic
-    have h_monomial : AnalyticOn ℂ (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
-      have h_factor : (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
-                      (fun z => SchwingerFunctionℂ₂ dμ_config (J i) (J j) * (z i * z j)) := by
-        funext z; ring
-      rw [h_factor]
-
-      apply AnalyticOn.mul
-      · exact analyticOn_const
-      · -- zᵢzⱼ = product of coordinate projections
-        have coord_i : AnalyticOn ℂ (fun z : Fin n → ℂ => z i) Set.univ := by
-          let proj : (Fin n → ℂ) →L[ℂ] ℂ := {
-            toFun := fun z => z i
-            map_add' := fun x y => by simp [Pi.add_apply]
-            map_smul' := fun c x => by simp [Pi.smul_apply]
-          }
-          exact ContinuousLinearMap.analyticOn proj Set.univ
-        have coord_j : AnalyticOn ℂ (fun z : Fin n → ℂ => z j) Set.univ := by
-          let proj : (Fin n → ℂ) →L[ℂ] ℂ := {
-            toFun := fun z => z j
-            map_add' := fun x y => by simp [Pi.add_apply]
-            map_smul' := fun c x => by simp [Pi.smul_apply]
-          }
-          exact ContinuousLinearMap.analyticOn proj Set.univ
-        exact AnalyticOn.mul coord_i coord_j
-
-    exact h_monomial
+    -- Each monomial z_i * z_j is analytic, and finite sums of analytic functions are analytic
+    have h_sum_analytic : AnalyticOnNhd ℂ (fun z : Fin n → ℂ => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
+      -- Each term z_i * z_j * constant is analytic
+      have h_monomial : ∀ i j, AnalyticOnNhd ℂ (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
+        intro i j
+        -- Rewrite as constant times polynomial
+        have h_factor : (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
+                        (fun z => SchwingerFunctionℂ₂ dμ_config (J i) (J j) * (z i * z j)) := by
+          funext z; ring
+        rw [h_factor]
+        
+        apply AnalyticOnNhd.mul
+        · exact analyticOnNhd_const
+        · -- z_i * z_j is analytic as product of coordinate projections
+          have coord_i : AnalyticOnNhd ℂ (fun z : Fin n → ℂ => z i) Set.univ := by
+            exact (ContinuousLinearMap.proj i : (Fin n → ℂ) →L[ℂ] ℂ).analyticOnNhd _
+          have coord_j : AnalyticOnNhd ℂ (fun z : Fin n → ℂ => z j) Set.univ := by
+            exact (ContinuousLinearMap.proj j : (Fin n → ℂ) →L[ℂ] ℂ).analyticOnNhd _
+          exact AnalyticOnNhd.mul coord_i coord_j
+      
+      -- Apply finite sum analyticity twice by decomposing the sum  
+      -- First for outer sum
+      have h_outer_sum : ∀ i, AnalyticOnNhd ℂ (fun z : Fin n → ℂ => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
+        intro i
+        -- Apply sum analyticity to inner sum over j
+        have : (fun z : Fin n → ℂ => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
+               (∑ j : Fin n, fun z => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
+          ext z; simp [Finset.sum_apply]
+        rw [this]
+        apply Finset.analyticOnNhd_sum
+        intro j _
+        exact h_monomial i j
+      
+      -- Now apply for the outer sum
+      have : (fun z : Fin n → ℂ => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
+             (∑ i : Fin n, fun z => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
+        ext z; simp [Finset.sum_apply]
+      rw [this]
+      apply Finset.analyticOnNhd_sum  
+      intro i _
+      exact h_outer_sum i
+    
+    -- Convert from AnalyticOnNhd to AnalyticOn
+    exact h_sum_analytic.analyticOn
 
 /-! ## OS2: Euclidean Invariance for Translation-Invariant Gaussian Measures
 
@@ -466,9 +477,9 @@ For Gaussian measures, clustering follows from the decay properties of the covar
 function at large separations.
 -/
 
--- Helper: translation of test functions
+/-- Helper: translation of test functions by spatial separation -/
 def translate_test_function (sep : ℝ) (f : TestFunction) : TestFunction :=
-  sorry -- f.comp (translation by (sep, 0, 0, 0))
+  sorry -- f translated by (sep, 0, 0, 0) in spacetime
 
 /-- Assumption: The covariance decays at large separations -/
 def CovarianceClustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=

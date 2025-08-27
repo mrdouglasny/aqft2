@@ -14,11 +14,11 @@ import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 
 -- Import our basic definitions
 import Aqft2.Basic
+import Aqft2.QFTHilbertSpace
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.Schwinger
 import Aqft2.FunctionalAnalysis
-import Aqft2.QFTHilbertSpace
 
 open MeasureTheory Complex Real
 open TopologicalSpace
@@ -401,7 +401,7 @@ lemma momentum_space_covariance_lemma {m : ℝ} [Fact (0 < m)] (s t : ℝ) (f g 
   ∫ k, (starRingEnd ℂ (SpatialToMomentum_draft g k)) *
     (freePropagatorMomentum m k : ℂ) *
     (SpatialToMomentum_draft f k) ∂volume =
-  ∫ x, g x * ((heatKernelIntOperator m (abs (s - t)) (abs_nonneg (s - t))) f) x ∂volume := by
+  ∫ x, (g : SpatialCoords → ℝ) x * ((heatKernelIntOperator m (abs (s - t)) (abs_nonneg (s - t))) f : SpatialCoords → ℝ) x ∂volume := by
   sorry
 
 /-- **Momentum space reflection positivity**: Much more direct proof!

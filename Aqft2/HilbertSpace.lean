@@ -17,7 +17,6 @@ import Mathlib.Analysis.Fourier.FourierTransform
 -- Import our basic definitions for context
 import Aqft2.Basic
 import Aqft2.QFTHilbertSpace
-import Aqft2.GFF  -- For IsIsometry definition
 import Aqft2.FunctionalAnalysis  -- For Plancherel theorem
 
 open MeasureTheory Complex ContinuousLinearMap
