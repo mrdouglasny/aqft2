@@ -50,9 +50,11 @@
 \def\IN{{\mathbb N}}
 \def\IZ{\mathbb{Z}}
 \def\E{{\mathbb E}}
+\def\tr{\mbox{tr}\;}
 \def\True{$\mbox{True}$}
 \def\False{$\mbox{False}$}
 \newcommand{\cA}{\mathcal A}
+\newcommand{\cD}{\mathcal D}
 \newcommand{\cG}{\mathcal G}
 \newcommand{\cI}{\mathcal I}
 \newcommand{\cM}{\mathcal M}
@@ -455,7 +457,47 @@ This is equivalent to saying that for all $L_{1}$ functions $A(\phi)$,
 
 \end{itemize}
 
-\subsection{Rewritting of the Axioms to be AI friendly}
+\subsection{Technical details of the definitions}
+
+For now we restrict to Euclidean spacetime $M \equiv \IR^D$ in a general dimension $D$, and a single real scalar field $\phi$.
+One could take $\phi$ to be any local scalar operator, so one could treat YM by taking (say) $\phi=\tr F^2$.
+
+Mathematically, one cannot talk about ``general functions,'' every function has to live in some precise space.  
+We can't review all of the relevant functional analysis, but here are a few relevant function spaces:
+\begin{itemize}
+    \item $C^\infty(M)$ are the smooth functions on $M$. 
+    %They need not be bounded (if $M$ is not compact) but they must have finite values everywhere (this goes without saying in math).  So, $1/|x|$ for example is not in $C^\infty(M)$.
+    \item $C_0^\infty(M) \equiv \cD$ are the smooth functions with compact support, so zero for all $|x|>R$ for some $R$.
+    \item $L^2(M,\mu)$ are equivalence classes of functions which are square normalizable in the measure $\mu$.   The equivalence relation
+    is $f \sim g$ if their difference has su pport on a set of measure zero (almost everywhere).
+    \item $\cS \subset C^\infty(\IR^D)$ is the Schwartz space of functions which decrease rapidly at infinity, meaning that
+    $|x^m D^n f|$ stays bounded for every $m$ and $n$.
+    \item Sobolev spaces, used in nonlinear PDE.
+    \item Besov spaces, used in stochastic PDE and rigorous stochastic quantization.
+\end{itemize}
+One also has distributions (generalized functions).  Mathematically these are linear functionals
+on test function spaces which are continuous in certain norms, denoted by prime: 
+a test function space $\cD$ has dual space $\cD'$.  
+Relevant examples include 
+\begin{itemize}
+    \item $\cD'$ is the space of Schwartz distributions.
+    \item $\cS'$ is the space of tempered distributions.
+\end{itemize}
+\MRD{We may add some motivation for each, for example $L^2$ makes Fourier transform much easier to discuss.}
+\MRD{Even better, let's say what these conditions are in Fourier space when possible.}
+
+While the space of normalizable classical spacetime fields is by definition $\phi \in L^2(M,\mu)$.  But, the
+QFT measure has support on more general objects.  In Glimm and Jaffe they are taken to live in
+$\cD'(\IR^D)$, and the test functions are in $\cD$.  Later once one has OS1 one can argue that the measure
+is supported on $\cS'$.
+
+Our current formalization uses $L^2$ as the field space, which looks different.  Presumably we would not
+see any problems until we actually define the functional measure with the correct covariance.
+
+
+
+
+\subsection{Rewriting of the Axioms to be AI friendly}
 
 Global definitions to carry through autoformalization:
 
@@ -864,7 +906,36 @@ in powers of the coupling constants.  One can then conjecture a relation between
 that perturbation theory is asymptotic.  One can also conjecture nonperturbative properties such as the mass gap.  The question is, can such
 conjectures be the basis for an interesting formal proof?
 
+\subsection{Towards version 2}
+
+Version 1 is proof of principle.  Before starting work on version 2, we should make sure that the top level definitions are broad enough to encompass as many future generalizations as possible.
+These include
+\begin{itemize}
+    \item Non-scalar fields: spinors, gauge fields etc.
+    \item Fermions and anticommuting variables
+    \item Real and complex valued fields, group actions
+    \item Supersymmetry and other space-time symmetries
+    \item Other base manifolds besides Euclidean space
+    \item Subtleties in relating Riemannian and Lorentzian signature
+    \item Perturbative computations and gauge fixing
+    \item Other function spaces (lattice, special definitions for stochastic quantization etc.)
+    \item Other definitions needed for stochastic quantizaation?
+    \item Other definitions needed for the RG (esp. tensor RG).
+\end{itemize}
+
 \section{Conclusions}
+
+What we did.
+
+How much work was it, how much did AI help.
+
+Lessons -- could it be easier, could AI be more helpful.
+
+Even if this was a lot of work, it only needs to be done once (in principle).  We combine the work of finding the best
+rigorous definitions (here already done for us in the math literature), organizing them as is done in software engineering,
+and finding completely verifiable versions of the proofs.  Once we have this it will be far easier to build on previous work
+which uses it.
+
 
 \appendix
 
@@ -945,17 +1016,17 @@ Typed lambda calculus extends the untyped lambda calculus by introducing a type 
 
 Simply typed $\lambda$‑calculus (STLC): every term must carry a type and must be used only where that type fits. The typing rules forbid Y: the self‑application that makes Y work cannot be given a consistent type. As a result every well‑typed term reduces to a final value after finitely many steps (strong normalisation). Since any Turing‑complete language must allow programs that run forever, STLC is not Turing complete.
 
-In the simply typed λ‑calculus every program is guaranteed to stop running. This follows from strong normalization: the evaluation rules always reach a final value and can never loop. The guarantee holds because the typing discipline blocks so‑called fix‑point combinators, special terms that would otherwise let a function call itself indefinitely, so a typeable term can never express unbounded self‑reference (Guannan Wei ). Since one of the requirements for Turing completeness is the ability to build such non‑terminating computations, the calculus cannot represent all computable functions; it can describe only total ones, that is, computations that halt on every input (Mathematics Stack Exchange).
+In the simply typed $\lambda$‑calculus every program is guaranteed to stop running. This follows from strong normalization: the evaluation rules always reach a final value and can never loop. The guarantee holds because the typing discipline blocks so‑called fix‑point combinators, special terms that would otherwise let a function call itself indefinitely, so a typeable term can never express unbounded self‑reference (Guannan Wei ). Since one of the requirements for Turing completeness is the ability to build such non‑terminating computations, the calculus cannot represent all computable functions; it can describe only total ones, that is, computations that halt on every input (Mathematics Stack Exchange).
 
 To get more expressive power one can extend the calculus with polymorphism, letting terms be parametrized by types. Dependent‑type systems such as Lean’s go further by letting terms appear inside types, yet they must still enforce termination on all kernel‑level functions, using checks for structural or otherwise well‑founded recursion (Lean Language, Lean Language).
 
-In plain language, the limits are these: the basic typed λ‑calculus can express any computation that is guaranteed to finish and any finite data you can build without self‑reference, but it cannot natively express endless loops, interact with the outside world, or automatically handle every kind of generic (polymorphic) function without running into undecidability. Extensions that lift some of these limits either sacrifice the guarantee that all programs halt or make some questions about programs impossible to answer algorithmically.
+In plain language, the limits are these: the basic typed $\lambda$‑calculus can express any computation that is guaranteed to finish and any finite data you can build without self‑reference, but it cannot natively express endless loops, interact with the outside world, or automatically handle every kind of generic (polymorphic) function without running into undecidability. Extensions that lift some of these limits either sacrifice the guarantee that all programs halt or make some questions about programs impossible to answer algorithmically.
 
 
 \section{The Wightman Reconstruction Theorem}
 \label{s:wrt2}
 
-Provided by o3 {\tt} https://chatgpt.com/share/6883cf15-5d7c-8010-8cf1-c7410c82099f}
+Provided by o3 {\tt https://chatgpt.com/share/6883cf15-5d7c-8010-8cf1-c7410c82099f}
 
 Let $\{ W_n(x_1, \dots, x_n) \}_{n \in \mathbb{N}}$ be a sequence of tempered distributions on $\mathbb{R}^{4n}$ (the Wightman functions), satisfying the following axioms:
 
@@ -1204,8 +1275,8 @@ Under assumptions (OS0)--(OS4), there exists a relativistic quantum field theory
 ### Assumed Context
 We assume the necessary mathematical objects are defined.
 - `d`: The dimension of spacetime.
-- `EuclideanAlgebra d`: The ℂ-algebra of test function sequences (the user's ��).
-- `star`: The involution `θ` on the algebra.
+- `EuclideanAlgebra d`: The $\BC$-algebra of test function sequences (the user's ).
+- `star`: The involution `$\theta$` on the algebra.
 - `S`: The Schwinger functional.
 - `os3`: The reflection positivity axiom.
 -/
@@ -1614,6 +1685,45 @@ This is just Definition \ref{def:pull}.
 \begin{remark}[Concrete example]
 Let $g=(I,\mathbf{1})$ with $\mathbf{1}=(1,1,1,1)\in\Rd$. Then $(\pull_g\varphi)(x)=\varphi(x-\mathbf{1})$ and $(\push_g J)(x)=J(x-\mathbf{1})$. All identities above specialize accordingly.
 \end{remark}
+
+\section{Covariance and reflection positivity}
+
+Here is a blueprint for how to prove that the standard bosonic free field covariance is reflection positive
+following the proof in Glimm and Jaffe prop 6.2.5.
+
+The idea of the proof is to re-express the spacetime condition as a condition on a spacelike hypersurface
+in terms of an explicit time evolution operator.  One can then make the positive time condition explicit.
+This is expressed in their equation (6.2.15),
+\be\label{eq:spatialRP}
+\langle \theta g_s, C f_t \rangle = \frac{1}{2} \langle g, \mu^{-1} e^{-\mu(s+t)} f\rangle .
+\ee
+Here the left hand side is a spacetime inner product on distributions $f_t = f \cdot \delta_t$
+(respectively $g_s$) and $C$ is the covariance.  To show RP, we need to show that it is non-negative
+for all $f=g$ and all $s,t\ge 0$.  The general positive time test function can be reinterpreted as
+a map from $t\in\IR^+$ to spatial functions $f_t$, so this implies the original RP.
+
+The right hand side is in terms of $L_2$ functions $f,g$ on space $\IR^{d-1}$, where $\mu=(-\Delta+m^2)^{1/2} > 0$ is
+the energy.  In momentum space $\mu=(\vec k^2+m^2)^{1/2}$.
+It is easy to show that this is positive in momentum space for all $f=g$.
+
+To show Eq. (\ref{eq:spatialRP}), one can first go to momentum space on both sides.  This takes $f_t$ to $f \cdot e^{ip_0 t}$
+and $\theta f_s$ to $f \cdot e^{-ip_0 s}$, since time reflection (and any linear isometry) commutes with Fourier transform.
+The spatial momentum integrals are then the same on both sides, $\int d^{d-1} k \, |f(\vec k)|^2$ and can be cancelled.
+
+The remaining integral $\int dp_0$ on the left hand side then becomes 
+\be
+\int_{-\infty}^\infty \frac{dp_0\, e^{ip_0(s+t)}}{p_0^2 + \vec p^2 + m^2} .
+\ee
+This can be done by contour integral, closing the contour with a large semicircle in the upper half plane.
+The integrand has a pole at $p_0 = i\mu$ with residue $1/2\mu$, leading to the correct right hand side.
+
+What are the underlying definitions we need to formalize this?  We need $L_2(\IR^{d-1})$ functions, and we will
+also need them for other purposes such as to define the QFT Hilbert space.
+
+It would be convenient to have a more abstract function space
+
+
+
 
 \section{Summary of correspondences with the Lean development}
 

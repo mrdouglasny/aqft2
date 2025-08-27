@@ -1,0 +1,77 @@
+Skip to content
+Chat history
+
+ChatGPT said:
+Short answer: there isn’t a built-in “cast” between different realizations of the same Hilbert space. The mathlib way is to work abstractly in a Hilbert space H and then link any concrete realization (e.g. position space L²(α, μ), momentum space via Fourier, etc.) by a unitary equivalence, i.e. a bundled LinearIsometryEquiv.
+
+That gives you a clean pattern:
+
+Pick your abstract space
+
+variable {𝕜 : Type*} [IsROrC 𝕜]
+variable (H : Type*) [InnerProductSpace 𝕜 H] [CompleteSpace H]
+Pick a concrete realization, e.g. position space
+
+open MeasureTheory
+variable {α : Type*} [MeasurableSpace α] (μ : Measure α)
+abbrev L2pos := Lp 𝕜 2 μ            -- this is a Hilbert space for p=2
+Bundle the change of representation as a unitary equivalence
+
+If you have some “dictionary” (e.g. Fourier/Plancherel, or a measure-preserving change of variables), package it as:
+
+-- abstract <-> concrete
+def U_pos  : H ≃ₗᵢ[𝕜] L2pos μ := sorry  -- your construction/proof of isometry + linear + bijective
+def U_mom  : H ≃ₗᵢ[𝕜] L2mom ν := sorry  -- another representation (e.g. momentum space)
+In practice you’ll either:
+
+build this from first principles (prove linearity + isometry + bijectivity), or
+
+if mathlib already provides the transform you want as an isometry, wrap it here. (Fourier on L² as a unitary exists mathematically; in mathlib4 its fully-bundled L² unitary form may not be ready everywhere yet, so people often define their own LinearIsometryEquiv and use Plancherel-type lemmas to justify it.)
+
+Transport everything along the unitary
+
+Vectors (states):
+
+-- move an abstract vector to position space / back
+def ψ_pos : L2pos μ := (U_pos : H →ᵢL2pos μ) ⟨⟨·⟩⟩? -- just `U_pos v`
+-- and back: v = (U_pos.symm) ψ_pos
+Operators (observables): conjugate by the unitary
+
+open ContinuousLinearMap
+
+/-- Conjugation of a bounded operator by a unitary equivalence. -/
+def conjCLM {E F : Type*} [InnerProductSpace 𝕜 E] [CompleteSpace E]
+    [InnerProductSpace 𝕜 F] [CompleteSpace F]
+    (U : E ≃ₗᵢ[𝕜] F) (T : E →L[𝕜] E) : F →L[𝕜] F :=
+  (U.toContinuousLinearEquiv : E ≃L[𝕜] F).symm.toContinuousLinearMap ∘L
+  T ∘L
+  (U.toContinuousLinearEquiv : E ≃L[𝕜] F).toContinuousLinearMap
+-- notation-wise: conjCLM U T = U⁻¹ ∘ T ∘ U on the nose
+Now you can define the “position-space” representative of an abstract observable:
+
+def T_pos (U_pos : H ≃ₗᵢ[𝕜] L2pos μ) (T : H →L[𝕜] H) : L2pos μ →L[𝕜] L2pos μ :=
+  conjCLM U_pos T
+and similarly for momentum space using U_mom.
+
+Change-of-variables / other concrete models
+
+If you want to move between two concrete L² spaces on different measure spaces via a measurable equivalence that preserves measure, you can likewise build a LinearIsometryEquiv by composing with the equivalence a.e. and proving it’s an isometry (this is a common pattern for coordinate changes). Once you have that V : Lp 𝕜 2 μ ≃ₗᵢ[𝕜] Lp 𝕜 2 ν, you transport states/operators with V and conjCLM V.
+
+Practical tips
+Work abstractly in H for most theorems; only “choose a chart” (apply U_pos, U_mom, …) when you need to compute.
+
+Bundle every dictionary/transform you trust as a LinearIsometryEquiv. That buys you:
+
+automatic norm/inner-product preservation,
+
+convenient .symm, .toContinuousLinearEquiv,
+
+easy conjugation of operators, and
+
+painless rewriting via U.injective and U.isometry.
+
+For multiplication by a bounded (measurable) function in L², use a ContinuousLinearMap M_ϕ : L² →L L² (as you were building). These interact well with conjugation: e.g. the momentum-space multiplication operator is conjCLM U_mom M_ϕ of the abstract observable.
+
+If you tell me which transforms you want concretely (Fourier on ℝ^n? unitary coordinate changes via measurable equivalences? wavelet transforms?), I can sketch the corresponding LinearIsometryEquiv wrappers and how to use them to shuttle states and operators back and forth.
+
+
