@@ -14,7 +14,7 @@ import Mathlib.Analysis.Distribution.SchwartzSpace
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.MeasureTheory.Measure.Decomposition.RadonNikodym
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis
-import Aqft2.Basic  -- For L2BilinearForm and related definitions
+import Aqft2.Basic  -- For test functions and distribution framework
 import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
 import Mathlib.MeasureTheory.Function.LpSpace.Basic
 import Mathlib.MeasureTheory.Function.L2Space
@@ -113,8 +113,13 @@ lemma sumSquares_analytic {n : ℕ} :
 
   simpa [Finset.sum_apply] using h_sum_aux.analyticOn
 
+/-
 /-- Key theorem: The L2 bilinear form on test functions gives polynomial dependence in complex coefficients.
-    This is exactly what we need for complex analyticity of the generating functional! -/
+    This is exactly what we need for complex analyticity of the generating functional! 
+    
+    NOTE: Commented out because L2BilinearForm has been moved to L2FieldSpace.lean
+    This theorem depends on the old L² framework that's being refactored.
+    -/
 theorem L2BilinearForm_polynomial_in_coefficients (n : ℕ) (J : Fin n → TestFunctionℂ) :
   AnalyticOn ℂ (fun z : ℂn n =>
     Complex.exp (-(1/2 : ℂ) * L2BilinearForm
@@ -135,3 +140,4 @@ theorem L2BilinearForm_polynomial_in_coefficients (n : ℕ) (J : Fin n → TestF
     -- The result ∑ᵢ ∑ⱼ zᵢ * zⱼ * L2BilinearForm(Jᵢ, Jⱼ) is polynomial in z
     -- Polynomials are analytic
     sorry -- Apply polynomial analyticity using the bilinear expansion
+-/

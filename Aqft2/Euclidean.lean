@@ -371,7 +371,7 @@ lemma euclidean_action_unified_basis (g : E) :
     Specialized for SpaceTime with Lebesgue measure. -/
 noncomputable def euclidean_action_L2 (g : E)
     (f : Lp ℂ 2 (μ : Measure SpaceTime)) : Lp ℂ 2 μ :=
-  -- Use Lp.compMeasurePreserving following OS2.lean's FieldSpace.pull pattern
+  -- Use Lp.compMeasurePreserving for measure-preserving transformations
   have h_meas_pres : MeasurePreserving (euclidean_pullback g) μ μ :=
     euclidean_action_unified_basis g
   Lp.compMeasurePreserving (p := 2) (euclidean_pullback g) h_meas_pres f
