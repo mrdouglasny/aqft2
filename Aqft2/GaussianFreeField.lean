@@ -1,43 +1,32 @@
 /-
 Copyright (c) 2025 MRD and SH. All rights reserved.
-Released under Apache 2.0 license as described  ∃ (k : ℕ) (M : ℝ), M > 0 ∧ ∀ (f : TestFunction),
-    |SchwingerFunction₂ dμ_config f f| ≤ M * (SchwartzMap.seminorm ℝ k k f)^2n the file LICENSE.
+Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 
-Gaussian Free Fields in the Glimm-Jaffe Distribution Framework
+Gaussian Free Field - OS Axiom Verification
 
-This file proves that Gaussian measures on field configurations (tempered distributions)
-satisfy the OS axioms in the distribution-based formulation from OS_Axioms.lean.
+This file verifies that the Gaussian Free Field construction satisfies all the
+Osterwalder-Schrader axioms, completing the connection between the measure-theoretic
+construction and the axiomatic framework.
 
 The key insight is that for Gaussian measures, the generating functional has the explicit form:
 Z[J] = exp(-½⟨J, CJ⟩)
 where C is the covariance operator. This allows direct verification of the OS axioms.
 -/
 
-import Mathlib.Algebra.Algebra.Defs
-import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Data.Complex.Basic
-import Mathlib.Data.NNReal.Defs
-import Mathlib.Analysis.InnerProductSpace.Defs
-import Mathlib.Analysis.InnerProductSpace.PiL2
-import Mathlib.Analysis.InnerProductSpace.LinearMap
-import Mathlib.Analysis.InnerProductSpace.EuclideanDist
-import Mathlib.MeasureTheory.Integral.IntegrableOn
-import Mathlib.MeasureTheory.Measure.ProbabilityMeasure
-import Mathlib.Probability.Distributions.Gaussian.Basic
-import Mathlib.Probability.Distributions.Gaussian.Real
-import Mathlib.Probability.ProbabilityMassFunction.Basic
-import Mathlib.Probability.Moments.ComplexMGF
 import Mathlib.Analysis.Analytic.Basic
 import Mathlib.Analysis.Analytic.Constructions
 import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
-import Mathlib.Analysis.Distribution.SchwartzSpace
-import Mathlib.Topology.Algebra.Module.WeakDual
 import Mathlib.LinearAlgebra.BilinearMap
-import Mathlib.LinearAlgebra.BilinearForm.Basic
+import Mathlib.Data.Complex.Basic
+import Mathlib.Data.Finset.Basic
+import Mathlib.Tactic.Ring
+import Mathlib.Tactic.Linarith
+import Mathlib.Tactic.NormNum
 
 import Aqft2.Basic
 import Aqft2.OS_Axioms
+import Aqft2.GFFconstruct
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
@@ -69,29 +58,11 @@ lemma bilin_sum_sum {E : Type*} [AddCommMonoid E] [Module ℂ E]
   -- Rearrange multiplication: z x * (z i * B ...) = z i * z x * B ...
   congr 1; ext i; ring
 
-/-! ## Gaussian Measures on Field Configurations
+/-! ## OS Axiom Verification for Gaussian Measures
 
-We define what it means for a probability measure on FieldConfiguration to be Gaussian
-and prove that such measures satisfy the OS axioms.
+We verify that Gaussian measures on FieldConfiguration satisfy the OS axioms
+using the Gaussian form Z[J] = exp(-½⟨J, CJ⟩).
 -/
-
-/-- A measure is centered (has zero mean) -/
-def isCenteredGJ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (f : TestFunction), GJMean dμ_config f = 0
-
-/-- The complex 2-point Schwinger function for complex test functions.
-    This is the natural extension of SchwingerFunction₂ to complex test functions. -/
-def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (φ ψ : TestFunctionℂ) : ℂ :=
-  SchwingerFunctionℂ dμ_config 2 ![φ, ψ]
-
-/-- A measure is Gaussian if its generating functional has the Gaussian form.
-    For a centered Gaussian measure, Z[J] = exp(-½⟨J, CJ⟩) where C is the covariance. -/
-def isGaussianGJ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  isCenteredGJ dμ_config ∧
-  ∀ (J : TestFunctionℂ),
-    GJGeneratingFunctionalℂ dμ_config J =
-    Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config J J)
 
 /-! ## OS1: Regularity for Gaussian Measures
 
