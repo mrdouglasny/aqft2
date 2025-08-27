@@ -258,7 +258,7 @@ theorem gaussian_satisfies_GJ_OS0
                         (fun z => SchwingerFunctionℂ₂ dμ_config (J i) (J j) * (z i * z j)) := by
           funext z; ring
         rw [h_factor]
-        
+
         apply AnalyticOnNhd.mul
         · exact analyticOnNhd_const
         · -- z_i * z_j is analytic as product of coordinate projections
@@ -267,8 +267,8 @@ theorem gaussian_satisfies_GJ_OS0
           have coord_j : AnalyticOnNhd ℂ (fun z : Fin n → ℂ => z j) Set.univ := by
             exact (ContinuousLinearMap.proj j : (Fin n → ℂ) →L[ℂ] ℂ).analyticOnNhd _
           exact AnalyticOnNhd.mul coord_i coord_j
-      
-      -- Apply finite sum analyticity twice by decomposing the sum  
+
+      -- Apply finite sum analyticity twice by decomposing the sum
       -- First for outer sum
       have h_outer_sum : ∀ i, AnalyticOnNhd ℂ (fun z : Fin n → ℂ => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
         intro i
@@ -280,16 +280,16 @@ theorem gaussian_satisfies_GJ_OS0
         apply Finset.analyticOnNhd_sum
         intro j _
         exact h_monomial i j
-      
+
       -- Now apply for the outer sum
       have : (fun z : Fin n → ℂ => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
              (∑ i : Fin n, fun z => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
         ext z; simp [Finset.sum_apply]
       rw [this]
-      apply Finset.analyticOnNhd_sum  
+      apply Finset.analyticOnNhd_sum
       intro i _
       exact h_outer_sum i
-    
+
     -- Convert from AnalyticOnNhd to AnalyticOn
     exact h_sum_analytic.analyticOn
 
@@ -328,7 +328,7 @@ theorem gaussian_satisfies_GJ_OS2
   -- Apply Gaussian form to both sides
   rw [h_form f, h_form (QFT.euclidean_action g f)]
 
-  -- Show the exponents are equal: ⟨gf, C(gf)⟩ = ⟨f, Cf⟩ 
+  -- Show the exponents are equal: ⟨gf, C(gf)⟩ = ⟨f, Cf⟩
   -- This follows directly from Euclidean invariance of the complex covariance
   congr 2
   -- Use Euclidean invariance directly (symmetric form)

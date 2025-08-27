@@ -202,7 +202,7 @@ def GJ_OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Pro
     QFT.ergodic_action (dμ_config : Measure FieldConfiguration) φ
 
 /-- OS4 Alternative: Clustering via correlation decay.
-    
+
     This is an alternative formulation that directly expresses the clustering property:
     correlations between well-separated regions decay to zero. This is equivalent
     to ergodicity for translation-invariant measures.
