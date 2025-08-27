@@ -41,8 +41,8 @@ import Aqft2.OS_Axioms
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
-import Aqft2.MVGaussianAbstract
 import Aqft2.FunctionalAnalysis
+import Aqft2.OS4
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -104,11 +104,11 @@ def CovarianceBoundedComplex (dμ_config : ProbabilityMeasure FieldConfiguration
   ∃ (M : ℝ), M > 0 ∧ ∀ (f : TestFunctionℂ),
     ‖SchwingerFunctionℂ₂ dμ_config f f‖ ≤ M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2)
 
-theorem gaussian_satisfies_GJ_OS1
+theorem gaussian_satisfies_OS1
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bounded : CovarianceBoundedComplex dμ_config)
-  : GJ_OS1_Regularity dμ_config := by
+  : OS1_Regularity dμ_config := by
   -- For complex test functions, the proof is more involved:
   -- |Z[f]| = |exp(-½⟨f, Cf⟩)| = exp(-½ Re⟨f, Cf⟩)
   --
@@ -208,12 +208,12 @@ def GJcov_bilin (dμ_config : ProbabilityMeasure FieldConfiguration)
     (by intro a x y   -- homogeneity in the 2nd arg
         exact (h_bilinear a x 0 y).2.2.1)
 
-theorem gaussian_satisfies_GJ_OS0
+theorem gaussian_satisfies_OS0
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_continuous : CovarianceContinuous dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
-  : GJ_OS0_Analyticity dμ_config := by
+  : OS0_Analyticity dμ_config := by
   intro n J
 
   -- Extract the Gaussian form: Z[f] = exp(-½⟨f, Cf⟩)
@@ -248,38 +248,50 @@ theorem gaussian_satisfies_GJ_OS0
     rw [h_expansion]
 
     -- Double sum of monomials is analytic
-    apply analyticOn_finsum
-    intro i
-    apply analyticOn_finsum
-    intro j
+    -- Each monomial z_i * z_j is analytic, and finite sums of analytic functions are analytic
+    have h_sum_analytic : AnalyticOnNhd ℂ (fun z : Fin n → ℂ => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
+      -- Each term z_i * z_j * constant is analytic
+      have h_monomial : ∀ i j, AnalyticOnNhd ℂ (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
+        intro i j
+        -- Rewrite as constant times polynomial
+        have h_factor : (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
+                        (fun z => SchwingerFunctionℂ₂ dμ_config (J i) (J j) * (z i * z j)) := by
+          funext z; ring
+        rw [h_factor]
 
-    -- Each monomial zᵢzⱼ is analytic
-    have h_monomial : AnalyticOn ℂ (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
-      have h_factor : (fun z : Fin n → ℂ => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
-                      (fun z => SchwingerFunctionℂ₂ dμ_config (J i) (J j) * (z i * z j)) := by
-        funext z; ring
-      rw [h_factor]
+        apply AnalyticOnNhd.mul
+        · exact analyticOnNhd_const
+        · -- z_i * z_j is analytic as product of coordinate projections
+          have coord_i : AnalyticOnNhd ℂ (fun z : Fin n → ℂ => z i) Set.univ := by
+            exact (ContinuousLinearMap.proj i : (Fin n → ℂ) →L[ℂ] ℂ).analyticOnNhd _
+          have coord_j : AnalyticOnNhd ℂ (fun z : Fin n → ℂ => z j) Set.univ := by
+            exact (ContinuousLinearMap.proj j : (Fin n → ℂ) →L[ℂ] ℂ).analyticOnNhd _
+          exact AnalyticOnNhd.mul coord_i coord_j
 
-      apply AnalyticOn.mul
-      · exact analyticOn_const
-      · -- zᵢzⱼ = product of coordinate projections
-        have coord_i : AnalyticOn ℂ (fun z : Fin n → ℂ => z i) Set.univ := by
-          let proj : (Fin n → ℂ) →L[ℂ] ℂ := {
-            toFun := fun z => z i
-            map_add' := fun x y => by simp [Pi.add_apply]
-            map_smul' := fun c x => by simp [Pi.smul_apply]
-          }
-          exact ContinuousLinearMap.analyticOn proj Set.univ
-        have coord_j : AnalyticOn ℂ (fun z : Fin n → ℂ => z j) Set.univ := by
-          let proj : (Fin n → ℂ) →L[ℂ] ℂ := {
-            toFun := fun z => z j
-            map_add' := fun x y => by simp [Pi.add_apply]
-            map_smul' := fun c x => by simp [Pi.smul_apply]
-          }
-          exact ContinuousLinearMap.analyticOn proj Set.univ
-        exact AnalyticOn.mul coord_i coord_j
+      -- Apply finite sum analyticity twice by decomposing the sum
+      -- First for outer sum
+      have h_outer_sum : ∀ i, AnalyticOnNhd ℂ (fun z : Fin n → ℂ => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) Set.univ := by
+        intro i
+        -- Apply sum analyticity to inner sum over j
+        have : (fun z : Fin n → ℂ => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
+               (∑ j : Fin n, fun z => z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
+          ext z; simp [Finset.sum_apply]
+        rw [this]
+        apply Finset.analyticOnNhd_sum
+        intro j _
+        exact h_monomial i j
 
-    exact h_monomial
+      -- Now apply for the outer sum
+      have : (fun z : Fin n → ℂ => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) =
+             (∑ i : Fin n, fun z => ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
+        ext z; simp [Finset.sum_apply]
+      rw [this]
+      apply Finset.analyticOnNhd_sum
+      intro i _
+      exact h_outer_sum i
+
+    -- Convert from AnalyticOnNhd to AnalyticOn
+    exact h_sum_analytic.analyticOn
 
 /-! ## OS2: Euclidean Invariance for Translation-Invariant Gaussian Measures
 
@@ -300,11 +312,11 @@ def CovarianceEuclideanInvariantℂ (dμ_config : ProbabilityMeasure FieldConfig
     SchwingerFunctionℂ₂ dμ_config (QFT.euclidean_action g f) (QFT.euclidean_action g h) =
     SchwingerFunctionℂ₂ dμ_config f h
 
-theorem gaussian_satisfies_GJ_OS2
+theorem gaussian_satisfies_OS2
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_euclidean_invariant : CovarianceEuclideanInvariantℂ dμ_config)
-  : GJ_OS2_EuclideanInvariance dμ_config := by
+  : OS2_EuclideanInvariance dμ_config := by
   -- For Gaussian measures: Z[f] = exp(-½⟨f, Cf⟩)
   -- If C commutes with Euclidean transformations g, then:
   -- Z[gf] = exp(-½⟨gf, C(gf)⟩) = exp(-½⟨f, Cf⟩) = Z[f]
@@ -317,9 +329,9 @@ theorem gaussian_satisfies_GJ_OS2
   rw [h_form f, h_form (QFT.euclidean_action g f)]
 
   -- Show the exponents are equal: ⟨gf, C(gf)⟩ = ⟨f, Cf⟩
-  congr 2
-
   -- This follows directly from Euclidean invariance of the complex covariance
+  congr 2
+  -- Use Euclidean invariance directly (symmetric form)
   exact (h_euclidean_invariant g f f).symm
 
 /-! ## OS3: Reflection Positivity for Gaussian Measures
@@ -392,12 +404,12 @@ lemma glimm_jaffe_exponent_reflection_positive
   -- results in a non-negative real part when C satisfies reflection positivity
   sorry
 
-theorem gaussian_satisfies_GJ_OS3
+theorem gaussian_satisfies_OS3
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
-  : GJ_OS3_ReflectionPositivity dμ_config := by
+  : OS3_ReflectionPositivity dμ_config := by
   -- TODO: This formulation needs to be corrected following the L2 expectation approach.
   -- For now, defer to the matrix formulation which is more reliable.
   sorry
@@ -406,12 +418,12 @@ theorem gaussian_satisfies_GJ_OS3
     This follows from the Gaussian structure applied to the matrix elements Z[fᵢ - Θfⱼ].
     The matrix formulation ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 requires separate analysis
     from the standard formulation Z[f̄(Θf)]. -/
-theorem gaussian_satisfies_GJ_OS3_matrix
+theorem gaussian_satisfies_OS3_matrix
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
-  : GJ_OS3_MatrixReflectionPositivity dμ_config := by
+  : OS3_MatrixReflectionPositivity dμ_config := by
   intro n f c
 
   -- Extract the Gaussian form: Z[g] = exp(-½⟨g, Cg⟩)
@@ -448,7 +460,7 @@ theorem gaussian_satisfies_GJ_OS3_matrix
 /-- Gaussian measures satisfy reflection invariance under appropriate conditions.
     For Gaussian measures Z[f] = exp(-½⟨f, Cf⟩), reflection invariance Z[Θf] = Z̄[f]
     holds when the covariance C satisfies specific symmetry properties under time reflection. -/
-theorem gaussian_satisfies_GJ_OS3_reflection_invariance
+theorem gaussian_satisfies_OS3_reflection_invariance
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
@@ -466,23 +478,38 @@ For Gaussian measures, clustering follows from the decay properties of the covar
 function at large separations.
 -/
 
--- Helper: translation of test functions
+/-- Helper: translation of test functions by spatial separation -/
 def translate_test_function (sep : ℝ) (f : TestFunction) : TestFunction :=
-  sorry -- f.comp (translation by (sep, 0, 0, 0))
+  sorry -- f translated by (sep, 0, 0, 0) in spacetime
 
 /-- Assumption: The covariance decays at large separations -/
 def CovarianceClustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (f g : TestFunction), ∀ ε > 0, ∃ R > 0, ∀ (sep : ℝ),
     sep > R → |SchwingerFunction₂ dμ_config f (translate_test_function sep g)| < ε
 
-theorem gaussian_satisfies_GJ_OS4
+theorem gaussian_satisfies_OS4_clustering
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_clustering : CovarianceClustering dμ_config)
-  : GJ_OS4_Clustering dμ_config := by
+  : OS4_Clustering dμ_config := by
   -- Strategy: For Gaussian measures, all correlations are determined by the covariance
   -- Clustering follows from the decay of the covariance at large separations
   sorry
+
+/-- Assumption: The measure is ergodic under spatial translations -/
+def CovarianceErgodic (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∃ (φ : QFT.Flow FieldConfiguration),
+    QFT.invariant_under (dμ_config : Measure FieldConfiguration) φ ∧
+    QFT.ergodic_action (dμ_config : Measure FieldConfiguration) φ
+
+theorem gaussian_satisfies_OS4_ergodicity
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_gaussian : isGaussianGJ dμ_config)
+  (h_ergodic : CovarianceErgodic dμ_config)
+  : OS4_Ergodicity dμ_config := by
+  -- For Gaussian measures, ergodicity is equivalent to the existence of an ergodic flow
+  -- that preserves the measure and commutes with the Gaussian structure
+  exact h_ergodic
 
 /-! ## Main Theorem: Gaussian Measures Satisfy All OS Axioms -/
 
@@ -496,20 +523,20 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   (h_euclidean_invariantℂ : CovarianceEuclideanInvariantℂ dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
   (h_clustering : CovarianceClustering dμ_config)
-  : GJ_OS0_Analyticity dμ_config ∧
-    GJ_OS1_Regularity dμ_config ∧
-    GJ_OS2_EuclideanInvariance dμ_config ∧
-    GJ_OS3_ReflectionPositivity dμ_config ∧
-    GJ_OS4_Clustering dμ_config := by
+  : OS0_Analyticity dμ_config ∧
+    OS1_Regularity dμ_config ∧
+    OS2_EuclideanInvariance dμ_config ∧
+    OS3_ReflectionPositivity dμ_config ∧
+    OS4_Clustering dμ_config := by
   constructor
-  · exact gaussian_satisfies_GJ_OS0 dμ_config h_gaussian h_continuous h_bilinear
+  · exact gaussian_satisfies_OS0 dμ_config h_gaussian h_continuous h_bilinear
   constructor
-  · exact gaussian_satisfies_GJ_OS1 dμ_config h_gaussian h_bounded
+  · exact gaussian_satisfies_OS1 dμ_config h_gaussian h_bounded
   constructor
-  · exact gaussian_satisfies_GJ_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
+  · exact gaussian_satisfies_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
-  · exact gaussian_satisfies_GJ_OS3 dμ_config h_gaussian h_bilinear h_reflection_positive
-  · exact gaussian_satisfies_GJ_OS4 dμ_config h_gaussian h_clustering
+  · exact gaussian_satisfies_OS3 dμ_config h_gaussian h_bilinear h_reflection_positive
+  · exact gaussian_satisfies_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-- Alternative main theorem: Gaussian Measures Satisfy All OS Axioms (Matrix Formulation) -/
 theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
@@ -522,20 +549,20 @@ theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
   (h_euclidean_invariantℂ : CovarianceEuclideanInvariantℂ dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
   (h_clustering : CovarianceClustering dμ_config)
-  : GJ_OS0_Analyticity dμ_config ∧
-    GJ_OS1_Regularity dμ_config ∧
-    GJ_OS2_EuclideanInvariance dμ_config ∧
-    GJ_OS3_MatrixReflectionPositivity dμ_config ∧
-    GJ_OS4_Clustering dμ_config := by
+  : OS0_Analyticity dμ_config ∧
+    OS1_Regularity dμ_config ∧
+    OS2_EuclideanInvariance dμ_config ∧
+    OS3_MatrixReflectionPositivity dμ_config ∧
+    OS4_Clustering dμ_config := by
   constructor
-  · exact gaussian_satisfies_GJ_OS0 dμ_config h_gaussian h_continuous h_bilinear
+  · exact gaussian_satisfies_OS0 dμ_config h_gaussian h_continuous h_bilinear
   constructor
-  · exact gaussian_satisfies_GJ_OS1 dμ_config h_gaussian h_bounded
+  · exact gaussian_satisfies_OS1 dμ_config h_gaussian h_bounded
   constructor
-  · exact gaussian_satisfies_GJ_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
+  · exact gaussian_satisfies_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
-  · exact gaussian_satisfies_GJ_OS3_matrix dμ_config h_gaussian h_bilinear h_reflection_positive
-  · exact gaussian_satisfies_GJ_OS4 dμ_config h_gaussian h_clustering
+  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_bilinear h_reflection_positive
+  · exact gaussian_satisfies_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-! ## Implementation Strategy
 

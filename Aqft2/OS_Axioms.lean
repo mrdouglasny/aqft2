@@ -60,55 +60,6 @@ open DFunLike (coe)
 noncomputable section
 open scoped MeasureTheory Complex BigOperators SchwartzMap
 
-/-! ## Original L2-based OS Axioms -/
-
-def S (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) : ℂ := generatingFunctional dμ f
-
--- OS0: The analyticity axiom - the generating functional is entire in complex linear combinations
-def OS0_Analyticity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), Entire (fun z : SCV.ℂn n =>
-    generatingFunctionalℂ dμ (weightedSumCLM (n := n) (J := J) z))
-
--- OS1: The regularity bound on the generating functional
-def OS1_bound (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) (p : ℝ) (c : ℝ) : Prop :=
-  ‖generatingFunctional dμ f‖ ≤ Real.exp (c * (∫ x, ‖f x‖ ∂volume + (∫ x, ‖f x‖^p ∂volume)^(1/p)))
-
--- OS1: Additional condition when p = 2 for two-point function integrability
-def OS1_two_point_condition (_ : ProbabilityMeasure FieldSpace) : Prop :=
-  -- Placeholder for two-point function integrability condition
-  -- TODO: Implement proper two-point function integrability
-  True
-
--- OS1: The regularity axiom
-def OS1_Regularity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ (f : TestFunction), OS1_bound dμ f p c) ∧
-    (p = 2 → OS1_two_point_condition dμ)
-
--- Note: Normalization Z[0] = 1 is automatic for probability measures:
--- Z[0] = ∫ exp(i⟨ω, 0⟩) dμ(ω) = ∫ 1 dμ(ω) = 1
--- Therefore, it's not included as a separate axiom.
-
--- OS2: Euclidean invariance axiom
-def OS2_EuclideanInvariance (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ (g : QFT.E) (f : TestFunctionℂ),
-    generatingFunctionalℂ dμ f = generatingFunctionalℂ dμ (QFT.euclidean_action g f)
-
--- OS3 Reflection Positivity
-
-def OS3_ReflectionPositivity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ (F : PositiveTimeTestFunction),
-    0 ≤ (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).re ∧
-        (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).im = 0
-
--- OS4: The ergodicity axiom
-def OS4_Ergodicity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∃ (φ : QFT.Flow FieldSpace),
-    QFT.invariant_under (dμ : Measure FieldSpace) φ ∧
-    QFT.ergodic_action (dμ : Measure FieldSpace) φ ∧
-    (∀ (A : FieldSpace → ℝ), Integrable A (dμ : Measure FieldSpace) →
-      ∀ᵐ _ ∂(dμ : Measure FieldSpace), True) -- Simplified for now
-
 /-! ## Glimm-Jaffe Distribution-Based OS Axioms
 
 The OS axioms (Osterwalder-Schrader) characterize Euclidean field theories that
@@ -116,7 +67,7 @@ admit analytic continuation to relativistic QFTs.
 -/
 
 /-- OS0 (Analyticity): The generating functional is analytic in the test functions. -/
-def GJ_OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (n : ℕ) (J : Fin n → TestFunctionℂ),
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
       GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
@@ -128,19 +79,19 @@ def SchwingerTwoPointFunction (dμ_config : ProbabilityMeasure FieldConfiguratio
   SchwingerFunction₂ dμ_config (DiracDelta x) (DiracDelta 0)
 
 /-- Two-point function integrability condition for p = 2 -/
-def GJ_TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   Integrable (fun x => (SchwingerTwoPointFunction dμ_config x)^2) volume
 
 /-- OS1 (Regularity): The complex generating functional satisfies exponential bounds. -/
-def GJ_OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
     (∀ (f : TestFunctionℂ),
       ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂volume + (∫ x, ‖f x‖^p ∂volume)^(1/p)))) ∧
-    (p = 2 → GJ_TwoPointIntegrable dμ_config)
+    (p = 2 → TwoPointIntegrable dμ_config)
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
-def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (g : QFT.E) (f : TestFunctionℂ),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
@@ -153,7 +104,7 @@ def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfigurati
 
     The matrix formulation below is more reliable and follows Glimm-Jaffe directly.
     TODO: Reformulate this properly using the L2 framework. -/
-def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (F : PositiveTimeTestFunction),
     let F_time_reflected := QFT.compTimeReflection F.val  -- ΘF (time reflection)
     let test_function := schwartzMul (star F.val) F_time_reflected  -- F̄(ΘF)
@@ -167,7 +118,7 @@ def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfigurat
     the matrix M_{i,j} = Z[fᵢ - Θfⱼ] is positive semidefinite.
 
     This means: ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 for all complex coefficients cᵢ. -/
-def GJ_OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℂ),
     let reflection_matrix := fun i j =>
       let fj_time_reflected := QFT.compTimeReflection (f j).val  -- Θfⱼ
@@ -180,29 +131,40 @@ def GJ_OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConf
     For reflection-positive measures, the generating functional should be invariant
     under time reflection: Z[Θf] = Z[f]. This ensures the consistency of the theory
     under the reflection operation. -/
-def GJ_OS3_ReflectionInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_ReflectionInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (f : TestFunctionℂ),
     -- The generating functional is exactly invariant under time reflection
     GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection f) =
     GJGeneratingFunctionalℂ dμ_config f
 
-/-- OS4 (Clustering/Ergodicity): The measure satisfies clustering properties. -/
-def GJ_OS4_Clustering (_ : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (_ _ : SchwartzMap SpaceTime ℝ), True
+/-- OS4 (Ergodicity): The measure is invariant and ergodic under an appropriate flow.
 
-/-! ## Comparison and Relationship Between Frameworks
+    In the distribution framework, ergodicity is formulated as:
+    1. The measure is invariant under some flow on field configurations
+    2. The flow action is ergodic (irreducible - no non-trivial invariant sets)
+    3. This ensures clustering properties: separated regions become uncorrelated
 
-The relationship between the L2-based and distribution-based OS axioms.
+    The flow typically represents spatial translations or other symmetry operations
+    that preserve the physical properties of the field theory.
 -/
+def OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∃ (φ : QFT.Flow FieldConfiguration),
+    QFT.invariant_under (dμ_config : Measure FieldConfiguration) φ ∧
+    QFT.ergodic_action (dμ_config : Measure FieldConfiguration) φ
 
-/-- The key insight: the L2 approach can be embedded into the distribution approach
-    via the canonical embedding L2 ↪ Distributions -/
-lemma L2_embedding_generates_same_functional (dμ : ProbabilityMeasure FieldSpace)
-  (J : TestFunction) :
-  generatingFunctional dμ J = sorry := by
-  -- This should show that the L2-based generating functional
-  -- equals the distribution-based one when we embed L2 into distributions
-  sorry
+/-- OS4 Alternative: Clustering via correlation decay.
+
+    This is an alternative formulation that directly expresses the clustering property:
+    correlations between well-separated regions decay to zero. This is equivalent
+    to ergodicity for translation-invariant measures.
+-/
+def OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (f g : TestFunctionℂ) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (sep : ℝ),
+    sep > R →
+    ‖GJGeneratingFunctionalℂ dμ_config (schwartzMul f (translate_test_function_complex sep g)) -
+     GJGeneratingFunctionalℂ dμ_config f * GJGeneratingFunctionalℂ dμ_config g‖ < ε
+  where
+    translate_test_function_complex (sep : ℝ) (f : TestFunctionℂ) : TestFunctionℂ := sorry
 
 /-! ## Matrix Formulation of OS3
 
@@ -215,7 +177,7 @@ computational framework for verifying reflection positivity.
     If Z[Θf] = Z[f], then the generating functional is stable under time reflection,
     which is a natural consistency condition for reflection-positive theories. -/
 theorem reflection_invariance_supports_OS3 (dμ_config : ProbabilityMeasure FieldConfiguration) :
-  GJ_OS3_ReflectionInvariance dμ_config →
+  OS3_ReflectionInvariance dμ_config →
   ∀ (F : PositiveTimeTestFunction),
     GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection F.val) =
     GJGeneratingFunctionalℂ dμ_config F.val := by
