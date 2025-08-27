@@ -67,7 +67,7 @@ admit analytic continuation to relativistic QFTs.
 -/
 
 /-- OS0 (Analyticity): The generating functional is analytic in the test functions. -/
-def GJ_OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS0_Analyticity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (n : ℕ) (J : Fin n → TestFunctionℂ),
     AnalyticOn ℂ (fun z : Fin n → ℂ =>
       GJGeneratingFunctionalℂ dμ_config (∑ i, z i • J i)) Set.univ
@@ -79,19 +79,19 @@ def SchwingerTwoPointFunction (dμ_config : ProbabilityMeasure FieldConfiguratio
   SchwingerFunction₂ dμ_config (DiracDelta x) (DiracDelta 0)
 
 /-- Two-point function integrability condition for p = 2 -/
-def GJ_TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def TwoPointIntegrable (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   Integrable (fun x => (SchwingerTwoPointFunction dμ_config x)^2) volume
 
 /-- OS1 (Regularity): The complex generating functional satisfies exponential bounds. -/
-def GJ_OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS1_Regularity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
     (∀ (f : TestFunctionℂ),
       ‖GJGeneratingFunctionalℂ dμ_config f‖ ≤
         Real.exp (c * (∫ x, ‖f x‖ ∂volume + (∫ x, ‖f x‖^p ∂volume)^(1/p)))) ∧
-    (p = 2 → GJ_TwoPointIntegrable dμ_config)
+    (p = 2 → TwoPointIntegrable dμ_config)
 
 /-- OS2 (Euclidean Invariance): The measure is invariant under Euclidean transformations. -/
-def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (g : QFT.E) (f : TestFunctionℂ),
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
@@ -104,7 +104,7 @@ def GJ_OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfigurati
 
     The matrix formulation below is more reliable and follows Glimm-Jaffe directly.
     TODO: Reformulate this properly using the L2 framework. -/
-def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (F : PositiveTimeTestFunction),
     let F_time_reflected := QFT.compTimeReflection F.val  -- ΘF (time reflection)
     let test_function := schwartzMul (star F.val) F_time_reflected  -- F̄(ΘF)
@@ -118,7 +118,7 @@ def GJ_OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfigurat
     the matrix M_{i,j} = Z[fᵢ - Θfⱼ] is positive semidefinite.
 
     This means: ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 for all complex coefficients cᵢ. -/
-def GJ_OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℂ),
     let reflection_matrix := fun i j =>
       let fj_time_reflected := QFT.compTimeReflection (f j).val  -- Θfⱼ
@@ -131,7 +131,7 @@ def GJ_OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConf
     For reflection-positive measures, the generating functional should be invariant
     under time reflection: Z[Θf] = Z[f]. This ensures the consistency of the theory
     under the reflection operation. -/
-def GJ_OS3_ReflectionInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_ReflectionInvariance (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (f : TestFunctionℂ),
     -- The generating functional is exactly invariant under time reflection
     GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection f) =
@@ -147,7 +147,7 @@ def GJ_OS3_ReflectionInvariance (dμ_config : ProbabilityMeasure FieldConfigurat
     The flow typically represents spatial translations or other symmetry operations
     that preserve the physical properties of the field theory.
 -/
-def GJ_OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (φ : QFT.Flow FieldConfiguration),
     QFT.invariant_under (dμ_config : Measure FieldConfiguration) φ ∧
     QFT.ergodic_action (dμ_config : Measure FieldConfiguration) φ
@@ -158,7 +158,7 @@ def GJ_OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Pro
     correlations between well-separated regions decay to zero. This is equivalent
     to ergodicity for translation-invariant measures.
 -/
-def GJ_OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (f g : TestFunctionℂ) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (sep : ℝ),
     sep > R →
     ‖GJGeneratingFunctionalℂ dμ_config (schwartzMul f (translate_test_function_complex sep g)) -
@@ -177,7 +177,7 @@ computational framework for verifying reflection positivity.
     If Z[Θf] = Z[f], then the generating functional is stable under time reflection,
     which is a natural consistency condition for reflection-positive theories. -/
 theorem reflection_invariance_supports_OS3 (dμ_config : ProbabilityMeasure FieldConfiguration) :
-  GJ_OS3_ReflectionInvariance dμ_config →
+  OS3_ReflectionInvariance dμ_config →
   ∀ (F : PositiveTimeTestFunction),
     GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection F.val) =
     GJGeneratingFunctionalℂ dμ_config F.val := by
