@@ -70,7 +70,7 @@ example : Module ℂ TestFunctionℂ := by infer_instance
 
 /- Space-time and test function setup -/
 
-variable (x : SpaceTime) 
+variable (x : SpaceTime)
 
 /- Probability distribution over field configurations (distributions) -/
 def pointwiseMulCLM : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := ContinuousLinearMap.mul ℂ ℂ

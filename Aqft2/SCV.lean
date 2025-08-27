@@ -115,8 +115,8 @@ lemma sumSquares_analytic {n : ℕ} :
 
 /-
 /-- Key theorem: The L2 bilinear form on test functions gives polynomial dependence in complex coefficients.
-    This is exactly what we need for complex analyticity of the generating functional! 
-    
+    This is exactly what we need for complex analyticity of the generating functional!
+
     NOTE: Commented out because L2BilinearForm has been moved to L2FieldSpace.lean
     This theorem depends on the old L² framework that's being refactored.
     -/
