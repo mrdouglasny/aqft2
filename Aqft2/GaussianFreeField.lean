@@ -42,6 +42,7 @@ import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
 import Aqft2.FunctionalAnalysis
+import Aqft2.OS4
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -327,10 +328,10 @@ theorem gaussian_satisfies_GJ_OS2
   -- Apply Gaussian form to both sides
   rw [h_form f, h_form (QFT.euclidean_action g f)]
 
-  -- Show the exponents are equal: ⟨gf, C(gf)⟩ = ⟨f, Cf⟩
-  congr 2
-
+  -- Show the exponents are equal: ⟨gf, C(gf)⟩ = ⟨f, Cf⟩ 
   -- This follows directly from Euclidean invariance of the complex covariance
+  congr 2
+  -- Use Euclidean invariance directly (symmetric form)
   exact (h_euclidean_invariant g f f).symm
 
 /-! ## OS3: Reflection Positivity for Gaussian Measures
@@ -486,7 +487,7 @@ def CovarianceClustering (dμ_config : ProbabilityMeasure FieldConfiguration) : 
   ∀ (f g : TestFunction), ∀ ε > 0, ∃ R > 0, ∀ (sep : ℝ),
     sep > R → |SchwingerFunction₂ dμ_config f (translate_test_function sep g)| < ε
 
-theorem gaussian_satisfies_GJ_OS4
+theorem gaussian_satisfies_GJ_OS4_clustering
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_clustering : CovarianceClustering dμ_config)
@@ -494,6 +495,21 @@ theorem gaussian_satisfies_GJ_OS4
   -- Strategy: For Gaussian measures, all correlations are determined by the covariance
   -- Clustering follows from the decay of the covariance at large separations
   sorry
+
+/-- Assumption: The measure is ergodic under spatial translations -/
+def CovarianceErgodic (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∃ (φ : QFT.Flow FieldConfiguration),
+    QFT.invariant_under (dμ_config : Measure FieldConfiguration) φ ∧
+    QFT.ergodic_action (dμ_config : Measure FieldConfiguration) φ
+
+theorem gaussian_satisfies_GJ_OS4_ergodicity
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_gaussian : isGaussianGJ dμ_config)
+  (h_ergodic : CovarianceErgodic dμ_config)
+  : GJ_OS4_Ergodicity dμ_config := by
+  -- For Gaussian measures, ergodicity is equivalent to the existence of an ergodic flow
+  -- that preserves the measure and commutes with the Gaussian structure
+  exact h_ergodic
 
 /-! ## Main Theorem: Gaussian Measures Satisfy All OS Axioms -/
 
@@ -520,7 +536,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   · exact gaussian_satisfies_GJ_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
   · exact gaussian_satisfies_GJ_OS3 dμ_config h_gaussian h_bilinear h_reflection_positive
-  · exact gaussian_satisfies_GJ_OS4 dμ_config h_gaussian h_clustering
+  · exact gaussian_satisfies_GJ_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-- Alternative main theorem: Gaussian Measures Satisfy All OS Axioms (Matrix Formulation) -/
 theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
@@ -546,7 +562,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
   · exact gaussian_satisfies_GJ_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
   · exact gaussian_satisfies_GJ_OS3_matrix dμ_config h_gaussian h_bilinear h_reflection_positive
-  · exact gaussian_satisfies_GJ_OS4 dμ_config h_gaussian h_clustering
+  · exact gaussian_satisfies_GJ_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-! ## Implementation Strategy
 

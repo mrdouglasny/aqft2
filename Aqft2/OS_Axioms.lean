@@ -186,9 +186,34 @@ def GJ_OS3_ReflectionInvariance (dμ_config : ProbabilityMeasure FieldConfigurat
     GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection f) =
     GJGeneratingFunctionalℂ dμ_config f
 
-/-- OS4 (Clustering/Ergodicity): The measure satisfies clustering properties. -/
-def GJ_OS4_Clustering (_ : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (_ _ : SchwartzMap SpaceTime ℝ), True
+/-- OS4 (Ergodicity): The measure is invariant and ergodic under an appropriate flow.
+
+    In the distribution framework, ergodicity is formulated as:
+    1. The measure is invariant under some flow on field configurations
+    2. The flow action is ergodic (irreducible - no non-trivial invariant sets)
+    3. This ensures clustering properties: separated regions become uncorrelated
+
+    The flow typically represents spatial translations or other symmetry operations
+    that preserve the physical properties of the field theory.
+-/
+def GJ_OS4_Ergodicity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∃ (φ : QFT.Flow FieldConfiguration),
+    QFT.invariant_under (dμ_config : Measure FieldConfiguration) φ ∧
+    QFT.ergodic_action (dμ_config : Measure FieldConfiguration) φ
+
+/-- OS4 Alternative: Clustering via correlation decay.
+    
+    This is an alternative formulation that directly expresses the clustering property:
+    correlations between well-separated regions decay to zero. This is equivalent
+    to ergodicity for translation-invariant measures.
+-/
+def GJ_OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (f g : TestFunctionℂ) (ε : ℝ), ε > 0 → ∃ (R : ℝ), R > 0 ∧ ∀ (sep : ℝ),
+    sep > R →
+    ‖GJGeneratingFunctionalℂ dμ_config (schwartzMul f (translate_test_function_complex sep g)) -
+     GJGeneratingFunctionalℂ dμ_config f * GJGeneratingFunctionalℂ dμ_config g‖ < ε
+  where
+    translate_test_function_complex (sep : ℝ) (f : TestFunctionℂ) : TestFunctionℂ := sorry
 
 /-! ## Comparison and Relationship Between Frameworks
 
