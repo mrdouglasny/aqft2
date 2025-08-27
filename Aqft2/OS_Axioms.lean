@@ -60,55 +60,6 @@ open DFunLike (coe)
 noncomputable section
 open scoped MeasureTheory Complex BigOperators SchwartzMap
 
-/-! ## Original L2-based OS Axioms -/
-
-def S (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) : ℂ := generatingFunctional dμ f
-
--- OS0: The analyticity axiom - the generating functional is entire in complex linear combinations
-def OS0_Analyticity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ (n : ℕ) (J : Fin n → TestFunctionℂ), Entire (fun z : SCV.ℂn n =>
-    generatingFunctionalℂ dμ (weightedSumCLM (n := n) (J := J) z))
-
--- OS1: The regularity bound on the generating functional
-def OS1_bound (dμ : ProbabilityMeasure FieldSpace) (f : TestFunction) (p : ℝ) (c : ℝ) : Prop :=
-  ‖generatingFunctional dμ f‖ ≤ Real.exp (c * (∫ x, ‖f x‖ ∂volume + (∫ x, ‖f x‖^p ∂volume)^(1/p)))
-
--- OS1: Additional condition when p = 2 for two-point function integrability
-def OS1_two_point_condition (_ : ProbabilityMeasure FieldSpace) : Prop :=
-  -- Placeholder for two-point function integrability condition
-  -- TODO: Implement proper two-point function integrability
-  True
-
--- OS1: The regularity axiom
-def OS1_Regularity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∃ (p : ℝ) (c : ℝ), 1 ≤ p ∧ p ≤ 2 ∧ c > 0 ∧
-    (∀ (f : TestFunction), OS1_bound dμ f p c) ∧
-    (p = 2 → OS1_two_point_condition dμ)
-
--- Note: Normalization Z[0] = 1 is automatic for probability measures:
--- Z[0] = ∫ exp(i⟨ω, 0⟩) dμ(ω) = ∫ 1 dμ(ω) = 1
--- Therefore, it's not included as a separate axiom.
-
--- OS2: Euclidean invariance axiom
-def OS2_EuclideanInvariance (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ (g : QFT.E) (f : TestFunctionℂ),
-    generatingFunctionalℂ dμ f = generatingFunctionalℂ dμ (QFT.euclidean_action g f)
-
--- OS3 Reflection Positivity
-
-def OS3_ReflectionPositivity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∀ (F : PositiveTimeTestFunction),
-    0 ≤ (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).re ∧
-        (generatingFunctionalℂ dμ (schwartzMul (star F.val) F.val)).im = 0
-
--- OS4: The ergodicity axiom
-def OS4_Ergodicity (dμ : ProbabilityMeasure FieldSpace) : Prop :=
-  ∃ (φ : QFT.Flow FieldSpace),
-    QFT.invariant_under (dμ : Measure FieldSpace) φ ∧
-    QFT.ergodic_action (dμ : Measure FieldSpace) φ ∧
-    (∀ (A : FieldSpace → ℝ), Integrable A (dμ : Measure FieldSpace) →
-      ∀ᵐ _ ∂(dμ : Measure FieldSpace), True) -- Simplified for now
-
 /-! ## Glimm-Jaffe Distribution-Based OS Axioms
 
 The OS axioms (Osterwalder-Schrader) characterize Euclidean field theories that
@@ -214,20 +165,6 @@ def GJ_OS4_Clustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Pro
      GJGeneratingFunctionalℂ dμ_config f * GJGeneratingFunctionalℂ dμ_config g‖ < ε
   where
     translate_test_function_complex (sep : ℝ) (f : TestFunctionℂ) : TestFunctionℂ := sorry
-
-/-! ## Comparison and Relationship Between Frameworks
-
-The relationship between the L2-based and distribution-based OS axioms.
--/
-
-/-- The key insight: the L2 approach can be embedded into the distribution approach
-    via the canonical embedding L2 ↪ Distributions -/
-lemma L2_embedding_generates_same_functional (dμ : ProbabilityMeasure FieldSpace)
-  (J : TestFunction) :
-  generatingFunctional dμ J = sorry := by
-  -- This should show that the L2-based generating functional
-  -- equals the distribution-based one when we embed L2 into distributions
-  sorry
 
 /-! ## Matrix Formulation of OS3
 
