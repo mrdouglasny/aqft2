@@ -2,6 +2,30 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+# Free Covariance for Gaussian Free Field
+
+This file implements the free covariance function C(x,y) = ∫ (dk/(k²+m²)) * cos(k·(x-y)),
+which is the fundamental two-point correlation function for the Gaussian Free Field.
+The covariance provides the kernel for reflection positivity (OS-3) and connects
+momentum space propagators 1/(k²+m²) to position space decay via Fourier transform.
+
+## Main Definitions
+
+- `freePropagatorMomentum`: Momentum space propagator 1/(‖k‖²+m²)
+- `freeCovariance`: Position space covariance via Fourier transform
+- `masslessCovariancePositionSpace`: Massless limit C₀(x,y) = C_d * ‖x-y‖^{-(d-2)}
+- `propagatorMultiplication`: Linear operator for multiplication by propagator
+- `covarianceBilinearForm`: Covariance as bilinear form on test functions
+- `fourierTransform`: Fourier transform mapping for reflection positivity
+
+## Key Results
+
+- `freeCovariance_positive_definite`: Positivity via Parseval's theorem
+- `freeCovariance_reflection_positive`: Establishes OS-3 reflection positivity
+- `reflection_positivity_position_momentum_equiv`: Equivalence of position/momentum formulations
+- `freePropagator_pos`, `freePropagator_bounded`: Propagator properties for integrability
+- `freeCovariance_translation_invariant`: Translation invariance C(x+a,y+a) = C(x,y)
 -/
 
 import Mathlib.Analysis.Fourier.FourierTransform

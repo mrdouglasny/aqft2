@@ -2,6 +2,19 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+## Osterwalder-Schrader Axioms
+
+The four OS axioms characterizing Euclidean field theories that admit analytic
+continuation to relativistic QFTs:
+
+- **OS-0**: `OS0_Analyticity` - Complex analyticity of generating functionals
+- **OS-1**: `OS1_Regularity` - Exponential bounds and temperedness
+- **OS-2**: `OS2_EuclideanInvariance` - Euclidean group invariance
+- **OS-3**: `OS3_ReflectionPositivity` - Reflection positivity (multiple formulations)
+- **OS-4**: `OS4_Ergodicity` - Ergodicity and clustering properties
+
+Following Glimm-Jaffe formulation using probability measures on field configurations.
 -/
 
 import Mathlib.Tactic  -- gives `ext` and `simp` power

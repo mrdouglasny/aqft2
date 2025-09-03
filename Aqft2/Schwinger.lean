@@ -2,6 +2,80 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+## Schwinger Functions for AQFT
+
+This file implements Schwinger functions - the fundamental n-point correlation functions
+of quantum field theory. These encode all physical information and satisfy the
+Osterwalder-Schrader axioms, serving as the bridge between constructive QFT and
+traditional Wightman axioms.
+
+### Core Definitions:
+
+**Schwinger Functions (Moment-based):**
+- `SchwingerFunction`: S_n(f₁,...,fₙ) = ∫ ⟨ω,f₁⟩⟨ω,f₂⟩...⟨ω,fₙ⟩ dμ(ω)
+- `SchwingerFunction₁` through `SchwingerFunction₄`: Specialized n-point functions
+- `SchwingerFunctionℂ`: Complex version for complex test functions
+
+**Distribution-based Framework:**
+- `SpaceTimeProduct`: n-fold product space (SpaceTime)ⁿ
+- `TestFunctionProduct`: Schwartz functions on (SpaceTime)ⁿ
+- `SchwingerDistribution`: S_n as distribution on (SpaceTime)ⁿ
+- `tensorProductTestFunction`: f₁ ⊗ f₂ ⊗ ... ⊗ fₙ tensor products
+
+**Generating Functional Connection:**
+- `generating_functional_as_series`: Z[J] = ∑ (i)ⁿ/n! S_n(J,...,J)
+- `extractCoefficient`: Extract S_n from exponential series
+- `schwinger_function_from_series_coefficient`: Inversion formula
+
+### Key Properties:
+
+**Basic Relations:**
+- `schwinger_eq_mean`: S₁ equals GJ mean functional
+- `schwinger_eq_covariance`: S₂ equals field covariance
+- `schwinger_vanishes_centered`: S₁ = 0 for centered measures
+
+**Special Cases:**
+- `generating_functional_centered`: Centered measures start with quadratic term
+- `generating_functional_gaussian`: Gaussian case with Wick's theorem
+- `IsGaussianMeasure`: Characterizes Gaussian field measures
+
+**Spacetime Properties:**
+- `schwinger_distribution_translation_invariance`: Translation symmetry
+- `schwinger_distribution_euclidean_locality`: Euclidean locality/clustering
+- `TwoPointSchwingerDistribution`: Covariance structure
+
+### Mathematical Framework:
+
+**Two Perspectives:**
+1. **Constructive**: Direct integration ∫ ⟨ω,f₁⟩...⟨ω,fₙ⟩ dμ(ω)
+2. **Distributional**: S_n ∈ 𝒟'((SpaceTime)ⁿ) with locality properties
+
+**Exponential Series Connection:**
+Z[J] = ∫ exp(i⟨ω,J⟩) dμ(ω) = ∑ₙ (i)ⁿ/n! Sₙ(J,...,J)
+More constructive than functional derivatives, natural for Gaussian measures.
+
+**Physical Interpretation:**
+- S₁: Mean field (vacuum expectation)
+- S₂: Two-point correlation (propagator)
+- S₃: Three-point vertex (interaction)
+- S₄: Four-point scattering amplitude
+- Higher Sₙ: Multi-particle correlations
+
+**Connection to OS Axioms:**
+- OS-1 (temperedness): S_n are tempered distributions
+- OS-2 (Euclidean invariance): Group action on correlation functions
+- OS-3 (reflection positivity): Positivity of restricted correlations
+- OS-4 (ergodicity): Clustering at large separations
+
+**Relation to Other Modules:**
+- Foundation: `Basic` (field configurations, distributions)
+- Symmetries: `Euclidean` (spacetime symmetries), `DiscreteSymmetry` (time reflection)
+- Measures: `Minlos`, `GFFconstruct` (Gaussian realizations)
+- Analysis: `FunctionalAnalysis` (Fourier theory), `SCV` (complex analyticity)
+
+This provides the computational core for proving the Osterwalder-Schrader axioms
+and constructing explicit quantum field theory models.
 -/
 
 import Mathlib.Data.Complex.Exponential

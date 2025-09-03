@@ -3,15 +3,49 @@ Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 
-Gaussian Free Field - OS Axiom Verification
+## Gaussian Free Field OS Axiom Verification
 
-This file verifies that the Gaussian Free Field construction satisfies all the
-Osterwalder-Schrader axioms, completing the connection between the measure-theoretic
-construction and the axiomatic framework.
+This file verifies that Gaussian Free Field measures satisfy all four Osterwalder-Schrader
+axioms, completing the bridge between the constructive measure-theoretic approach and
+the axiomatic framework. Uses the explicit Gaussian form Z[J] = exp(-½⟨J, CJ⟩).
 
-The key insight is that for Gaussian measures, the generating functional has the explicit form:
-Z[J] = exp(-½⟨J, CJ⟩)
-where C is the covariance operator. This allows direct verification of the OS axioms.
+### OS Axiom Verification:
+
+**OS-0 (Analyticity):**
+- `gaussian_satisfies_OS0`: Z[∑ᵢ zᵢJᵢ] = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩) is entire in zᵢ
+- Key insight: Polynomial in complex variables → exponential → entire function
+- `bilin_sum_sum`: Technical lemma for bilinear expansion
+- `CovarianceContinuous`, `CovarianceBilinear`: Required covariance properties
+
+**OS-1 (Regularity):**
+- `gaussian_satisfies_OS1`: Exponential bounds from Gaussian form |Z[f]| = exp(-½Re⟨f,Cf⟩)
+- `CovarianceBoundedComplex`: Covariance bounded by L¹×L² norms
+- Uses positive semidefinite covariance to control exponential growth
+
+**OS-2 (Euclidean Invariance):**
+- `gaussian_satisfies_OS2`: Z[gf] = Z[f] when covariance commutes with g ∈ E(4)
+- `CovarianceEuclideanInvariant`: Covariance invariance under Euclidean transformations
+- Direct from Gaussian form when ⟨gf, C(gf)⟩ = ⟨f, Cf⟩
+
+**OS-3 (Reflection Positivity):**
+Multiple approaches for robustness:
+- `gaussian_satisfies_OS3`: Standard formulation using positive-time test functions
+- `gaussian_satisfies_OS3_matrix`: Matrix formulation ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0
+- `gaussian_satisfies_OS3_reflection_invariance`: Consistency condition Z[Θf] = Z[f]
+
+**Glimm-Jaffe Framework for OS-3:**
+- `glimm_jaffe_exponent`: Expansion of ⟨F - CF', C(F - CF')⟩ where F' = ΘF
+- `glimm_jaffe_reflection_functional`: Z[F - CF'] = exp(-½⟨F - CF', C(F - CF')⟩
+- `CovarianceReflectionPositive`: Key condition ensuring reflection positivity
+- `covarianceOperator`: Riesz representation of 2-point function
+
+**OS-4 (Ergodicity/Clustering):**
+- `gaussian_satisfies_OS4_clustering`: Correlation decay from covariance decay
+- `gaussian_satisfies_OS4_ergodicity`: Ergodicity under appropriate flows
+- `CovarianceClustering`: Large separation decay condition
+
+Establishes that the Gaussian Free Field satisfies all requirements for analytic
+continuation to relativistic quantum field theory.
 -/
 
 import Mathlib.Analysis.Analytic.Basic

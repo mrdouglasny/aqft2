@@ -3,13 +3,63 @@ Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 
-Construction of Gaussian Free Fields
+## Gaussian Free Field Construction via Minlos Theorem
 
-This file provides the mathematical framework for constructing Gaussian probability measures
-on field configurations (tempered distributions) and proves their existence and uniqueness.
+This file constructs Gaussian probability measures on field configurations using
+the Minlos theorem. The key insight: a Gaussian measure is uniquely determined
+by its covariance function, and nuclear covariances give measures on tempered distributions.
 
-The key insight is that a Gaussian measure is uniquely determined by its covariance function.
-We construct the Gaussian Free Field using the Klein-Gordon propagator as the covariance.
+### Core Framework:
+
+**Covariance Structure:**
+- `CovarianceFunction`: Symmetric, bilinear, positive semidefinite covariance with boundedness
+- `CovarianceNuclear`: Nuclear (trace class) condition required for Minlos theorem
+- `SchwingerFunctionℂ₂`: Complex 2-point correlation function ⟨φ(f)φ(g)⟩
+
+**Gaussian Characterization:**
+- `isCenteredGJ`: Zero mean condition for Gaussian measures
+- `isGaussianGJ`: Generating functional Z[J] = exp(-½⟨J, CJ⟩) for centered Gaussian
+
+### Minlos Construction:
+
+**Main Constructor:**
+- `constructGaussianMeasureMinlos`: Direct construction from nuclear covariance via Minlos theorem
+- `constructGaussianMeasureMinlos_isGaussian`: Proof that construction yields Gaussian measure
+
+**Existence & Uniqueness:**
+- `gaussian_measure_unique`: Uniqueness of Gaussian measures with same covariance
+- `gaussian_measure_exists_unique_minlos`: Existence and uniqueness via nuclear covariance
+
+### Free Field Realization:
+
+**Klein-Gordon Propagator:**
+- `freeFieldPropagator`: C(k) = 1/(ik² + m²) in momentum space
+- `freeFieldCovariance`: Covariance built from propagator via Fourier transform
+- `freeFieldCovariance_nuclear`: Proof of nuclear condition for m > 0, d < 4
+
+**Main Result:**
+- `gaussianFreeField`: The Gaussian Free Field measure for mass m > 0
+
+### Mathematical Foundation:
+
+**Minlos Theorem:** For nuclear covariance C on Schwartz space S(ℝᵈ), there exists
+unique probability measure μ on S'(ℝᵈ) with characteristic functional Z[f] = exp(-½⟨f,Cf⟩).
+
+**Nuclear Condition:** Tr(C) = ∫ 1/(k² + m²) dk < ∞ for d < 4 (with m > 0).
+Essential for extending cylindrical measures to σ-additive measures on S'(ℝᵈ).
+
+**Advantages:** Direct infinite-dimensional construction without Kolmogorov extension,
+standard approach in constructive QFT, handles dimension restrictions naturally.
+
+### Integration:
+
+**AQFT Connections:** Uses `Basic` (field configurations), `Minlos` (measure theory),
+`Schwinger` (correlation functions), provides foundation for OS axiom verification.
+
+**Implementation:** Core mathematical structure complete, ready for nuclear condition
+proofs and explicit Fourier transform implementation.
+
+Standard approach for constructing Gaussian Free Fields in quantum field theory.
 -/
 
 import Mathlib.Algebra.Algebra.Defs
