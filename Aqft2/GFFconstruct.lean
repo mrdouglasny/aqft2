@@ -95,10 +95,6 @@ open TopologicalSpace SchwartzMap
 noncomputable section
 
 /-! ## Gaussian Measures on Field Configurations
-
-The key insight is that a Gaussian measure on FieldConfiguration is uniquely determined
-by its covariance function. We construct it using the Gaussian measure theory from Mathlib
-applied to the distribution space.
 -/
 
 /-- A covariance function on test functions that determines the Gaussian measure -/
@@ -138,43 +134,6 @@ def CovarianceNuclear (C : CovarianceFunction) : Prop :=
   -- an orthonormal basis of eigenfunctions of a suitable elliptic operator
   -- For the free field: Tr(C) = ∫ 1/(k² + m²) dk < ∞ in dimensions d < 4
   sorry
-
-/-- Minlos theorem: Construction of Gaussian measure on tempered distributions.
-
-    Given a nuclear covariance operator C on the Schwartz space S(ℝᵈ),
-    there exists a unique probability measure μ on S'(ℝᵈ) such that
-    the characteristic functional is Z[f] = exp(-½⟨f, Cf⟩).
-
-    This is the standard approach for constructing the Gaussian Free Field. -/
-noncomputable def constructGaussianMeasureMinlos (C : CovarianceFunction)
-  (h_nuclear : CovarianceNuclear C) : ProbabilityMeasure FieldConfiguration := by
-  -- Strategy: restrict to real test functions and apply Minlos using the real part
-  -- of the covariance on real test functions, realized as a norm square via T.
-  -- Then transport the resulting measure to FieldConfiguration.
-  -- For now, we rely on the abstract Minlos interface and embedding axiom.
-  classical
-  -- Placeholder: constructing the actual ProbabilityMeasure requires further plumbing
-  -- (linking WeakDual ℝ E to FieldConfiguration). We leave as sorry pending glue code.
-  sorry
-
-/-- The constructed measure via Minlos theorem is indeed Gaussian -/
-theorem constructGaussianMeasureMinlos_isGaussian (C : CovarianceFunction)
-  (h_nuclear : CovarianceNuclear C) :
-  isGaussianGJ (constructGaussianMeasureMinlos C h_nuclear) := by
-  constructor
-  · -- Centered: GJMean = 0
-    intro f
-    -- Minlos construction gives a centered Gaussian measure
-    sorry
-  · -- Gaussian form: Z[J] = exp(-½⟨J, CJ⟩)
-    intro J
-    -- This follows directly from the Minlos theorem construction
-    have h_covar : SchwingerFunctionℂ₂ (constructGaussianMeasureMinlos C h_nuclear) J J = C.covar J J := by
-      -- The 2-point function equals the input covariance by Minlos construction
-      sorry
-    rw [h_covar]
-    -- The generating functional has the Gaussian form by Minlos theorem
-    sorry
 
 /-- Helper: build a `ProbabilityMeasure` from a measure with `IsProbabilityMeasure`. -/
 axiom probabilityMeasure_of_isProbability {α : Type*} [MeasurableSpace α] (μ : Measure α) :
@@ -246,31 +205,6 @@ theorem gaussian_measure_unique (μ₁ μ₂ : ProbabilityMeasure FieldConfigura
   have _inst : NuclearSpace TestFunctionR := instNuclear_TestFunctionR
   exact minlos_uniqueness (E := TestFunctionR) μ₁ μ₂ h_real
 
-/-- Existence theorem via Minlos: Given a nuclear covariance function, there exists a unique
-    Gaussian probability measure on FieldConfiguration with that covariance -/
-theorem gaussian_measure_exists_unique_minlos (C : CovarianceFunction)
-  (h_nuclear : CovarianceNuclear C) :
-  ∃! μ : ProbabilityMeasure FieldConfiguration,
-    isGaussianGJ μ ∧
-    (∀ f g, SchwingerFunctionℂ₂ μ f g = C.covar f g) := by
-  use constructGaussianMeasureMinlos C h_nuclear
-  constructor
-  · constructor
-    · exact constructGaussianMeasureMinlos_isGaussian C h_nuclear
-    · intro f g
-      -- The 2-point function equals the input covariance by Minlos construction
-      sorry
-  · -- Uniqueness part
-    intro μ' ⟨h_gaussian', h_covar'⟩
-    have h_eq := gaussian_measure_unique (constructGaussianMeasureMinlos C h_nuclear) μ'
-      (constructGaussianMeasureMinlos_isGaussian C h_nuclear)
-      h_gaussian'
-      (by intro f g
-          -- Both measures have the same covariance as C
-          have h1 : SchwingerFunctionℂ₂ (constructGaussianMeasureMinlos C h_nuclear) f g = C.covar f g := by sorry
-          have h2 : SchwingerFunctionℂ₂ μ' f g = C.covar f g := h_covar' f g
-          rw [h1, h2])
-    exact h_eq.symm
 
 /-! ## Free Field Covariance
 
@@ -307,8 +241,72 @@ theorem freeFieldCovariance_nuclear (m : ℝ) (hm : m > 0) :
   sorry
 
 /-- The Gaussian Free Field with mass m > 0, constructed via Minlos theorem -/
-noncomputable def gaussianFreeField (m : ℝ) (hm : m > 0) : ProbabilityMeasure FieldConfiguration :=
-  constructGaussianMeasureMinlos (freeFieldCovariance m) (freeFieldCovariance_nuclear m hm)
+noncomputable def gaussianFreeField (m : ℝ) (hm : m > 0) : ProbabilityMeasure FieldConfiguration := by
+  -- Prefer the specialized constructor; the general one is incomplete and isolated.
+  letI : Fact (0 < m) := ⟨hm⟩
+  simpa using gaussianFreeField_free m
+
+/-! ### General (incomplete) Minlos-based constructor
+These are kept in a dedicated namespace to avoid accidental usage elsewhere.
+They provide a more general pathway via an abstract nuclear covariance, but remain unfinished. -/
+namespace GeneralMinlos
+
+/-- Minlos theorem: Construction of Gaussian measure on tempered distributions.
+
+    Given a nuclear covariance operator C on the Schwartz space S(ℝᵈ),
+    there exists a unique probability measure μ on S'(ℝᵈ) such that
+    the characteristic functional is Z[f] = exp(-½⟨f, Cf⟩).
+
+    This is the standard approach for constructing the Gaussian Free Field. -/
+noncomputable def constructGaussianMeasureMinlos (C : CovarianceFunction)
+  (h_nuclear : CovarianceNuclear C) : ProbabilityMeasure FieldConfiguration := by
+  classical
+  -- Placeholder: constructing the actual ProbabilityMeasure requires further plumbing
+  -- (linking WeakDual ℝ E to FieldConfiguration). We leave as sorry pending glue code.
+  sorry
+
+/-- The constructed measure via Minlos theorem is indeed Gaussian -/
+ theorem constructGaussianMeasureMinlos_isGaussian (C : CovarianceFunction)
+  (h_nuclear : CovarianceNuclear C) :
+  isGaussianGJ (constructGaussianMeasureMinlos C h_nuclear) := by
+  constructor
+  · -- Centered: GJMean = 0
+    intro f
+    -- Minlos construction gives a centered Gaussian measure
+    sorry
+  · -- Gaussian form: Z[J] = exp(-½⟨J, CJ⟩)
+    intro J
+    -- This follows directly from the Minlos theorem construction
+    have h_covar : SchwingerFunctionℂ₂ (constructGaussianMeasureMinlos C h_nuclear) J J = C.covar J J := by
+      -- The 2-point function equals the input covariance by Minlos construction
+      sorry
+    rw [h_covar]
+    -- The generating functional has the Gaussian form by Minlos theorem
+    sorry
+
+/-- Existence theorem via Minlos: Given a nuclear covariance function, there exists a unique
+    Gaussian probability measure on FieldConfiguration with that covariance -/
+ theorem gaussian_measure_exists_unique_minlos (C : CovarianceFunction)
+  (h_nuclear : CovarianceNuclear C) :
+  ∃! μ : ProbabilityMeasure FieldConfiguration,
+    isGaussianGJ μ ∧
+    (∀ f g, SchwingerFunctionℂ₂ μ f g = C.covar f g) := by
+  use constructGaussianMeasureMinlos C h_nuclear
+  constructor
+  · constructor
+    · exact constructGaussianMeasureMinlos_isGaussian C h_nuclear
+    · intro f g; sorry
+  · intro μ' ⟨h_gaussian', h_covar'⟩
+    have h_eq :=
+      gaussian_measure_unique (constructGaussianMeasureMinlos C h_nuclear) μ'
+        (constructGaussianMeasureMinlos_isGaussian C h_nuclear)
+        h_gaussian'
+        (by intro f g; have h1 : SchwingerFunctionℂ₂ (constructGaussianMeasureMinlos C h_nuclear) f g = C.covar f g := by sorry
+            have h2 : SchwingerFunctionℂ₂ μ' f g = C.covar f g := h_covar' f g
+            rw [h1, h2])
+    exact h_eq.symm
+
+end GeneralMinlos
 
 /-! ## Summary: Gaussian Free Field Construction via Minlos Theorem
 
