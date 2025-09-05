@@ -179,7 +179,7 @@ theorem gaussian_satisfies_OS1
 /-! ## OS0: Analyticity for Gaussian Measures
 
 The key insight is that for Gaussian measures, the generating functional
-Z[∑ᵢ zᵢJᵢ] = exp(-½⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJⱼ)⟩) = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩)
+Z[∑ᵢ zᵢJᵢ] = exp(-½⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJ⟩) = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩)
 is the exponential of a polynomial in the complex variables zᵢ, hence entire.
 -/
 
@@ -242,7 +242,7 @@ theorem gaussian_satisfies_OS0
   · -- Show the quadratic form is analytic by expanding via bilinearity
     let B := GJcov_bilin dμ_config h_bilinear
 
-    -- Expand quadratic form: ⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJⱼ)⟩ = ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩
+    -- Expand quadratic form: ⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJ⟩) = ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩
     have h_expansion : (fun z : Fin n → ℂ => SchwingerFunctionℂ₂ dμ_config (∑ i, z i • J i) (∑ i, z i • J i)) =
                        (fun z => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
       funext z
@@ -409,39 +409,33 @@ lemma glimm_jaffe_exponent_reflection_positive
   -- results in a non-negative real part when C satisfies reflection positivity
   sorry
 
+/-- Simplified OS3 (heuristic) for Gaussian measures. -/
 theorem gaussian_satisfies_OS3
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
-  : OS3_ReflectionPositivity dμ_config := by
+  : OS3_SimplifiedReflectionPositivity dμ_config := by
   -- TODO: This formulation needs to be corrected following the L2 expectation approach.
   -- For now, defer to the matrix formulation which is more reliable.
   sorry
 
-/-- Gaussian measures also satisfy the matrix formulation of OS3.
-    This follows from the Gaussian structure applied to the matrix elements Z[fᵢ - Θfⱼ].
-    The matrix formulation ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 requires separate analysis
-    from the standard formulation Z[f̄(Θf)]. -/
+/-- Gaussian measures also satisfy the matrix formulation of OS3. -/
 theorem gaussian_satisfies_OS3_matrix
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
-  : OS3_MatrixReflectionPositivity dμ_config := by
+  : OS3_ReflectionPositivity dμ_config := by
   intro n f c
-
   -- Extract the Gaussian form: Z[g] = exp(-½⟨g, Cg⟩)
   have h_form := h_gaussian.2
-
   -- Define the matrix elements as in the definition
   let reflection_matrix := fun i j =>
     let fj_time_reflected := QFT.compTimeReflection (f j).val  -- Θfⱼ
     let test_function := (f i).val - fj_time_reflected  -- fᵢ - Θfⱼ
     GJGeneratingFunctionalℂ dμ_config test_function
-
   -- Goal: 0 ≤ (∑ᵢⱼ c̄ᵢcⱼ * reflection_matrix i j).re
-
   -- Apply Gaussian form: Z[fᵢ - Θfⱼ] = exp(-½⟨fᵢ - Θfⱼ, C(fᵢ - Θfⱼ)⟩)
   have h_matrix_gaussian : ∀ i j, reflection_matrix i j =
     Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config
@@ -450,32 +444,10 @@ theorem gaussian_satisfies_OS3_matrix
     intro i j
     simp only [reflection_matrix]
     exact h_form _
-
-  -- The key mathematical insight:
-  -- The sum ∑ᵢⱼ c̄ᵢcⱼ exp(-½⟨fᵢ - Θfⱼ, C(fᵢ - Θfⱼ)⟩) has the structure
-  -- of a Hermitian matrix multiplication c† M c where M is positive semidefinite
-  -- due to the reflection positivity of the covariance operator C.
-
   -- The positivity follows from the Gaussian structure combined with
   -- reflection positivity properties of the covariance.
   -- This is the matrix version of the reflection positivity condition.
-
   sorry
-
-/-- Gaussian measures satisfy reflection invariance under appropriate conditions.
-    For Gaussian measures Z[f] = exp(-½⟨f, Cf⟩), reflection invariance Z[Θf] = Z̄[f]
-    holds when the covariance C satisfies specific symmetry properties under time reflection. -/
-theorem gaussian_satisfies_OS3_reflection_invariance
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (h_gaussian : isGaussianGJ dμ_config)
-  (h_bilinear : CovarianceBilinear dμ_config)
-  (h_time_reflection_invariant : ∀ (f g : TestFunctionℂ),
-    SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection f) (QFT.compTimeReflection g) =
-    (starRingEnd ℂ) (SchwingerFunctionℂ₂ dμ_config f g))
-  : True := by  -- TODO: Change back to GJ_OS3_ReflectionInvariance when import issue is resolved
-  -- For now, establish that Gaussian measures can satisfy reflection invariance
-  -- under appropriate conditions on the covariance operator
-  trivial
 
 /-! ## OS4: Clustering for Gaussian Measures
 
@@ -531,7 +503,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   : OS0_Analyticity dμ_config ∧
     OS1_Regularity dμ_config ∧
     OS2_EuclideanInvariance dμ_config ∧
-    OS3_ReflectionPositivity dμ_config ∧
+    OS3_SimplifiedReflectionPositivity dμ_config ∧
     OS4_Clustering dμ_config := by
   constructor
   · exact gaussian_satisfies_OS0 dμ_config h_gaussian h_continuous h_bilinear
@@ -557,7 +529,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
   : OS0_Analyticity dμ_config ∧
     OS1_Regularity dμ_config ∧
     OS2_EuclideanInvariance dμ_config ∧
-    OS3_MatrixReflectionPositivity dμ_config ∧
+    OS3_ReflectionPositivity dμ_config ∧
     OS4_Clustering dμ_config := by
   constructor
   · exact gaussian_satisfies_OS0 dμ_config h_gaussian h_continuous h_bilinear
