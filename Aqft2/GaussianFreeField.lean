@@ -12,7 +12,7 @@ the axiomatic framework. Uses the explicit Gaussian form Z[J] = exp(-½⟨J, CJ�
 ### OS Axiom Verification:
 
 **OS-0 (Analyticity):**
-- `gaussian_satisfies_OS0`: Z[∑ᵢ zᵢJᵢ] = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩) is entire in zᵢ
+- `gaussian_satisfies_OS0`: Z[∑ᵢ zᵢJᵢ] = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJ⟩) is entire in zᵢ
 - Key insight: Polynomial in complex variables → exponential → entire function
 - `bilin_sum_sum`: Technical lemma for bilinear expansion
 - `CovarianceContinuous`, `CovarianceBilinear`: Required covariance properties
@@ -503,7 +503,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   : OS0_Analyticity dμ_config ∧
     OS1_Regularity dμ_config ∧
     OS2_EuclideanInvariance dμ_config ∧
-    OS3_SimplifiedReflectionPositivity dμ_config ∧
+    OS3_ReflectionPositivity dμ_config ∧
     OS4_Clustering dμ_config := by
   constructor
   · exact gaussian_satisfies_OS0 dμ_config h_gaussian h_continuous h_bilinear
@@ -512,7 +512,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   constructor
   · exact gaussian_satisfies_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
-  · exact gaussian_satisfies_OS3 dμ_config h_gaussian h_bilinear h_reflection_positive
+  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_bilinear h_reflection_positive
   · exact gaussian_satisfies_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-- Alternative main theorem: Gaussian Measures Satisfy All OS Axioms (Matrix Formulation) -/
