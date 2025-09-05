@@ -379,6 +379,8 @@ lemma covariance_to_heat_kernel_lemma_draft {m : ℝ} [Fact (0 < m)] (s t : ℝ)
   -- = ∫ ḡ(x⃗) * K((s-t, x⃗-y⃗)) * f(y⃗) dx⃗ dy⃗
   -- = ∫ ḡ(x⃗) * [exp(-|s-t|√(|x⃗-y⃗|² + m²)) / √(|x⃗-y⃗|² + m²) * f](x⃗) dx⃗
   -- = ∫ ḡ(x⃗) * (heat_kernel_operator f)(x⃗) dx⃗
+  -- = ∫ ḡ(x⃗) * [exp(-|s-t|√(|x⃗|² + m²)) / √(|x⃗|² + m²) * f](x⃗) dx⃗
+  -- = ∫ ḡ(x⃗) * (heat_kernel_operator f)(x⃗) dx⃗
   True := by
   -- Placeholder for the actual complex distribution calculation
   sorry
@@ -736,7 +738,7 @@ The free covariance C(x,y) provides the foundation for:
 4. **Green's Functions**: Solution to Klein-Gordon equation
 
 Key mathematical structures:
-- **Fourier Transform**: `C(x,y) = ∫ k/(k²+m²) * cos(k·(x-y)) dk` (massive case)
+- **Fourier Transform**: `C(x,y) = ∫ k/(k²+m²) * cos(k·(x-y)) dk` (massive)
 - **Massless Limit**: `C₀(x,y) = C_d * ‖x-y‖^{-(d-2)}` (m=0, also short-distance limit)
 - **Inner product**: `∑ᵢ kᵢ(xᵢ-yᵢ)` for spacetime vectors
 - **Norm**: `‖k‖² = ∑ᵢ kᵢ²` for Euclidean distance
@@ -751,3 +753,30 @@ Key mathematical structures:
 
 This establishes the mathematical foundation for constructive QFT.
 -/
+
+/-! ## Real test functions and covariance form for Minlos -/
+
+/-- Real-valued Schwartz test functions on spacetime. -/
+abbrev TestFunctionR : Type := SchwartzMap SpaceTime ℝ
+
+/-- Real covariance bilinear form induced by the free covariance kernel. -/
+noncomputable def freeCovarianceFormR (m : ℝ) (f g : TestFunctionR) : ℝ :=
+  ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (g y) ∂volume ∂volume
+
+/-- Existence of a linear embedding realizing the free covariance as a squared norm.
+    Conceptually: T is the Fourier multiplier by (‖k‖²+m²)^{-1/2} composed with the
+    (real) Fourier transform, so that ‖T f‖² = ∫ |f̂(k)|² / (‖k‖²+m²) dk = freeCovarianceFormR m f f. -/
+axiom sqrtPropagatorEmbedding
+  (m : ℝ) [Fact (0 < m)] :
+  ∃ (H : Type*) (_ : SeminormedAddCommGroup H) (_ : NormedSpace ℝ H)
+    (T : TestFunctionR →ₗ[ℝ] H),
+    ∀ f : TestFunctionR, freeCovarianceFormR m f f = ‖T f‖^2
+
+/-- Continuity of the real covariance quadratic form f ↦ C(f,f). -/
+axiom freeCovarianceFormR_continuous (m : ℝ) :
+  Continuous (fun f : TestFunctionR => freeCovarianceFormR m f f)
+
+/-- Positivity of the real covariance quadratic form. -/
+axiom freeCovarianceFormR_pos (m : ℝ) : ∀ f : TestFunctionR, 0 ≤ freeCovarianceFormR m f f
+/-- Symmetry of the real covariance bilinear form. -/
+axiom freeCovarianceFormR_symm (m : ℝ) : ∀ f g : TestFunctionR, freeCovarianceFormR m f g = freeCovarianceFormR m g f
