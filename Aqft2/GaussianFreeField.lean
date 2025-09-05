@@ -66,6 +66,7 @@ import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
 import Aqft2.FunctionalAnalysis
 import Aqft2.OS4
+import Aqft2.Minlos
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -179,7 +180,7 @@ theorem gaussian_satisfies_OS1
 /-! ## OS0: Analyticity for Gaussian Measures
 
 The key insight is that for Gaussian measures, the generating functional
-Z[∑ᵢ zᵢJᵢ] = exp(-½⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJ⟩) = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩)
+Z[∑ᵢ zᵢJᵢ] = exp(-½⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJ⟩) = exp(-½ ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJ⟩)
 is the exponential of a polynomial in the complex variables zᵢ, hence entire.
 -/
 
@@ -192,6 +193,7 @@ def CovarianceContinuous (dμ_config : ProbabilityMeasure FieldConfiguration) : 
 def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ),
     SchwingerFunctionℂ₂ dμ_config (c • φ₁) ψ = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
+    -- DO NOT CHANGE: must be φ₁ + φ₂ (first-arg additivity). Using φ₁ + φ₁ breaks GJcov_bilin and OS0 expansion.
     SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
     SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
     SchwingerFunctionℂ₂ dμ_config φ₁ (ψ + φ₂) = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₁ φ₂
@@ -242,7 +244,7 @@ theorem gaussian_satisfies_OS0
   · -- Show the quadratic form is analytic by expanding via bilinearity
     let B := GJcov_bilin dμ_config h_bilinear
 
-    -- Expand quadratic form: ⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJ⟩) = ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJⱼ⟩
+    -- Expand quadratic form: ⟨∑ᵢ zᵢJᵢ, C(∑ⱼ zⱼJ⟩) = ∑ᵢⱼ zᵢzⱼ⟨Jᵢ, CJ⟩
     have h_expansion : (fun z : Fin n → ℂ => SchwingerFunctionℂ₂ dμ_config (∑ i, z i • J i) (∑ i, z i • J i)) =
                        (fun z => ∑ i, ∑ j, z i * z j * SchwingerFunctionℂ₂ dμ_config (J i) (J j)) := by
       funext z
@@ -409,45 +411,98 @@ lemma glimm_jaffe_exponent_reflection_positive
   -- results in a non-negative real part when C satisfies reflection positivity
   sorry
 
-/-- Simplified OS3 (heuristic) for Gaussian measures. -/
-theorem gaussian_satisfies_OS3
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (h_gaussian : isGaussianGJ dμ_config)
-  (h_bilinear : CovarianceBilinear dμ_config)
-  (h_reflection_positive : CovarianceReflectionPositive dμ_config)
-  : OS3_SimplifiedReflectionPositivity dμ_config := by
-  -- TODO: This formulation needs to be corrected following the L2 expectation approach.
-  -- For now, defer to the matrix formulation which is more reliable.
-  sorry
-
-/-- Gaussian measures also satisfy the matrix formulation of OS3. -/
+/-- Gaussian measures also satisfy the matrix formulation of OS3.
+    Strategy (Minlos-style):
+    1. Build the reflection-positivity pre-Hilbert space H as the completion of
+       PositiveTimeTestFunction modulo the nullspace of the RP form
+       ⟪F,G⟫ := (SchwingerFunctionℂ₂ dμ_config F (QFT.compTimeReflection G)).
+    2. Let T : PositiveTimeTestFunction →ₗ[ℝ] H be the canonical map. Then
+       for all i,j, we have
+         (SchwingerFunctionℂ₂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val)
+                                          ((f i).val - QFT.compTimeReflection (f j).val)).re
+         = ‖T (f i) - T (f j)‖^2.
+    3. Apply positive-definiteness of the Gaussian RBF kernel on H
+       (gaussian_rbf_pd_normed) and precompose with T to get the OS3 matrix inequality. -/
 theorem gaussian_satisfies_OS3_matrix
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
-  (h_bilinear : CovarianceBilinear dμ_config)
   (h_reflection_positive : CovarianceReflectionPositive dμ_config)
   : OS3_ReflectionPositivity dμ_config := by
+  -- Fix a finite family of positive-time test functions and coefficients
   intro n f c
-  -- Extract the Gaussian form: Z[g] = exp(-½⟨g, Cg⟩)
-  have h_form := h_gaussian.2
-  -- Define the matrix elements as in the definition
-  let reflection_matrix := fun i j =>
-    let fj_time_reflected := QFT.compTimeReflection (f j).val  -- Θfⱼ
-    let test_function := (f i).val - fj_time_reflected  -- fᵢ - Θfⱼ
-    GJGeneratingFunctionalℂ dμ_config test_function
-  -- Goal: 0 ≤ (∑ᵢⱼ c̄ᵢcⱼ * reflection_matrix i j).re
-  -- Apply Gaussian form: Z[fᵢ - Θfⱼ] = exp(-½⟨fᵢ - Θfⱼ, C(fᵢ - Θfⱼ)⟩)
-  have h_matrix_gaussian : ∀ i j, reflection_matrix i j =
-    Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ dμ_config
-      ((f i).val - QFT.compTimeReflection (f j).val)
-      ((f i).val - QFT.compTimeReflection (f j).val)) := by
+  -- Step 1-2: Construct RP embedding T with the norm-square identity
+  classical
+  -- Goal A (RP embedding via quotient–completion): build H and T with the real-part identity
+  have RP_embedding : ∃ (H : Type) (_ : SeminormedAddCommGroup H) (_ : NormedSpace ℝ H)
+      (T : PositiveTimeTestFunction →ₗ[ℝ] H),
+      ∀ i j : Fin n,
+        (SchwingerFunctionℂ₂ dμ_config
+          ((f i).val - QFT.compTimeReflection (f j).val)
+          ((f i).val - QFT.compTimeReflection (f j).val)).re
+        = ‖T (f i) - T (f j)‖^2 := by
+    -- Standard RP construction via quotient-completion (pre-Hilbert space of positive-time test
+    -- functions modulo RP-nullspace, completed to H). Proof omitted.
+    sorry
+  rcases RP_embedding with ⟨H, hSem, hNorm, T, h_re_eq⟩
+  -- Notation for the embedded family
+  let Φ : Fin n → H := fun i => T (f i)
+
+  -- Goal A' (values are real): specialize hermiticity to diagonal to upgrade from Re-equality to
+  -- complex equality with an ℝ-value. This is standard: S₂(h,h) ∈ ℝ for RP kernels.
+  have h_eq_complex : ∀ i j,
+      SchwingerFunctionℂ₂ dμ_config
+        ((f i).val - QFT.compTimeReflection (f j).val)
+        ((f i).val - QFT.compTimeReflection (f j).val)
+      = (‖(Φ i) - (Φ j)‖^2 : ℝ) := by
+    -- Use: (1) h_re_eq i j for the real part; (2) hermitian/positivity to show imaginary part = 0.
+    -- Hence the complex value equals the real number of its real part.
+    -- Proof omitted.
+    intro i j; sorry
+
+  -- Step 3: Use Gaussian RBF positive definiteness on H and precompose with Φ
+  let ψ : H → ℂ := fun h => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))
+  -- Positive definiteness of the Gaussian RBF kernel on any real normed space H
+  have hPD_H : IsPositiveDefinite (fun h : H => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))) :=
+    gaussian_rbf_pd_normed (H := H)
+
+  -- Goal B (finite positive-definite matrix inequality): instantiate hPD_H with points Φ i
+  have hPD_matrix :
+      0 ≤ (∑ i, ∑ j,
+        (starRingEnd ℂ) (c i) * c j * (Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ)))).re := by
+    -- Standard consequence of positive-definite kernels: for any finite family {x_i} and coeffs c_i,
+    -- the Hermitian form ∑ᵢⱼ c̄ᵢ cⱼ k(xᵢ,xⱼ) has nonnegative real part. Proof omitted.
+    sorry
+
+  -- Goal C (Gaussian rewrite): express Z[f_i - Θ f_j] via the Gaussian form and h_eq_complex
+  have h_gauss_matrix : ∀ i j,
+      GJGeneratingFunctionalℂ dμ_config
+        (((f i).val) - QFT.compTimeReflection (f j).val)
+      = Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ)) := by
     intro i j
-    simp only [reflection_matrix]
-    exact h_form _
-  -- The positivity follows from the Gaussian structure combined with
-  -- reflection positivity properties of the covariance.
-  -- This is the matrix version of the reflection positivity condition.
-  sorry
+    -- Gaussian form Z[h] = exp(-½ S₂(h,h)) and h_eq_complex i j
+    have h_form := h_gaussian.2
+    simpa [h_eq_complex i j] using h_form (((f i).val) - QFT.compTimeReflection (f j).val)
+
+  -- Substitute equalities into the target sum (work at the level of complex sums, then take Re)
+  have hsum_eq :
+      (∑ i, ∑ j,
+        (starRingEnd ℂ) (c i) * c j *
+          GJGeneratingFunctionalℂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val))
+      = (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ))) := by
+    apply Finset.sum_congr rfl
+    intro i _
+    apply Finset.sum_congr rfl
+    intro j _
+    simpa [h_gauss_matrix i j]
+  have hsum_re_eq :
+      (∑ i, ∑ j,
+        (starRingEnd ℂ) (c i) * c j *
+          GJGeneratingFunctionalℂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val)).re
+      = (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ))).re := by
+    -- take real parts of the complex equality
+    exact congrArg (fun z : ℂ => z.re) hsum_eq
+  -- Conclude nonnegativity from Goal B
+  simpa [hsum_re_eq] using hPD_matrix
 
 /-! ## OS4: Clustering for Gaussian Measures
 
@@ -512,11 +567,11 @@ theorem gaussian_satisfies_all_GJ_OS_axioms
   constructor
   · exact gaussian_satisfies_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
-  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_bilinear h_reflection_positive
+  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_reflection_positive
   · exact gaussian_satisfies_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-- Alternative main theorem: Gaussian Measures Satisfy All OS Axioms (Matrix Formulation) -/
-theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
+ theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bounded : CovarianceBoundedComplex dμ_config)
@@ -538,7 +593,7 @@ theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
   constructor
   · exact gaussian_satisfies_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
   constructor
-  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_bilinear h_reflection_positive
+  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_reflection_positive
   · exact gaussian_satisfies_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-! ## Implementation Strategy
