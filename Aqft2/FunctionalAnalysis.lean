@@ -469,52 +469,32 @@ theorem FourierL2_unitary_equiv :
   -- This follows from the fact that fourierTransformL2 is a LinearIsometryEquiv
   exact fourierTransformL2.norm_map f
 
-/-- On Schwartz representatives, fourierTransformL2 agrees with the Schwartz Fourier transform -/
 @[simp] theorem fourierTransformL2_on_schwartz (f : SchwartzRd d) :
   fourierTransformL2 (schwartzToL2 d f) = schwartzToL2 d (fourierTransformSchwartz d f) := by
-  -- We can prove this using the Schwartz compatibility property from fourier_inverse_properties
-  -- Since fourierTransformL2 was constructed using fourier_inverse_properties,
-  -- it inherits the Schwartz compatibility by construction
-
-  -- Extract the combined existence properties that were used to build fourierTransformL2
+  classical
+  -- Unfold the construction and use the compatibility from fourier_inverse_properties
   let combined_existence := fourier_inverse_properties d
-  let ℱ_L2 := Classical.choose combined_existence
   let remaining := Classical.choose_spec combined_existence
-  let ℱ_L2_inv := Classical.choose remaining
   let properties := Classical.choose_spec remaining
-
-  -- Extract the Schwartz compatibility property
   have ℱ_schwartz_compat := properties.2.2.1
-
-  -- By construction of fourierTransformL2, we have fourierTransformL2 = the LinearIsometryEquiv built from ℱ_L2
-  -- Therefore fourierTransformL2 (schwartzToL2 d f) = ℱ_L2 (schwartzToL2 d f) := by rfl
-
-  -- Apply the compatibility
-  rw [← schwartzToL2_injective d (schwartzToL2 d f) (schwartzToL2 d (fourierTransformSchwartz d f)),
-      ← schwartzToL2_injective d (fourierTransformSchwartz d f) (fourierTransformSchwartz d f)]
-  exact ℱ_schwartz_compat f
+  simpa [fourierTransformL2] using ℱ_schwartz_compat f
 
 /-- The inverse agrees with the inverse Fourier on Schwartz -/
 @[simp] theorem fourierTransformL2_symm_on_schwartz (g : SchwartzRd d) :
   fourierTransformL2.symm (schwartzToL2 d g) = schwartzToL2 d ((fourierTransformSchwartz d).symm g) := by
   -- Similar to the forward direction, we use the inverse Schwartz compatibility
-
+  classical
   -- Extract the combined existence properties
   let combined_existence := fourier_inverse_properties d
   let ℱ_L2 := Classical.choose combined_existence
   let remaining := Classical.choose_spec combined_existence
   let ℱ_L2_inv := Classical.choose remaining
   let properties := Classical.choose_spec remaining
-
   -- Extract the inverse Schwartz compatibility property
   have ℱ_inv_schwartz_compat := properties.2.2.2
-
-  -- By construction of fourierTransformL2, we have fourierTransformL2.symm = the inverse from ℱ_L2_inv
+  -- By construction of fourierTransformL2, the symm map applies ℱ_L2_inv
   have h_apply : fourierTransformL2.symm (schwartzToL2 d g) = ℱ_L2_inv (schwartzToL2 d g) := by
-    -- This follows from the construction of fourierTransformL2.symm
-    -- In the definition, we set invFun := ℱ_L2_inv
     rfl
-
   -- Apply the inverse compatibility
   rw [h_apply]
   exact ℱ_inv_schwartz_compat g
