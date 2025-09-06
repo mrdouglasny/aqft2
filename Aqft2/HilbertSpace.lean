@@ -2,6 +2,75 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+## Abstract and Concrete Hilbert Spaces for AQFT
+
+This file provides a flexible framework for QFT Hilbert spaces with both abstract and
+concrete realizations. The key principle: work abstractly, choose representations when needed.
+
+### Core Framework:
+
+**Abstract Pattern:**
+- Abstract Hilbert space E for theoretical work
+- Concrete L² realizations (position, momentum)
+- Unitary equivalences (LinearIsometryEquiv) between representations
+- Operator transport via conjugation: T ↦ U⁻¹ ∘ T ∘ U
+
+**Concrete L² Spaces:**
+- `L2PositionReal`: L²(ℝᴰ; ℝ) real-valued position functions
+- `L2PositionComplex`: L²(ℝᴰ; ℂ) complex-valued position functions
+- `L2MomentumComplex`: L²(ℝᴰ; ℂ) complex-valued momentum functions
+- `L2MomentumReal`: Complex L² with reality condition f(-k) = f̄(k)
+
+### Key Definitions:
+
+**Operator Transport:**
+- `conjCLM`: Conjugation U⁻¹ ∘ T ∘ U for moving operators between spaces
+
+**Configuration Spaces:**
+- `ConfigMeasure`: Lebesgue measure on ℝᴰ
+- Automatic Hilbert space instances via Mathlib's Lp construction
+
+**Reality Conditions:**
+- `momentumInversion`: k ↦ -k (momentum reflection)
+- `MomentumRealStructure`: f(-k) = f̄(k) (reality condition for real fields)
+- `satisfiesMomentumReality`: L² functions satisfying reality condition
+
+**Fourier Transform Framework:**
+- `fourierMapL2`: L² Fourier transform (position → momentum)
+- `inverseFourierMapL2`: Inverse Fourier transform (momentum → position)
+- `fourierIsometry`: Fourier transform as unitary equivalence F : L²(x) ≃ L²(k)
+- `𝓕` / `𝓕⁻¹`: Convenient notation for Fourier transform
+
+**Abstract Interface:**
+- `QFTHilbertConfig`: Class bundling abstract space with concrete realizations
+- `QFTSpace[𝕜, D]`: Notation for abstract D-dimensional space over field 𝕜
+- `toPositionRep` / `toMomentumRep`: Move vectors between representations
+- `toPositionOp` / `toMomentumOp`: Transport operators between representations
+
+### Mathematical Foundation:
+
+**Plancherel Theorem:** ‖𝓕 f‖ = ‖f‖ (Fourier transform preserves L² norm)
+**Unitary Equivalence:** Position and momentum spaces are unitarily equivalent via 𝓕
+**Reality Structure:** Real quantum fields require momentum functions with f(-k) = f̄(k)
+**Operator Transport:** Preserves spectrum and functional calculus properties
+
+**Physical Interpretation:**
+- Position representation: ψ(x) = field amplitude at point x
+- Momentum representation: ψ̃(k) = Fourier transform, plane wave amplitudes
+- Fourier transform: 𝓕 converts derivatives ∂ₓ to multiplication by ik
+- Reality condition: Ensures real fields in position correspond to real expectation values
+
+### Integration with AQFT:
+
+**Connections:** Links to `Basic` (field configurations), `QFTHilbertSpace` (spatial slices),
+`FunctionalAnalysis` (Plancherel theorem), `Operators` (multiplication operators).
+
+**Applications:** Foundation for field operator construction, spectral analysis,
+Gaussian free field realization, and Osterwalder-Schrader axiom verification.
+
+Provides the mathematical infrastructure for rigorous QFT construction in the
+Osterwalder-Schrader framework with explicit Fourier transform machinery.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.PiL2

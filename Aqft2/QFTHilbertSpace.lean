@@ -2,6 +2,68 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+## QFT Hilbert Space Construction for AQFT
+
+This file applies the multiplication operator framework from `Operators` to construct
+concrete L² Hilbert spaces for quantum field theory. The focus is on spatial slices
+and heat kernel operators essential for the Glimm-Jaffe reflection positivity argument.
+
+### Spatial Geometry:
+
+**Spatial Coordinates:**
+- `SpatialCoords`: ℝ^(d-1) (space without time dimension)
+- `SpatialL2`: L²(ℝ^(d-1)) space for spatial functions
+- `spatialPart`: Extract spatial coordinates from spacetime
+- `timeSlice`: Extract spatial function at fixed time t
+
+### Energy Functions (Mass m > 0):
+
+**Energy Operators:**
+- `Esq`: E²(k) = ‖k‖² + m² (squared energy in momentum space)
+- `E`: E(k) = √(‖k‖² + m²) (energy function)
+- `E_pos`: E(k) > 0 for all k (positive energy)
+- `E_bounded_below`: E(k) ≥ m (mass gap)
+- `E_continuous`: Continuity of energy function
+- `E_squared`: (E(k))² = E²(k) relationship
+
+### Heat Kernel Framework:
+
+**Heat Kernel Functions (for Reflection Positivity):**
+- `heatKernel`: e^(-tE(k)) (basic exponential decay)
+- `heatKernelInt`: E(k)⁻¹ e^(-tE(k)) (integrated version)
+- `heatKernel_bounded`: |e^(-tE(k))| ≤ 1 for t ≥ 0
+- `heatKernelInt_bounded`: |E⁻¹ e^(-tE)| ≤ m⁻¹ for t ≥ 0
+- `heatKernel_continuous`: Continuity properties
+
+**Heat Kernel Operators:**
+- `heatKernelOperator`: e^(-tE) as bounded operator on SpatialL2
+- `heatKernelIntOperator`: E⁻¹ e^(-tE) as bounded operator on SpatialL2
+- `heatKernelOperator_norm_bound`: ‖e^(-tE)‖ ≤ 1
+- `heatKernelIntOperator_norm_bound`: ‖E⁻¹ e^(-tE)‖ ≤ m⁻¹
+
+### Multiplication Operators on Spatial Slices:
+
+**Constructors (using OperatorTheory framework):**
+- `mulSpatialL2_BoundedContinuous`: φ ∈ BC(ℝ^(d-1)) → T_φ on SpatialL2
+- `mulSpatialL2_Linfty`: φ ∈ L∞(ℝ^(d-1)) → T_φ on SpatialL2
+- `spatialConstantMultiplication`: Constant scaling c·f on spatial slices
+
+### Mathematical Foundation:
+
+**Glimm-Jaffe Application:**
+Heat kernels e^(-tE) and E⁻¹ e^(-tE) provide reflection positivity (OS-3):
+exponential decay dominates polynomial growth, preserving positivity under time reflection.
+
+**Energy Spectrum:** σ(E) = [m, ∞) with mass gap m > 0 preventing zero modes.
+
+### Integration:
+
+**AQFT Connections:** Links to `Basic` (fields), `Operators` (framework), `Euclidean` (symmetries),
+`Schwinger` (correlations), `GFFconstruct` (Gaussian realization), `OS_Axioms` (verification).
+
+**Physical Role:** SpatialL2 = field state space, E(k) = energy spectrum, heat kernels =
+Euclidean time evolution for constructive QFT in Osterwalder-Schrader framework.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.PiL2

@@ -1,5 +1,63 @@
 
-/-© 2025 Math definitions which arguably should be in mathlib
+/-
+Copyright (c) 2025 Math definitions which arguably should be in mathlib
+
+## Functional Analysis for AQFT
+
+This file provides essential functional analysis foundations for Algebraic Quantum Field Theory (AQFT),
+particularly focusing on Fourier analysis on L² spaces and Schwartz space constructions.
+
+### Key Definitions & Theorems:
+
+**Sphere Volume Formulas:**
+- `unitSphereVolume`: Volume of unit sphere S^{d-1} in d dimensions
+- `unitSphereVolume_eq_formula`: Proves formula matches standard Γ-function expression
+
+**Analyticity:**
+- `analyticOn_double_sum`: Double finite sums of analytic functions are analytic
+
+**Plancherel Theorems (using Mathlib's 𝓕 notation):**
+- `plancherel_theorem_1d`: 1D Plancherel theorem ‖𝓕 f‖₂ = ‖f‖₂
+- `plancherel_theorem_d`: d-dimensional generalization
+- `fourier_transform_isometry_on_L2`: Existence of L² Fourier isometry
+
+**Schwartz Space Properties:**
+- `SchwartzMap.hasTemperateGrowth_general`: Schwartz functions have temperate growth
+- `SchwartzMap.hasTemperateGrowth`: Specialized version for ℂ-normed spaces
+
+**Complex Embeddings:**
+- `Complex.ofRealCLM_isometry`: Real→Complex embedding is isometric
+- `Complex.ofRealCLM_continuous_compLp`: Continuous lifting to Lp spaces
+- `embedding_real_to_complex`: Canonical ℝ→ℂ embedding for Lp functions
+- `liftMeasure_real_to_complex`: Lifts probability measures from real to complex Lp spaces
+
+**L² Fourier Transform Construction:**
+- `fourierTransformSchwartz`: Fourier transform on Schwartz space (uses Mathlib's fourierTransformCLE)
+- `schwartzToL2`: Embedding Schwartz functions into L² space
+- `schwartzToL2'`: Alternative embedding for type compatibility
+- `fourier_transform_isometry_on_L2_with_schwartz_compatibility`: L² isometry compatible with Schwartz transform
+
+**Plancherel on Schwartz Core:**
+- `plancherel_on_schwartz`: Norm preservation ‖ℱ(f)‖ = ‖f‖ for Schwartz functions
+
+**Mathematical Properties:**
+- `schwartzToL2_injective`: Injectivity of Schwartz→L² embedding
+- `schwartzToL2_denseRange`: Density of Schwartz functions in L²
+- `fourierTransform_welldefined_on_range`: Well-definedness of Fourier transform
+
+**Main L² Fourier Transform:**
+- `fourierTransformL2`: Complete L² Fourier transform as LinearIsometryEquiv
+- `fourierTransformCLM`: Forward transform as continuous linear map
+- `inverseFourierTransformCLM`: Inverse transform as continuous linear map
+- `FourierL2_unitary_equiv`: Main unitary result ∃ℱ: L²≃L², ‖ℱf‖=‖f‖
+
+**Transform Properties:**
+- `fourierTransformL2_on_schwartz`: Compatibility with Schwartz-level transform
+- `fourierTransform_norm_preserving`: Norm preservation ‖ℱf‖ = ‖f‖
+- `fourierTransform_left_inv`, `fourierTransform_right_inv`: Inversion properties
+- `fourierTransform_linear`: Linearity of the transform
+
+This provides the mathematical foundation for Fourier isometry used in the QFT Hilbert space framework.
  -/
 
 import Mathlib.Tactic  -- gives `ext` and `simp` power
@@ -247,47 +305,7 @@ section LiftMeasure
 
 end LiftMeasure
 
-/-! ## Plancherel theorem for ℝᵈ -/
 
-open MeasureTheory.Measure
-
-variable {d : ℕ} [NeZero d]
-
--- Add inner product space structure
-variable [Fintype (Fin d)]
-
-/-- The Plancherel theorem in one dimension: The Fourier transform preserves the L² norm.
-
-    For f : ℝ → ℂ integrable and in L², the Fourier transform 𝓕 f satisfies:
-    ‖𝓕 f‖₂ = ‖f‖₂
-
-    This uses Mathlib's eLpNorm which is the essential L^p norm. -/
-
--- this one is thanks to PhysLean
-theorem plancherel_theorem_1d' {f : ℝ → ℂ} (hf : Integrable f volume) (hf_mem : MemLp f 2) :
-  eLpNorm (Real.fourierIntegral f) 2 volume = eLpNorm f 2 volume := by
-  sorry
-
-/-- The Plancherel theorem for ℝᵈ: generalization to d dimensions.
-
-    For f : EuclideanSpace ℝ (Fin d) → ℂ integrable and in L², the Fourier transform preserves
-    the L² norm. -/
-theorem plancherel_theorem_d' {f : EuclideanSpace ℝ (Fin d) → ℂ}
-  (hf : Integrable f (volume : Measure (EuclideanSpace ℝ (Fin d))))
-  (hf_mem : MemLp f 2) :
-  eLpNorm (Real.fourierIntegral f) 2 (volume : Measure (EuclideanSpace ℝ (Fin d))) =
-  eLpNorm f 2 (volume : Measure (EuclideanSpace ℝ (Fin d))) := by
-  -- This is the d-dimensional generalization of the Plancherel theorem
-  -- The proof would use the tensor product structure and iterate the 1D result
-  sorry
-
-/-- The Plancherel theorem implies the Fourier transform extends to an isometry on L² -/
-theorem fourier_transform_isometry_on_L2' :
-  ∃ (ℱ_L2 : Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d))) →ₗᵢ[ℂ] Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d)))),
-    ∀ (f : Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d)))), ‖ℱ_L2 f‖ = ‖f‖ := by
-  -- This asserts the existence of the L² Fourier transform as a linear isometry
-  -- The construction would use the Plancherel theorem and a completion argument
-  sorry
 
 /-! ## Fourier Transform as Linear Isometry on L² Spaces
 
@@ -326,7 +344,7 @@ noncomputable def fourierTransformSchwartz (d : ℕ) : SchwartzRd d ≃L[ℂ] Sc
 noncomputable def schwartzToL2 (d : ℕ) : SchwartzRd d →L[ℂ] L2Complex d :=
   SchwartzMap.toLpCLM ℂ ℂ 2 (volume : Measure (EuclideanRd d))
 
-/-- Alternative embedding that produces the exact L² type expected by fourier_transform_isometry_on_L2'.
+/-- Alternative embedding that produces the exact L² type expected by the unprimed theorems.
     This maps Schwartz functions to Lp ℂ 2 (volume : Measure (EuclideanSpace ℝ (Fin d))).
     The difference from schwartzToL2 is only in the type representation, not the mathematical content. -/
 noncomputable def schwartzToL2' (d : ℕ) [NeZero d] [Fintype (Fin d)] :
@@ -343,31 +361,6 @@ theorem fourier_transform_isometry_on_L2_with_schwartz_compatibility (d : ℕ) [
   -- This is the complete characterization: there exists a unique L² Fourier isometry
   -- that extends the Schwartz Fourier transform and preserves norms
   -- The proof would construct this as the completion of the Schwartz Fourier transform
-  sorry
-
-/-- The prime version using EuclideanRd that matches our type abbreviations -/
-theorem fourier_transform_isometry_on_L2_with_schwartz_compatibility' (d : ℕ) [NeZero d] [Fintype (Fin d)] :
-  ∃ (ℱ_L2 : L2Complex d →ₗᵢ[ℂ] L2Complex d),
-    (∀ (f : L2Complex d), ‖ℱ_L2 f‖ = ‖f‖) ∧
-    (∀ (g : SchwartzRd d),
-      ℱ_L2 (schwartzToL2 d g) = schwartzToL2 d (fourierTransformSchwartz d g)) := by
-  -- This is the same theorem but using our type abbreviations:
-  -- - EuclideanRd d instead of EuclideanSpace ℝ (Fin d)
-  -- - L2Complex d instead of Lp ℂ 2 (volume : Measure (EuclideanRd d))
-  -- - SchwartzRd d instead of SchwartzMap (EuclideanRd d) ℂ
-  -- - fourierTransformSchwartz d instead of SchwartzMap.fourierTransformCLE ℂ
-  -- - schwartzToL2 d instead of schwartzToL2' d
-  sorry
-
-/-- The inverse Fourier transform also extends to a linear isometry on L² -/
-theorem inverse_fourier_transform_isometry_on_L2' (d : ℕ) [NeZero d] [Fintype (Fin d)] :
-  ∃ (ℱ_L2_inv : L2Complex d →ₗᵢ[ℂ] L2Complex d),
-    (∀ (f : L2Complex d), ‖ℱ_L2_inv f‖ = ‖f‖) ∧
-    (∀ (g : SchwartzRd d),
-      ℱ_L2_inv (schwartzToL2 d g) = schwartzToL2 d ((fourierTransformSchwartz d).symm g)) := by
-  -- The inverse Fourier transform is also a unitary operator on L²
-  -- On Schwartz functions, it's given by (fourierTransformSchwartz d).symm
-  -- This extends to all of L² by the same density argument as the forward transform
   sorry
 
 /-- The key inversion properties that relate forward and inverse Fourier transforms -/
@@ -407,25 +400,6 @@ lemma plancherel_on_schwartz (d : ℕ) [NeZero d] [Fintype (Fin d)] (f : Schwart
     = ‖ℱ_L2 (schwartzToL2' d f)‖        := by rw [← schwartz_compatibility]
     _ = ‖schwartzToL2' d f‖              := hℱ_L2_isometry (schwartzToL2' d f)
 
-/-- Plancherel theorem on the Schwartz core using our type abbreviations -/
-lemma plancherel_on_schwartz' (d : ℕ) [NeZero d] [Fintype (Fin d)] (f : SchwartzRd d) :
-  ‖schwartzToL2 d (fourierTransformSchwartz d f)‖ = ‖schwartzToL2 d f‖ := by
-  -- **Clean Proof Strategy**: Use the prime existence theorem that matches our types
-  -- This avoids all type conversion issues!
-
-  -- Get the L² Fourier isometry with Schwartz compatibility (prime version)
-  obtain ⟨ℱ_L2, hℱ_L2_isometry, hℱ_L2_schwartz⟩ := fourier_transform_isometry_on_L2_with_schwartz_compatibility' d
-
-  -- Apply the Schwartz compatibility directly - no type conversion needed!
-  have schwartz_compatibility :
-    ℱ_L2 (schwartzToL2 d f) = schwartzToL2 d (fourierTransformSchwartz d f) :=
-    hℱ_L2_schwartz f
-
-  -- Now apply the isometry property
-  calc ‖schwartzToL2 d (fourierTransformSchwartz d f)‖
-    = ‖ℱ_L2 (schwartzToL2 d f)‖        := by rw [← schwartz_compatibility]
-    _ = ‖schwartzToL2 d f‖              := hℱ_L2_isometry (schwartzToL2 d f)
-
 /-! ### Mathematical properties for the construction -/
 
 /-- Injectivity: Schwartz functions that are zero a.e. are zero everywhere -/
@@ -434,21 +408,9 @@ lemma schwartzToL2_injective (d : ℕ) :
   -- Since Schwartz functions are continuous, if they are zero a.e., they are zero
   sorry
 
-/-- Injectivity for the alternative embedding -/
-lemma schwartzToL2'_injective (d : ℕ) [NeZero d] [Fintype (Fin d)] :
-  Function.Injective (schwartzToL2' d) := by
-  -- Since Schwartz functions are continuous, if they are zero a.e., they are zero
-  sorry
-
 /-- Density: Schwartz functions are dense in L² -/
 lemma schwartzToL2_denseRange (d : ℕ) :
   DenseRange (schwartzToL2 d) := by
-  -- This is a standard result: 𝒮(ℝᵈ) ⊆ L²(ℝᵈ) and 𝒮 is dense in L²
-  sorry
-
-/-- Density for the alternative embedding -/
-lemma schwartzToL2'_denseRange (d : ℕ) [NeZero d] [Fintype (Fin d)] :
-  DenseRange (schwartzToL2' d) := by
   -- This is a standard result: 𝒮(ℝᵈ) ⊆ L²(ℝᵈ) and 𝒮 is dense in L²
   sorry
 

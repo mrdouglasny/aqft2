@@ -2,6 +2,19 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+## Osterwalder-Schrader Axioms
+
+The four OS axioms characterizing Euclidean field theories that admit analytic
+continuation to relativistic QFTs:
+
+- **OS-0**: `OS0_Analyticity` - Complex analyticity of generating functionals
+- **OS-1**: `OS1_Regularity` - Exponential bounds and temperedness
+- **OS-2**: `OS2_EuclideanInvariance` - Euclidean group invariance
+- **OS-3**: `OS3_ReflectionPositivity` - Reflection positivity (multiple formulations)
+- **OS-4**: `OS4_Ergodicity` - Ergodicity and clustering properties
+
+Following Glimm-Jaffe formulation using probability measures on field configurations.
 -/
 
 import Mathlib.Tactic  -- gives `ext` and `simp` power
@@ -96,7 +109,7 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration)
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 
-/-- OS3 (Reflection Positivity): Standard formulation (needs clarification).
+/-- OS3 (Simplified Reflection Positivity): Standard formulation (needs clarification).
 
     WARNING: This formulation is not obviously correct and needs more careful analysis.
     The proper Glimm-Jaffe formulation involves L2 expectations of exponentials of
@@ -104,21 +117,21 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration)
 
     The matrix formulation below is more reliable and follows Glimm-Jaffe directly.
     TODO: Reformulate this properly using the L2 framework. -/
-def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_SimplifiedReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (F : PositiveTimeTestFunction),
     let F_time_reflected := QFT.compTimeReflection F.val  -- ΘF (time reflection)
     let test_function := schwartzMul (star F.val) F_time_reflected  -- F̄(ΘF)
     0 ≤ (GJGeneratingFunctionalℂ dμ_config test_function).re ∧
         (GJGeneratingFunctionalℂ dμ_config test_function).im = 0
 
-/-- OS3 Matrix Formulation (Glimm-Jaffe): The reflection positivity matrix is positive semidefinite.
+/-- OS3 (Reflection Positivity, Matrix Formulation): The reflection positivity matrix is positive semidefinite.
 
     This is the alternative formulation from Glimm-Jaffe where reflection positivity
     is expressed as: for any finite collection of positive-time test functions f₁,...,fₙ,
     the matrix M_{i,j} = Z[fᵢ - Θfⱼ] is positive semidefinite.
 
     This means: ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 for all complex coefficients cᵢ. -/
-def OS3_MatrixReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℂ),
     let reflection_matrix := fun i j =>
       let fj_time_reflected := QFT.compTimeReflection (f j).val  -- Θfⱼ
