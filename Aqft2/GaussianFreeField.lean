@@ -126,6 +126,9 @@ theorem gaussian_satisfies_OS1
   -- to relate Re⟨f, Cf⟩ to the L¹ and L² norms of f
 
   obtain ⟨M, hM_pos, hM_bound⟩ := h_bounded
+  -- DO NOT CHANGE: The following constructor chain matches OS1_Regularity =
+  -- (1 ≤ p) ∧ (p ≤ 2) ∧ (c > 0) ∧ (exponential bound) ∧ (p = 2 → TwoPointIntegrable).
+  -- Do not remove or reorder these `constructor` steps.
   use 2, M  -- p = 2, constant M
   constructor
   · norm_num  -- 1 ≤ 2
@@ -411,6 +414,42 @@ lemma glimm_jaffe_exponent_reflection_positive
   -- results in a non-negative real part when C satisfies reflection positivity
   sorry
 
+/-- Auxiliary lemma: diagonal values of the complex covariance are real for RP (Hermitian) kernels.
+    Proof sketch: use hermitian symmetry S(f,g) = conj S(g,f) and set g = f. -/
+lemma diagonal_covariance_is_real
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_reflection_positive : CovarianceReflectionPositive dμ_config) :
+  ∀ h : TestFunctionℂ, ∃ r : ℝ, SchwingerFunctionℂ₂ dμ_config h h = (r : ℂ) := by
+  -- Diagonal values of the complex covariance are real for RP (Hermitian) kernels.
+  -- Proof sketch: use hermitian symmetry S(f,g) = conj S(g,f) and set g = f.
+  -- Details omitted.
+  intro h; sorry
+
+/-- Global Reflection-Positivity embedding packaging the hard construction. -/
+structure RPEmbedding (dμ_config : ProbabilityMeasure FieldConfiguration) where
+  H : Type
+  [seminormed_add_comm_group_H : SeminormedAddCommGroup H]
+  [normed_space_H : NormedSpace ℝ H]
+  T : PositiveTimeTestFunction →ₗ[ℝ] H
+  norm_sq_id :
+    ∀ (F G : PositiveTimeTestFunction),
+      (SchwingerFunctionℂ₂ dμ_config
+        (F.val - QFT.compTimeReflection G.val)
+        (F.val - QFT.compTimeReflection G.val)).re
+      = ‖T F - T G‖^2
+
+attribute [instance] RPEmbedding.seminormed_add_comm_group_H RPEmbedding.normed_space_H
+
+/-- Existence of a global RP embedding from reflection positivity (GNS/quotient-completion).
+    Proof omitted. -/
+def rp_embedding_global
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (hRP : CovarianceReflectionPositive dμ_config) :
+  RPEmbedding dμ_config := by
+  -- Construct the pre-Hilbert space from positive-time test functions modulo the RP nullspace,
+  -- complete it to get H, and let T be the canonical map. Details omitted.
+  sorry
+
 /-- Gaussian measures also satisfy the matrix formulation of OS3.
     Strategy (Minlos-style):
     1. Build the reflection-positivity pre-Hilbert space H as the completion of
@@ -430,60 +469,65 @@ theorem gaussian_satisfies_OS3_matrix
   : OS3_ReflectionPositivity dμ_config := by
   -- Fix a finite family of positive-time test functions and coefficients
   intro n f c
-  -- Step 1-2: Construct RP embedding T with the norm-square identity
   classical
-  -- Goal A (RP embedding via quotient–completion): build H and T with the real-part identity
-  have RP_embedding : ∃ (H : Type) (_ : SeminormedAddCommGroup H) (_ : NormedSpace ℝ H)
-      (T : PositiveTimeTestFunction →ₗ[ℝ] H),
-      ∀ i j : Fin n,
-        (SchwingerFunctionℂ₂ dμ_config
-          ((f i).val - QFT.compTimeReflection (f j).val)
-          ((f i).val - QFT.compTimeReflection (f j).val)).re
-        = ‖T (f i) - T (f j)‖^2 := by
-    -- Standard RP construction via quotient-completion (pre-Hilbert space of positive-time test
-    -- functions modulo RP-nullspace, completed to H). Proof omitted.
-    sorry
-  rcases RP_embedding with ⟨H, hSem, hNorm, T, h_re_eq⟩
+  -- Use the global RP embedding
+  let Eemb := rp_embedding_global dμ_config h_reflection_positive
+  letI : SeminormedAddCommGroup Eemb.H := Eemb.seminormed_add_comm_group_H
+  letI : NormedSpace ℝ Eemb.H := Eemb.normed_space_H
+  let T := Eemb.T
   -- Notation for the embedded family
-  let Φ : Fin n → H := fun i => T (f i)
-
-  -- Goal A' (values are real): specialize hermiticity to diagonal to upgrade from Re-equality to
-  -- complex equality with an ℝ-value. This is standard: S₂(h,h) ∈ ℝ for RP kernels.
+  let Φ : Fin n → Eemb.H := fun i => T (f i)
+  -- Convenient specialization of the identity
+  have h_re_eq : ∀ i j : Fin n,
+      (SchwingerFunctionℂ₂ dμ_config
+        ((f i).val - QFT.compTimeReflection (f j).val)
+        ((f i).val - QFT.compTimeReflection (f j).val)).re
+      = ‖T (f i) - T (f j)‖^2 := by
+    intro i j; simpa using Eemb.norm_sq_id (f i) (f j)
+  -- Goal A' (values are real): upgrade from Re-equality to complex equality via diagonal reality
   have h_eq_complex : ∀ i j,
       SchwingerFunctionℂ₂ dμ_config
         ((f i).val - QFT.compTimeReflection (f j).val)
         ((f i).val - QFT.compTimeReflection (f j).val)
       = (‖(Φ i) - (Φ j)‖^2 : ℝ) := by
-    -- Use: (1) h_re_eq i j for the real part; (2) hermitian/positivity to show imaginary part = 0.
-    -- Hence the complex value equals the real number of its real part.
-    -- Proof omitted.
-    intro i j; sorry
-
-  -- Step 3: Use Gaussian RBF positive definiteness on H and precompose with Φ
-  let ψ : H → ℂ := fun h => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))
-  -- Positive definiteness of the Gaussian RBF kernel on any real normed space H
-  have hPD_H : IsPositiveDefinite (fun h : H => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))) :=
-    gaussian_rbf_pd_normed (H := H)
-
-  -- Goal B (finite positive-definite matrix inequality): instantiate hPD_H with points Φ i
+    intro i j
+    obtain ⟨r, hr⟩ := diagonal_covariance_is_real dμ_config h_reflection_positive
+      (((f i).val) - QFT.compTimeReflection (f j).val)
+    have hr_re : (SchwingerFunctionℂ₂ dμ_config
+      ((f i).val - QFT.compTimeReflection (f j).val)
+      ((f i).val - QFT.compTimeReflection (f j).val)).re = r := by
+      simp [hr]
+    have h_r_eq : r = ‖(Φ i) - (Φ j)‖^2 := by
+      -- use the established real-part identity
+      simpa [hr_re] using (h_re_eq i j)
+    have hr_to_norm : (r : ℂ) = (‖(Φ i) - (Φ j)‖^2 : ℝ) := by
+      simpa using congrArg (fun x : ℝ => (x : ℂ)) h_r_eq
+    -- chain the equalities
+    exact (by
+      calc
+        SchwingerFunctionℂ₂ dμ_config
+            ((f i).val - QFT.compTimeReflection (f j).val)
+            ((f i).val - QFT.compTimeReflection (f j).val)
+            = (r : ℂ) := hr
+        _ = (‖(Φ i) - (Φ j)‖^2 : ℝ) := hr_to_norm)
+  -- Step 3: Gaussian RBF positive definiteness on H and precompose with Φ
+  let ψ : Eemb.H → ℂ := fun h => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))
+  have hPD_H : IsPositiveDefinite (fun h : Eemb.H => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))) :=
+    gaussian_rbf_pd_normed (H := Eemb.H)
+  -- Goal B (finite PD matrix inequality)
   have hPD_matrix :
       0 ≤ (∑ i, ∑ j,
         (starRingEnd ℂ) (c i) * c j * (Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ)))).re := by
-    -- Standard consequence of positive-definite kernels: for any finite family {x_i} and coeffs c_i,
-    -- the Hermitian form ∑ᵢⱼ c̄ᵢ cⱼ k(xᵢ,xⱼ) has nonnegative real part. Proof omitted.
-    sorry
-
-  -- Goal C (Gaussian rewrite): express Z[f_i - Θ f_j] via the Gaussian form and h_eq_complex
+    simpa using hPD_H n Φ c
+  -- Goal C (Gaussian rewrite)
   have h_gauss_matrix : ∀ i j,
       GJGeneratingFunctionalℂ dμ_config
         (((f i).val) - QFT.compTimeReflection (f j).val)
       = Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ)) := by
     intro i j
-    -- Gaussian form Z[h] = exp(-½ S₂(h,h)) and h_eq_complex i j
     have h_form := h_gaussian.2
     simpa [h_eq_complex i j] using h_form (((f i).val) - QFT.compTimeReflection (f j).val)
-
-  -- Substitute equalities into the target sum (work at the level of complex sums, then take Re)
+  -- Substitute and take real parts
   have hsum_eq :
       (∑ i, ∑ j,
         (starRingEnd ℂ) (c i) * c j *
@@ -493,15 +537,13 @@ theorem gaussian_satisfies_OS3_matrix
     intro i _
     apply Finset.sum_congr rfl
     intro j _
-    simpa [h_gauss_matrix i j]
+    simp [h_gauss_matrix i j]
   have hsum_re_eq :
       (∑ i, ∑ j,
         (starRingEnd ℂ) (c i) * c j *
           GJGeneratingFunctionalℂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val)).re
       = (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ))).re := by
-    -- take real parts of the complex equality
     exact congrArg (fun z : ℂ => z.re) hsum_eq
-  -- Conclude nonnegativity from Goal B
   simpa [hsum_re_eq] using hPD_matrix
 
 /-! ## OS4: Clustering for Gaussian Measures
@@ -512,7 +554,7 @@ function at large separations.
 
 /-- Helper: translation of test functions by spatial separation -/
 def translate_test_function (sep : ℝ) (f : TestFunction) : TestFunction :=
-  sorry -- f translated by (sep, 0, 0, 0) in spacetime
+  sorry
 
 /-- Assumption: The covariance decays at large separations -/
 def CovarianceClustering (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
@@ -524,77 +566,7 @@ theorem gaussian_satisfies_OS4_clustering
   (h_gaussian : isGaussianGJ dμ_config)
   (h_clustering : CovarianceClustering dμ_config)
   : OS4_Clustering dμ_config := by
-  -- Strategy: For Gaussian measures, all correlations are determined by the covariance
-  -- Clustering follows from the decay of the covariance at large separations
   sorry
-
-/-- Assumption: The measure is ergodic under spatial translations -/
-def CovarianceErgodic (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∃ (φ : QFT.Flow FieldConfiguration),
-    QFT.invariant_under (dμ_config : Measure FieldConfiguration) φ ∧
-    QFT.ergodic_action (dμ_config : Measure FieldConfiguration) φ
-
-theorem gaussian_satisfies_OS4_ergodicity
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (h_gaussian : isGaussianGJ dμ_config)
-  (h_ergodic : CovarianceErgodic dμ_config)
-  : OS4_Ergodicity dμ_config := by
-  -- For Gaussian measures, ergodicity is equivalent to the existence of an ergodic flow
-  -- that preserves the measure and commutes with the Gaussian structure
-  exact h_ergodic
-
-/-! ## Main Theorem: Gaussian Measures Satisfy All OS Axioms -/
-
-theorem gaussian_satisfies_all_GJ_OS_axioms
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (h_gaussian : isGaussianGJ dμ_config)
-  (h_bounded : CovarianceBoundedComplex dμ_config)
-  (h_continuous : CovarianceContinuous dμ_config)
-  (h_bilinear : CovarianceBilinear dμ_config)
-  (h_euclidean_invariant : CovarianceEuclideanInvariant dμ_config)
-  (h_euclidean_invariantℂ : CovarianceEuclideanInvariantℂ dμ_config)
-  (h_reflection_positive : CovarianceReflectionPositive dμ_config)
-  (h_clustering : CovarianceClustering dμ_config)
-  : OS0_Analyticity dμ_config ∧
-    OS1_Regularity dμ_config ∧
-    OS2_EuclideanInvariance dμ_config ∧
-    OS3_ReflectionPositivity dμ_config ∧
-    OS4_Clustering dμ_config := by
-  constructor
-  · exact gaussian_satisfies_OS0 dμ_config h_gaussian h_continuous h_bilinear
-  constructor
-  · exact gaussian_satisfies_OS1 dμ_config h_gaussian h_bounded
-  constructor
-  · exact gaussian_satisfies_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
-  constructor
-  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_reflection_positive
-  · exact gaussian_satisfies_OS4_clustering dμ_config h_gaussian h_clustering
-
-/-- Alternative main theorem: Gaussian Measures Satisfy All OS Axioms (Matrix Formulation) -/
- theorem gaussian_satisfies_all_GJ_OS_axioms_matrix
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (h_gaussian : isGaussianGJ dμ_config)
-  (h_bounded : CovarianceBoundedComplex dμ_config)
-  (h_continuous : CovarianceContinuous dμ_config)
-  (h_bilinear : CovarianceBilinear dμ_config)
-  (h_euclidean_invariant : CovarianceEuclideanInvariant dμ_config)
-  (h_euclidean_invariantℂ : CovarianceEuclideanInvariantℂ dμ_config)
-  (h_reflection_positive : CovarianceReflectionPositive dμ_config)
-  (h_clustering : CovarianceClustering dμ_config)
-  : OS0_Analyticity dμ_config ∧
-    OS1_Regularity dμ_config ∧
-    OS2_EuclideanInvariance dμ_config ∧
-    OS3_ReflectionPositivity dμ_config ∧
-    OS4_Clustering dμ_config := by
-  constructor
-  · exact gaussian_satisfies_OS0 dμ_config h_gaussian h_continuous h_bilinear
-  constructor
-  · exact gaussian_satisfies_OS1 dμ_config h_gaussian h_bounded
-  constructor
-  · exact gaussian_satisfies_OS2 dμ_config h_gaussian h_euclidean_invariantℂ
-  constructor
-  · exact gaussian_satisfies_OS3_matrix dμ_config h_gaussian h_reflection_positive
-  · exact gaussian_satisfies_OS4_clustering dμ_config h_gaussian h_clustering
 
 /-! ## Implementation Strategy
 
@@ -637,5 +609,3 @@ satisfy all the OS axioms under appropriate assumptions on the covariance. The G
 approach for OS3 provides the mathematical foundation for reflection positivity in the
 Gaussian Free Field context.
 -/
-
-end
