@@ -6,7 +6,6 @@ Authors:
 
 import Mathlib.Tactic  -- gives `ext` and `simp` power
 import Mathlib.Data.Complex.Basic
-import Mathlib.Data.Complex.Module
 import Mathlib.Algebra.Star.Basic
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Complex.Basic

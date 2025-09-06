@@ -7,7 +7,8 @@ General facts about functions of several complex variables.
 -/
 
 import Mathlib.Algebra.Algebra.Defs
-import Mathlib.Data.Complex.Exponential
+import Mathlib.Analysis.Complex.Exponential
+import Mathlib.Analysis.SpecialFunctions.Complex.Analytic
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Distribution.SchwartzSpace
@@ -22,8 +23,8 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 
 import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Analysis.NormedSpace.RCLike
-import Mathlib.Analysis.NormedSpace.Real
+import Mathlib.Analysis.Normed.Module.RCLike.Basic
+import Mathlib.Analysis.Normed.Module.RCLike.Real
 import Mathlib.Analysis.NormedSpace.Extend
 
 import Mathlib.Probability.Independence.Basic

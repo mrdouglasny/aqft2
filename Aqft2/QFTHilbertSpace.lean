@@ -11,8 +11,14 @@ import Mathlib.MeasureTheory.Function.EssSup
 import Mathlib.Topology.ContinuousMap.Bounded.Basic
 import Mathlib.Analysis.Normed.Operator.BoundedLinearMaps
 import Mathlib.Data.ENNReal.Basic
-import Mathlib.Data.Complex.Exponential
 import Mathlib.Data.Complex.Basic
+import Mathlib.Analysis.Complex.Exponential
+import Mathlib.Algebra.Star.Basic
+import Mathlib.Analysis.InnerProductSpace.LinearMap
+import Mathlib.Analysis.Complex.Basic
+import Mathlib.Analysis.Distribution.SchwartzSpace
+
+import Mathlib.Topology.MetricSpace.Isometry
 
 -- Import our basic definitions
 import Aqft2.Basic

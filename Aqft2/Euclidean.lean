@@ -12,8 +12,7 @@ import Mathlib.Probability.Density
 import Mathlib.Probability.Independence.Basic
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Distribution.SchwartzSpace
-import Mathlib.Analysis.Complex.Basic
-import Mathlib.Data.Complex.Exponential
+import Mathlib.Analysis.Complex.Exponential
 import Mathlib.MeasureTheory.Measure.Haar.OfBasis
 import Mathlib.MeasureTheory.Function.L2Space
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction
@@ -285,7 +284,7 @@ private def act_inv_poly_bound (g : E) :
         have h2 : 0 ≤ ‖g⁻¹.t‖ := norm_nonneg _
         linarith [mul_nonneg h2 h1]
 
-/-! ### Unified Action of Euclidean group on function spaces ---------
+ /-! ### Unified Action of Euclidean group on function spaces ---------
 
     UNIFIED EUCLIDEAN ACTION FRAMEWORK
 

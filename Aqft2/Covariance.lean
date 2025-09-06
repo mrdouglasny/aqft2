@@ -9,7 +9,8 @@ import Mathlib.Analysis.Distribution.FourierSchwartz
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.Distribution.SchwartzSpace
 import Mathlib.MeasureTheory.Integral.Bochner.Basic
-import Mathlib.Data.Complex.Exponential
+import Mathlib.Data.Complex.Basic
+import Mathlib.Analysis.Complex.Exponential
 import Mathlib.Analysis.SpecialFunctions.Gaussian.GaussianIntegral
 
 -- Import our basic definitions
@@ -614,7 +615,7 @@ theorem parseval_schwartz (f g : TestFunctionℂ) :
   -- This follows from the general Parseval theorem for the Fourier transform
   sorry
 
-/-- Fourier transform of time-reflected function -/
+/-- Fourier transform of a time-reflected function -/
 theorem fourierTransform_timeReflection (f : TestFunctionℂ) :
   ∃ g : TestFunctionℂ, fourierTransform (QFT.compTimeReflection f) = g := by
   -- This expresses how time reflection acts on the Fourier transform

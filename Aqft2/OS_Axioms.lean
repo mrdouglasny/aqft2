@@ -6,8 +6,7 @@ Authors:
 
 import Mathlib.Tactic  -- gives `ext` and `simp` power
 import Mathlib.Data.Complex.Basic
-import Mathlib.Data.Complex.Module
-import Mathlib.Data.Complex.Exponential
+import Mathlib.Analysis.Complex.Exponential
 import Mathlib.Algebra.Group.Support
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Complex.Basic
@@ -31,8 +30,8 @@ import Mathlib.Probability.Independence.Basic
 import Mathlib.Probability.Density
 
 import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Analysis.NormedSpace.RCLike
-import Mathlib.Analysis.NormedSpace.Real
+import Mathlib.Analysis.Normed.Module.RCLike.Basic
+import Mathlib.Analysis.Normed.Module.RCLike.Real
 
 import Mathlib.Topology.Basic
 import Mathlib.Order.Filter.Basic

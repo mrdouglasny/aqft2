@@ -4,12 +4,13 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 -/
 
-import Mathlib.Data.Complex.Exponential
-import Mathlib.Analysis.Distribution.SchwartzSpace
-import Mathlib.Analysis.RCLike.Basic
+import Mathlib.Tactic  -- gives `ext` and `simp` power
+import Mathlib.Data.Complex.Basic
+import Mathlib.Analysis.Complex.Exponential
+import Mathlib.Algebra.Star.Basic
+import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Complex.Basic
-import Mathlib.Topology.Algebra.Module.WeakDual
-import Mathlib.MeasureTheory.Integral.Bochner.Basic
+import Mathlib.Analysis.Distribution.SchwartzSpace
 
 -- Import our basic definitions
 import Aqft2.Basic

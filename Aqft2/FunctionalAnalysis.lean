@@ -1,10 +1,8 @@
-
 /-© 2025 Math definitions which arguably should be in mathlib
  -/
 
 import Mathlib.Tactic  -- gives `ext` and `simp` power
 import Mathlib.Data.Complex.Basic
-import Mathlib.Data.Complex.Module
 import Mathlib.Analysis.InnerProductSpace.LinearMap
 import Mathlib.Analysis.Distribution.SchwartzSpace
 import Mathlib.Analysis.Distribution.FourierSchwartz
@@ -19,8 +17,8 @@ import Mathlib.MeasureTheory.Integral.Bochner.Basic
 import Mathlib.MeasureTheory.Measure.CharacteristicFunction
 
 import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Analysis.NormedSpace.RCLike
-import Mathlib.Analysis.NormedSpace.Real
+import Mathlib.Analysis.Normed.Module.RCLike.Basic
+import Mathlib.Analysis.Normed.Module.RCLike.Real
 import Mathlib.Analysis.Normed.Field.Basic
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Fourier.FourierTransform
