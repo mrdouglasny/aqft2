@@ -687,11 +687,17 @@ theorem freeCovariance_euclidean_invariant (m : ℝ) (R : SpaceTime ≃ₗᵢ[�
 
 /-- Complex extension of the covariance for complex test functions -/
 def freeCovarianceℂ (m : ℝ) (f g : TestFunctionℂ) : ℂ :=
-  ∫ x, ∫ y, (f x) * (freeCovariance m x y : ℂ) * (starRingEnd ℂ (g y)) ∂volume ∂volume
+  ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (starRingEnd ℂ (g y)) ∂volume ∂volume
 
 /-- The complex covariance is positive definite -/
 theorem freeCovarianceℂ_positive (m : ℝ) (f : TestFunctionℂ) :
   0 ≤ (freeCovarianceℂ m f f).re := by
+  sorry
+
+/-- The diagonal of the complex free covariance is real-valued. -/
+theorem freeCovarianceℂ_diagonal_real (m : ℝ) (h : TestFunctionℂ) :
+  ∃ r : ℝ, freeCovarianceℂ m h h = (r : ℂ) := by
+  -- Follows from symmetry and real-valued kernel; proof deferred.
   sorry
 
 /-! ## Connection to Schwinger Functions -/
@@ -781,3 +787,63 @@ axiom freeCovarianceFormR_continuous (m : ℝ) :
 axiom freeCovarianceFormR_pos (m : ℝ) : ∀ f : TestFunctionR, 0 ≤ freeCovarianceFormR m f f
 /-- Symmetry of the real covariance bilinear form. -/
 axiom freeCovarianceFormR_symm (m : ℝ) : ∀ f g : TestFunctionR, freeCovarianceFormR m f g = freeCovarianceFormR m g f
+/-- The momentum-space propagator is real-valued: its star (complex conjugate) equals itself. -/
+@[simp] lemma freePropagatorMomentum_star (m : ℝ) (k : SpaceTime) :
+  star (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
+  simp
+
+/-- Same statement via the star ring endomorphism (complex conjugation). -/
+@[simp] lemma freePropagatorMomentum_starRing (m : ℝ) (k : SpaceTime) :
+  (starRingEnd ℂ) (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
+  simp
+
+/-- In particular, the imaginary part of the momentum-space propagator vanishes. -/
+@[simp] lemma freePropagatorMomentum_im (m : ℝ) (k : SpaceTime) :
+  (freePropagatorMomentum m k : ℂ).im = 0 := by
+  simp
+
+/-- Pointwise hermiticity of the momentum-space integrand: taking star swaps f and g
+    because the propagator is real-valued. -/
+lemma momentum_integrand_hermitian
+  (m : ℝ) (f g : SpaceTime → ℂ) (k : SpaceTime) :
+  star ((star (f k)) * (freePropagatorMomentum m k : ℂ) * g k)
+    = (star (g k)) * (freePropagatorMomentum m k : ℂ) * f k := by
+  -- star distributes over products and `star (star (f k)) = f k`; the propagator is real
+  simp [mul_comm, mul_left_comm, mul_assoc]
+
+/-- Momentum-space covariance bilinear form (Fourier side). -/
+noncomputable def momentumCovarianceForm (m : ℝ) (f g : SpaceTime → ℂ) : ℂ :=
+  ∫ k, (star (f k)) * (freePropagatorMomentum m k : ℂ) * g k ∂volume
+
+/-- Hermiticity of the momentum-space covariance form.
+    Under standard integrability assumptions, the star of the integral equals the
+    integral of the starred integrand, which by `momentum_integrand_hermitian` swaps f and g. -/
+lemma momentumCovarianceForm_hermitian (m : ℝ) (f g : SpaceTime → ℂ)
+  (hf : Integrable f volume) (hg : Integrable g volume) :
+  star (momentumCovarianceForm m f g) = momentumCovarianceForm m g f := by
+  -- TODO: justify swapping star with the Bochner integral via the CLM for conjugation
+  -- and integrability of the integrand built from f and g.
+  -- Pointwise, the integrands satisfy `momentum_integrand_hermitian`.
+  -- The full statement then follows by linearity and continuity of the star map.
+  -- Proof deferred.
+  sorry
+
+/-- Position-space free covariance is symmetric: C(x,y) = C(y,x). -/
+lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime) :
+  freeCovariance m x y = freeCovariance m y x := by
+  -- Position-space kernel depends only on x−y and uses an even cosine, hence symmetric.
+  -- A rigorous proof can be given via the identity y−x = −(x−y) and cos(−a)=cos(a),
+  -- or by a change of variables k ↦ −k in the integral since the propagator is even.
+  -- Proof deferred.
+  sorry
+
+/-- The position-space free covariance is real-valued after ℂ coercion. -/
+@[simp] lemma freeCovariance_star (m : ℝ) (x y : SpaceTime) :
+  star (freeCovariance m x y : ℂ) = (freeCovariance m x y : ℂ) := by
+  simp
+
+/-- Hermiticity of the complex-lifted position-space kernel. -/
+@[simp] lemma freeCovariance_hermitian (m : ℝ) (x y : SpaceTime) :
+  (freeCovariance m x y : ℂ) = star (freeCovariance m y x : ℂ) := by
+  -- symmetry plus real-valuedness
+  simp [freeCovariance_symmetric m x y]

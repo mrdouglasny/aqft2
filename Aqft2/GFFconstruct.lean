@@ -366,3 +366,11 @@ of Kolmogorov extension while giving explicit dimension-dependent conditions.
 -/
 
 end
+
+/-- For the specialized free-field GFF, the complex 2-point function equals the complex
+    free covariance. Proof deferred to the Minlos/Fourier construction details. -/
+theorem gff_two_point_equals_covarianceℂ_free
+  (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
+  SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ m f g := by
+  -- TODO: derive from gaussianFreeField_free construction and the Fourier representation
+  sorry

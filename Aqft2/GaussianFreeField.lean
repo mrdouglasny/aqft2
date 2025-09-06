@@ -67,6 +67,7 @@ import Aqft2.SCV
 import Aqft2.FunctionalAnalysis
 import Aqft2.OS4
 import Aqft2.Minlos
+import Aqft2.Covariance
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -448,6 +449,19 @@ lemma diagonal_covariance_is_real
   -- Details omitted.
   intro h; sorry
 
+lemma diagonal_covariance_is_real_GFF (m : ℝ) [Fact (0 < m)] :
+  ∀ h : TestFunctionℂ, ∃ r : ℝ,
+    SchwingerFunctionℂ₂ (gaussianFreeField_free m) h h = (r : ℂ) := by
+  intro h
+  -- identify Schwinger 2-pt with free covariance
+  have hid : SchwingerFunctionℂ₂ (gaussianFreeField_free m) h h = freeCovarianceℂ m h h :=
+    gff_two_point_equals_covarianceℂ_free m h h
+  -- diagonal of free covariance is real
+  rcases freeCovarianceℂ_diagonal_real m h with ⟨r, hr⟩
+  refine ⟨r, ?_⟩
+  -- conclude by rewriting
+  simpa [hid] using hr
+
 /-- Global Reflection-Positivity embedding packaging the hard construction. -/
 structure RPEmbedding (dμ_config : ProbabilityMeasure FieldConfiguration) where
   H : Type
@@ -464,14 +478,68 @@ structure RPEmbedding (dμ_config : ProbabilityMeasure FieldConfiguration) where
 attribute [instance] RPEmbedding.seminormed_add_comm_group_H RPEmbedding.normed_space_H
 
 /-- Existence of a global RP embedding from reflection positivity (GNS/quotient-completion).
-    Proof omitted. -/
+
+    **Mathematical Construction (Gelfand-Naimark-Segal for Reflection Positivity):**
+
+    1. **RP Form**: Define ⟪F,G⟫_RP := S₂(F*, ΘG) where Θ is time reflection
+    2. **Positive Semidefinite**: hRP ensures ⟪F,F⟫_RP ≥ 0 for positive-time F
+    3. **Quotient**: Mod out nullspace N = {F : ⟪F,F⟫_RP = 0}
+    4. **Pre-Hilbert**: Quotient inherits inner product structure
+    5. **Completion**: Complete to Hilbert space H with canonical map T
+    6. **Key Identity**: ‖T(F) - T(G)‖² = Re⟨F - ΘG, C(F - ΘG)⟩
+
+    **Why This Works:**
+    - Reflection positivity → Well-defined inner product on quotient
+    - GNS completion → Concrete Hilbert space representation
+    - Canonical map T preserves the RP geometric structure
+    - Transforms abstract QFT covariance into Hilbert space geometry
+
+    **Connection to OS3:**
+    Once we have T: PositiveTimeTestFunction → H, the matrix inequality
+    ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 follows from Gaussian RBF positive definiteness
+    exp(-½‖x-y‖²) on the Hilbert space H.
+
+    This is the mathematical heart of Osterwalder-Schrader reconstruction:
+    **"Reflection positivity provides the geometry needed for analytic continuation."**
+
+    Implementation note: This version uses ℝ as a placeholder for H. A complete
+    implementation would use Mathlib's quotient and completion constructions. -/
 def rp_embedding_global
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (hRP : CovarianceReflectionPositive dμ_config) :
   RPEmbedding dμ_config := by
-  -- Construct the pre-Hilbert space from positive-time test functions modulo the RP nullspace,
-  -- complete it to get H, and let T be the canonical map. Details omitted.
-  sorry
+  classical
+
+  -- For now, use a concrete construction via L² space as the target Hilbert space
+  -- In a full implementation, this would use the proper GNS quotient construction
+
+  -- Define H as a concrete Hilbert space (placeholder - would be the GNS completion)
+  let H : Type := ℝ  -- Simplified for now; should be completion of quotient space
+  let _inst1 : SeminormedAddCommGroup H := by infer_instance
+  let _inst2 : NormedSpace ℝ H := by infer_instance
+
+  -- Define T as the canonical embedding (placeholder implementation)
+  let T : PositiveTimeTestFunction →ₗ[ℝ] H := {
+    toFun := fun F => 0,  -- Placeholder - should extract norm from RP form
+    map_add' := by simp,
+    map_smul' := by simp
+  }
+
+  -- The key property that would follow from proper GNS construction
+  have norm_sq_identity : ∀ (F G : PositiveTimeTestFunction),
+      (SchwingerFunctionℂ₂ dμ_config
+        (F.val - QFT.compTimeReflection G.val)
+        (F.val - QFT.compTimeReflection G.val)).re
+      = ‖T F - T G‖^2 := by
+    intro F G
+    -- This would follow from the GNS construction relating the RP form to the Hilbert space norm
+    -- Key insight: the RP form ⟪f, g⟫ := S₂(f*, Θg) induces a norm via ‖f‖² = ⟪f, f⟫
+    -- The identity connects quantum field covariance to geometric distance in H
+    simp [T]  -- Simplified for placeholder implementation
+    sorry
+
+  -- Package into RPEmbedding structure
+  exact ⟨H, T, norm_sq_identity⟩
 
 /-- Gaussian measures also satisfy the matrix formulation of OS3.
     Strategy (Minlos-style):
