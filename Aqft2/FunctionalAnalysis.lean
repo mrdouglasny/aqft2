@@ -487,14 +487,11 @@ theorem FourierL2_unitary_equiv :
   have ℱ_schwartz_compat := properties.2.2.1
 
   -- By construction of fourierTransformL2, we have fourierTransformL2 = the LinearIsometryEquiv built from ℱ_L2
-  -- Therefore fourierTransformL2 (schwartzToL2 d f) = ℱ_L2 (schwartzToL2 d f)
-  have h_apply : fourierTransformL2 (schwartzToL2 d f) = ℱ_L2 (schwartzToL2 d f) := by
-    -- This follows from the construction of fourierTransformL2
-    -- In the definition, we set toFun := ℱ_L2
-    rfl
+  -- Therefore fourierTransformL2 (schwartzToL2 d f) = ℱ_L2 (schwartzToL2 d f) := by rfl
 
   -- Apply the compatibility
-  rw [h_apply]
+  rw [← schwartzToL2_injective d (schwartzToL2 d f) (schwartzToL2 d (fourierTransformSchwartz d f)),
+      ← schwartzToL2_injective d (fourierTransformSchwartz d f) (fourierTransformSchwartz d f)]
   exact ℱ_schwartz_compat f
 
 /-- The inverse agrees with the inverse Fourier on Schwartz -/
@@ -584,4 +581,6 @@ This is our equivalent of `FourierL2_unitary` from `plancherel.lean`, providing:
 3. **Future**: Add convolution theorems, derivative properties, Gaussian measures
 
 This provides the mathematical foundation for the Fourier isometry used in
-the QFT Hilbert space framework, matching the structure of `plancherel.lean`.
+ the QFT Hilbert space framework, matching the structure of `plancherel.lean`.
+
+-/
