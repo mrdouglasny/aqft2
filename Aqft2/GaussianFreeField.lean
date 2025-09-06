@@ -108,7 +108,7 @@ of the generating functional and properties of the covariance operator.
 /-- Assumption: The covariance operator is bounded by L¹ and L² norms for complex test functions -/
 def CovarianceBoundedComplex (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∃ (M : ℝ), M > 0 ∧ ∀ (f : TestFunctionℂ),
-    ‖SchwingerFunctionℂ₂ dμ_config f f‖ ≤ M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2)
+    ‖SchwingerFunctionℂ₂ dμ_config f f‖ ≤ M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2:ℝ)
 
 theorem gaussian_satisfies_OS1
   (dμ_config : ProbabilityMeasure FieldConfiguration)
@@ -149,7 +149,7 @@ theorem gaussian_satisfies_OS1
 
     -- The key step: bound -½ Re⟨f, Cf⟩
     have h_re_bound : -(1/2 : ℝ) * (SchwingerFunctionℂ₂ dμ_config f f).re ≤
-                      (1/2) * M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2) := by
+                      (1/2) * M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2:ℝ) := by
       -- Use the covariance bound and properties of complex numbers
       have h_covar_bound := hM_bound f
       -- The proof requires careful analysis of complex inner products
@@ -166,19 +166,42 @@ theorem gaussian_satisfies_OS1
         linarith
       calc -(1/2 : ℝ) * (SchwingerFunctionℂ₂ dμ_config f f).re
         _ ≤ (1/2) * ‖SchwingerFunctionℂ₂ dμ_config f f‖ := h_neg_bound
-        _ ≤ (1/2) * (M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2)) := by
+        _ ≤ (1/2) * (M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2:ℝ)) := by
           apply mul_le_mul_of_nonneg_left h_covar_bound
           norm_num
-        _ = (1/2) * M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2) := by
+        _ = (1/2) * M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2:ℝ) := by
           ring
 
-    -- For now, we need a more sophisticated bound to complete the proof
-    -- The key mathematical step is relating the L¹×L² bound to the required L¹+L² bound
-    sorry
+    -- Implement the bound in the exponent: exp is monotone
+    -- First, identify the real-part simplification for a real scalar multiple
+    have hre_eq : (((-(1/2 : ℂ)) * SchwingerFunctionℂ₂ dμ_config f f).re)
+        = (-(1/2 : ℝ)) * (SchwingerFunctionℂ₂ dμ_config f f).re := by
+      simp [Complex.mul_re, zero_mul]
+    -- Now bound the exponent and lift through exp
+    have h_bound_goal :
+      Real.exp (((-(1/2 : ℂ)) * SchwingerFunctionℂ₂ dμ_config f f).re)
+        ≤ Real.exp (M * ((∫ x, ‖f x‖ ∂volume) + (∫ x, (‖f x‖) ^ (2 : ℝ) ∂volume)^(1/2:ℝ))) := by
+      apply Real.exp_le_exp.mpr
+      -- convert product bound to a linear sum bound with matching exponents
+      have h_prod_to_sum :
+        (1/2 : ℝ) * M * (∫ x, ‖f x‖ ∂volume) * (∫ x, (‖f x‖)^2 ∂volume)^(1/2:ℝ)
+          ≤ M * ((∫ x, ‖f x‖ ∂volume) + (∫ x, (‖f x‖)^2 ∂volume)^(1/2:ℝ)) := by
+        -- Placeholder inequality to move from product to sum; fill with your preferred estimate
+        sorry
+      -- combine h_re_bound (with ^2) and reconcile exponents inside the integrals in h_prod_to_sum
+      -- Any required comparison between (∫ ‖f‖^2) and (∫ ‖f‖^(2:ℝ)) can be folded into h_prod_to_sum.
+      have : (-(1/2:ℝ)) * (SchwingerFunctionℂ₂ dμ_config f f).re
+          ≤ M * ((∫ x, ‖f x‖ ∂volume) + (∫ x, (‖f x‖)^2 ∂volume)^(1/2:ℝ)) :=
+        le_trans h_re_bound h_prod_to_sum
+      simpa [hre_eq]
+    exact h_bound_goal
   · -- p = 2 case: two-point function integrability
     intro h_p_eq_2
-    -- This follows from the boundedness assumption
-    sorry
+    -- Covariance property: the squared two-point function is integrable (p = 2 case)
+    have h_two_point_covariance_integrable : TwoPointIntegrable dμ_config := by
+      -- This is a property of the covariance (e.g., decay/spectral estimate). Proof deferred.
+      sorry
+    exact h_two_point_covariance_integrable
 
 /-! ## OS0: Analyticity for Gaussian Measures
 
@@ -386,7 +409,7 @@ def CovarianceReflectionPositive (dμ_config : ProbabilityMeasure FieldConfigura
     a specific part of the 2-point function, and reflection positivity controls the sign. -/
 def glimm_jaffe_exponent (dμ_config : ProbabilityMeasure FieldConfiguration)
   (C : TestFunctionℂ →L[ℂ] TestFunctionℂ) (F : PositiveTimeTestFunction) : ℂ :=
-  let F_refl := QFT.compTimeReflection F.val  -- F' = ΘF (TIME-REFLECTED F, not complex conjugate!)
+  let F_refl := QFT.compTimeReflection F.val  -- F' = ΘF (TIME-REFLECTED F, not complex conjugation!)
   let CF_refl := C F_refl               -- CF'
   -- Expand ⟨F - CF', C(F - CF')⟩ using bilinearity of the 2-point function
   SchwingerFunctionℂ₂ dμ_config F.val F.val -
