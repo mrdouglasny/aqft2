@@ -1,4 +1,71 @@
-/-© 2025 SYH - OS-2 (Euclidean invariance)
+/-
+Copyright (c) 2025 SYH - OS-2 (Euclidean invariance)
+
+## Euclidean Group Actions for AQFT
+
+This file implements the Euclidean group E(4) = ℝ⁴ ⋊ O(4) and its actions on function spaces,
+providing the mathematical foundation for the OS-2 (Euclidean invariance) axiom in the
+Osterwalder-Schrader framework.
+
+### Key Definitions & Structures:
+
+**Euclidean Group Structure:**
+- `O4`: The orthogonal group O(4) as linear isometries on spacetime
+- `E`: Euclidean group structure with rotation `R : O4` and translation `t : SpaceTime`
+- `act`: Group action `g • x = R(x) + t` on spacetime points
+- Group instances: `Mul`, `One`, `Inv`, `Div`, and complete `Group` structure
+
+**Group Action Properties:**
+- `act_one`: Identity action `1 • x = x`
+- `act_mul`: Composition law `(gh) • x = g • (h • x)`
+- `act_inv`: Inverse action `g⁻¹ • x = R⁻¹(x - t)`
+- Complete group axioms: associativity, identity, inverses
+
+**Measure Preservation:**
+- `measurePreserving_act`: Euclidean transformations preserve Lebesgue measure
+- Foundation for OS-2 measure invariance requirement
+
+**Pullback Maps and Temperate Growth:**
+- `euclidean_pullback`: Fundamental geometric transformation `x ↦ g⁻¹ • x`
+- `euclidean_pullback_temperate_growth`: Pullbacks have temperate growth (needed for Schwartz spaces)
+- `euclidean_pullback_polynomial_bounds`: Polynomial growth bounds for analysis
+
+**Function Space Actions:**
+- `euclidean_action`: Action on complex test functions `(g • f)(x) = f(g⁻¹ • x)`
+- `euclidean_action_real`: Action on real test functions
+- `euclidean_action_L2`: Action on L² functions via composition
+- `euclidean_action_CLM`: Continuous linear map version for test functions
+
+**Unified Framework:**
+- `euclidean_action_unified_basis`: Consistent geometric foundation for all actions
+- `euclidean_actions_unified`: Both test function and L² actions are continuous linear maps
+- `euclidean_action_isInvertible'`: Euclidean actions are invertible transformations
+
+**Mathematical Foundation:**
+This implements the geometric principle that quantum fields should be invariant under
+Euclidean motions (rotations + translations). The key properties are:
+
+1. **Group Structure**: E(4) acts properly on spacetime
+2. **Measure Preservation**: Euclidean transformations preserve integration
+3. **Function Space Compatibility**: Actions extend to Schwartz and L² spaces
+4. **Continuity**: All actions are continuous linear transformations
+5. **Invertibility**: Group actions are bijective on function spaces
+
+**Connection to OS-2 Axiom:**
+This provides the mathematical foundation for OS-2 (Euclidean invariance):
+For any Euclidean transformation g ∈ E(4) and generating functional Z[J]:
+```
+Z[g • J] = Z[J]
+```
+
+**Integration with AQFT Framework:**
+- Spacetime structure from `Aqft2.Basic`
+- Test function actions for OS axiom verification
+- L² actions for Hilbert space constructions
+- Measure preservation for probability measures on field configurations
+
+This enables the formulation and verification of Euclidean invariance in both the
+distribution-theoretic (Glimm-Jaffe) and Hilbert space approaches to AQFT.
 -/
 
 import Mathlib.Analysis.InnerProductSpace.PiL2

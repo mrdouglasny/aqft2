@@ -3,6 +3,51 @@ Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
 
+## Several Complex Variables (SCV) for AQFT
+
+This file provides the theory of several complex variables needed for the OS-0 (analyticity) axiom
+in the Osterwalder-Schrader framework. It focuses on complex analyticity of generating functionals
+and the crucial polynomial structure that emerges from bilinear forms on test functions.
+
+### Key Definitions & Structures:
+
+**Complex Variable Foundations:**
+- `ℂn`: Type abbreviation for `Fin n → ℂ` (n-dimensional complex space)
+- `Entire`: Predicate for entire functions (analytic on all of ℂⁿ)
+- Complex analyticity using Mathlib's `AnalyticOn ℂ f Set.univ`
+
+**Linear Combinations of Test Functions:**
+- `weightedSumCLM`: Continuous linear map `ℂⁿ →L[ℂ] TestFunctionℂ`
+- Maps coefficient vector `z : ℂⁿ` to test function `∑ᵢ zᵢ • Jᵢ`
+- Automatic continuity from finite-dimensional domain
+- Foundation for complex analytic generating functionals
+
+**Gaussian Functions and Analyticity:**
+- `gaussian1`: Single-variable Gaussian `exp(-z²)` on ℂ
+- `gaussian`: Multi-variable Gaussian `exp(-∑ᵢ zᵢ²)` on ℂⁿ
+- `h_exp_arg`: Proof that `-z²` is analytic
+- `gaussian1_entire`: Proof that single Gaussian is entire
+- `sumSquares_analytic`: Proof that `∑ᵢ zᵢ²` is analytic on ℂⁿ
+
+**Analyticity Machinery:**
+- Coordinate projections are analytic: `(x : ℂⁿ) ↦ xᵢ`
+- Powers preserve analyticity: `f^n` analytic if `f` analytic
+- Finite sums preserve analyticity: `∑ᵢ fᵢ` analytic if each `fᵢ` analytic
+- Composition with exponential: `exp ∘ f` analytic if `f` analytic
+
+**Connection to L² Bilinear Forms (Framework):**
+- `L2BilinearForm_polynomial_in_coefficients`: Key theorem (commented/framework)
+- Shows that L² bilinear forms give polynomial dependence in complex coefficients
+- Essential for proving analyticity of generating functionals
+- Links to exp(-½⟨∑ᵢ zᵢJᵢ, ∑ⱼ zⱼJⱼ⟩) structure
+
+**Mathematical Foundation:**
+Establishes analyticity for OS-0: symmetric bilinear forms ⟨∑ᵢ zᵢJᵢ, ∑ⱼ zⱼJⱼ⟩ = ∑ᵢⱼ zᵢzⱼ⟨Jᵢ,Jⱼ⟩
+give polynomial dependence (no conjugation) → exp(polynomial) is entire → Z[∑ᵢ zᵢJᵢ] analytic.
+
+**Integration:** Links to `Basic` (test functions), `OS_Axioms` (OS-0), and L² theory for
+analytic continuation from Euclidean to Minkowski QFT.
+
 General facts about functions of several complex variables.
 -/
 

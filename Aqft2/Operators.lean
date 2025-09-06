@@ -2,6 +2,75 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+## Multiplication Operators on L² Spaces for AQFT
+
+This file provides a general framework for multiplication operators on L² spaces,
+essential for constructing field operators and heat kernel operators in quantum field theory.
+The key insight: bounded functions give bounded multiplication operators on L².
+
+### Core Theory:
+
+**Main Results:**
+- `mulL2_of_boundedContinuous`: Bounded continuous φ → bounded T_φ on L²(α,μ) with ‖T_φ‖ ≤ ‖φ‖∞
+- `mulL2_of_Linfty`: L∞ functions φ → bounded T_φ on L²(α,μ) with ‖T_φ‖ ≤ ‖φ‖∞
+- `mulC0_of_boundedContinuous`: Warmup lemma for continuous function spaces
+
+**Key Technical Lemma:**
+- `ae_lin_of_coeLp`: Handles L^p coercion linearity for multiplication operators
+
+### Operator Constructors:
+
+**From Bounded Continuous Functions:**
+- `mulL2_BoundedContinuous`: T_φ : L²(α,μ) →L[ℝ] L²(α,μ) from φ ∈ BC(α,ℝ)
+- `mulL2_BoundedContinuous_apply`: (T_φ f)(x) = φ(x) · f(x) (a.e.)
+- `mulL2_BoundedContinuous_norm_le`: ‖T_φ‖ ≤ ‖φ‖∞
+
+**From L∞ Functions:**
+- `mulL2_Linfty`: T_φ : L²(α,μ) →L[ℝ] L²(α,μ) from φ ∈ L∞(α,μ)
+- `mulL2_Linfty_apply`: (T_φ f)(x) = φ(x) · f(x) (a.e.)
+- `mulL2_Linfty_norm_le`: ‖T_φ‖ ≤ ‖φ‖∞
+
+### Examples and Applications:
+
+**Concrete Examples:**
+- `constantFunction`: Constant multiplication c·f for c ∈ ℝ
+- `constantMultiplication`: Scaling operator on L²(ℝ)
+- `sineBoundedFunction`: Sine multiplication (bounded by 1)
+- `sineBoundedMultiplication`: sin(x)·f(x) operator
+
+### Mathematical Framework:
+
+**Multiplication Operator Definition:**
+For bounded φ : α → ℝ, define T_φ : L²(α,μ) → L²(α,μ) by:
+```
+(T_φ f)(x) = φ(x) · f(x)  (pointwise, a.e.)
+```
+
+**Key Properties:**
+1. **Boundedness**: ‖T_φ‖ ≤ ‖φ‖∞ (essential supremum bound)
+2. **Linearity**: T_φ(af + bg) = aT_φf + bT_φg (linear operator)
+3. **A.E. Equality**: Uses =ᵐ[μ] since L² functions are equivalence classes
+
+**Technical Challenges:**
+- L² functions are equivalence classes, not pointwise functions
+- Need AE representatives for pointwise multiplication
+- Proving boundedness requires careful measure theory
+- MemLp.toLp conversions between functions and L² classes
+
+### AQFT Applications:
+
+**Field Operators:** φ(f) = ∫ φ(x)f(x) dx (field smearing)
+**Heat Kernels:** exp(-t|p|²) multiplication for Gaussian free field evolution
+**Spectral Theory:** Multiplication operators with spectrum = essential range of φ
+
+### Implementation:
+
+**Proof Strategy:** Pointwise bound → L² bound → LinearMap.mkContinuous
+**Status:** Framework complete, core proofs marked with `sorry`
+**Integration:** Used in `QFTHilbertSpace`, `GFFconstruct`, `HilbertSpace` modules
+
+Foundation for rigorous field operator construction in Osterwalder-Schrader framework.
 -/
 import Mathlib.Analysis.InnerProductSpace.PiL2
 import Mathlib.MeasureTheory.Function.LpSpace.Basic

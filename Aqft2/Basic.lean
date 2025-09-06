@@ -2,6 +2,59 @@
 Copyright (c) 2025 MRD and SH. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors:
+
+## AQFT Basic Framework
+
+This file provides the foundational definitions for the Glimm-Jaffe approach to Algebraic Quantum Field Theory,
+implementing field configurations as tempered distributions and the associated generating functionals.
+
+### Key Definitions & Framework:
+
+**Spacetime Structure:**
+- `STDimension`: Spacetime dimension (4D)
+- `STvector`: 4-vector type as Fin 4 → ℝ
+- `SpaceTime`: Euclidean 4-space using EuclideanSpace
+- `getTimeComponent`: Extracts time coordinate (t = x₄)
+- `μ`: Standard Lebesgue measure on spacetime
+
+**Test Function Spaces:**
+- `TestFunction`: Real-valued Schwartz functions on spacetime
+- `TestFunction𝕜`: Generic Schwartz functions over field 𝕜
+- `TestFunctionℂ`: Complex-valued Schwartz functions
+- `schwartzMul`: Multiplication operation on complex test functions
+- `schwartz_comp_clm`: Composition with continuous linear maps (extends Schwartz regularity)
+
+**Field Configurations as Distributions:**
+- `FieldConfiguration`: Tempered distributions (WeakDual of Schwartz space)
+- Proper weak-* topology for measure theory
+- Measurable space structure via Borel σ-algebra
+
+**Distribution Pairings:**
+- `distributionPairing`: Real pairing ⟨ω, f⟩ between distributions and test functions
+- `complex_testfunction_decompose`: Efficient real/imaginary decomposition for complex test functions
+- `distributionPairingℂ_real`: Complex pairing ⟨ω, f⟩ = ⟨ω, Re f⟩ + i⟨ω, Im f⟩
+
+**Glimm-Jaffe Generating Functionals:**
+- `GJGeneratingFunctional`: Real generating functional Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
+- `GJGeneratingFunctionalℂ`: Complex generating functional for analyticity
+- `GJMean`: Mean field ⟨φ⟩ = ∫ ⟨ω, φ⟩ dμ(ω)
+
+**Mathematical Foundation:**
+This implements the distribution-based approach where:
+1. Field configurations ω are tempered distributions, not L² functions
+2. Generating functionals are defined via complex exponential integrals
+3. All correlation functions emerge from functional derivatives
+4. Complex analyticity (OS0) is naturally incorporated
+5. Measure theory is well-defined on the weak-* topology
+
+**Connection to Other Modules:**
+- Schwinger functions and correlations → `Aqft2.Schwinger`
+- Osterwalder-Schrader axioms → `Aqft2.OS_Axioms`
+- Gaussian measures and Minlos theorem → `Aqft2.Minlos`, `Aqft2.GFFconstruct`
+- Euclidean group actions → `Aqft2.Euclidean`
+
+This provides the mathematical foundation for constructive quantum field theory
+using the Osterwalder-Schrader framework.
 -/
 
 import Mathlib.Algebra.Algebra.Defs
@@ -166,30 +219,5 @@ variable (dμ_config : ProbabilityMeasure FieldConfiguration)
 
 #check GJGeneratingFunctional dμ_config
 #check GJGeneratingFunctionalℂ dμ_config
-
-/-! ## Summary of Basic Framework
-
-This file provides the foundational definitions for the Glimm-Jaffe approach:
-
-### 1. Field Configurations as Distributions
-- `FieldConfiguration`: Tempered distributions (WeakDual of Schwartz space)
-- `distributionPairing`: Fundamental pairing ⟨ω, f⟩
-- Proper weak-* topology for measure theory
-
-### 2. Glimm-Jaffe Generating Functional
-- `GJGeneratingFunctional`: Z[J] = ∫ exp(i⟨ω, J⟩) dμ(ω)
-- Complex versions for analyticity
-- Connection to correlation functions
-
-### 3. Field Correlations
-- Note: All correlation functions (2-point, n-point) are handled in `Aqft2.Schwinger` via the Schwinger function framework
-
-### 4. Complex Analyticity Framework
-- `L2BilinearForm`: Symmetric bilinear forms (no conjugation!)
-- Key for OS0 analyticity: B(z•f, g) = z * B(f, g)
-- Foundation for complex analytic generating functionals
-
-**Note**: Schwinger functions, distributions, and exponential series are now in `Aqft2.Schwinger`.
--/
 
 end

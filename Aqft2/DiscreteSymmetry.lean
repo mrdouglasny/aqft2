@@ -1,3 +1,75 @@
+/-
+Copyright (c) 2025 - Discrete Symmetries for AQFT
+
+## Discrete Symmetries for AQFT
+
+This file implements discrete symmetries, particularly time reflection (T), which is fundamental
+for the OS-3 (reflection positivity) axiom in the Osterwalder-Schrader framework. Time reflection
+maps (t, x⃗) ↦ (-t, x⃗), reversing the time coordinate while preserving spatial coordinates.
+
+### Key Definitions & Structures:
+
+**Time Reflection Operation:**
+- `timeReflection`: Point transformation (t, x⃗) ↦ (-t, x⃗) on spacetime
+- `timeReflectionMatrix`: Diagonal matrix with -1 for time, +1 for spatial coordinates
+- `timeReflectionMatrix_is_orthogonal`: Proof that the matrix is orthogonal (in O(4))
+
+**Linear Algebraic Structure:**
+- `timeReflectionIsometry`: Time reflection as element of orthogonal group O(4)
+- `timeReflectionLinear'`: Linear map version via matrix multiplication
+- `timeReflectionLinear`: Direct construction as linear map with additivity/homogeneity proofs
+- `timeReflectionCLM`: Continuous linear map version for analysis
+
+**Geometric Properties:**
+- `timeReflection_inner_map`: Time reflection preserves inner products ⟨Θx, Θy⟩ = ⟨x, y⟩
+- Self-inverse property: Θ² = Id (time reflection applied twice gives identity)
+- Orthogonal transformation: preserves angles and distances
+
+**Linear Isometry Structure:**
+- `timeReflectionLE`: Complete linear isometry equivalence Θ: SpaceTime ≃ₗᵢ[ℝ] SpaceTime
+- Includes proofs of:
+  - `left_inv` and `right_inv`: Θ⁻¹ = Θ (self-inverse)
+  - `map_add'` and `map_smul'`: Linearity
+  - `norm_map'`: Isometry property ‖Θx‖ = ‖x‖
+
+**Function Space Actions:**
+- `compTimeReflection`: Action on test functions (f ↦ f ∘ Θ)
+- Maps test function f(x) to (Θ*f)(x) = f(Θx) = f(-t, x⃗)
+- Continuous linear map on Schwartz space TestFunctionℂ
+- Includes temperate growth and polynomial bound proofs
+
+**Mathematical Foundation:**
+Time reflection is the key discrete symmetry for QFT because:
+
+1. **Geometric**: Reverses time flow while preserving spatial structure
+2. **Orthogonal**: Preserves Euclidean metric ⟨x,y⟩ = ⟨Θx,Θy⟩
+3. **Self-Inverse**: Θ² = Id, making it an involution
+4. **Measure-Preserving**: Preserves Lebesgue measure (det Θ = -1, |det Θ| = 1)
+5. **Function Space Compatible**: Extends to actions on test functions and distributions
+
+**Connection to OS-3 (Reflection Positivity):**
+This provides the mathematical foundation for OS-3 reflection positivity:
+- Θ acts on test functions: (Θf)(x) = f(Θx)
+- Generates the "star" operation for positive-time test functions
+- Essential for the reflection positivity matrix formulation
+- Enables analytic continuation from Euclidean to Minkowski QFT
+
+**Integration with AQFT Framework:**
+- Spacetime structure from `Aqft2.Basic`
+- Used in `Aqft2.OS_Axioms` for OS-3 formulation
+- Function space actions for Schwartz test functions
+- Geometric foundation for positive-time test functions in `Aqft2.PositiveTimeTestFunction`
+
+**Technical Implementation:**
+- Complete mathematical rigor with all linearity and isometry proofs
+- Continuous linear map structure for functional analysis
+- Temperate growth bounds for Schwartz space compatibility
+- Matrix representation for computational applications
+
+This enables the proper formulation of reflection positivity, which is crucial for proving
+that Euclidean field theories can be analytically continued to relativistic quantum field theories.
+-/
+
 import Mathlib.Tactic  -- gives `ext` and `simp` power
 import Mathlib.Data.Complex.Basic
 import Mathlib.Analysis.Complex.Exponential
@@ -156,3 +228,4 @@ noncomputable def compTimeReflection : TestFunctionℂ →L[ℝ] TestFunctionℂ
     -- Now we need ‖x‖ ≤ 1 + ‖x‖, which is always true
     linarith [norm_nonneg x]
   exact SchwartzMap.compCLM (𝕜 := ℝ) (hg := timeReflectionCLM.hasTemperateGrowth) (hg_upper := hg_upper)
+end QFT
