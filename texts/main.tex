@@ -462,14 +462,35 @@ This is equivalent to saying that for all $L_{1}$ functions $A(\phi)$,
 For now we restrict to Euclidean spacetime $M \equiv \IR^D$ in a general dimension $D$, and a single real scalar field $\phi$.
 One could take $\phi$ to be any local scalar operator, so one could treat YM by taking (say) $\phi=\tr F^2$.
 
-Mathematically, one cannot talk about ``general functions,'' every function has to live in some precise space.  
+Mathematically, one cannot talk about ``general functions,'' every function has to live in some precisely defined space.  
+In physics one is most familiar with the Hilbert space of wave functions, and this is clearly important, but
+there are many other important function spaces.  There are also very useful spaces of ``functions'' which are actually
+not functions strictly speaking (they are not maps from space to $\IR$) but are constructed from functions in simple ways.
+
+In the Glimm-Jaffe treatment (and most others), the following three function spaces are important:
+\begin{itemize}
+    \item The space $L_2(\IR^{D-1})$ of square integrable ``functions'' on space.  Square integrability
+    is of course the normalizability requirement in QM, and these functions form a Hilbert space.
+    A mathematical subtlety is that one defines two functions to be equivalent as vectors in $L^2$ if they
+    agree except for a set of measure zero (or ``almost everywhere''), as this makes the space isomorphic to its dual space and makes
+    many arguments simpler.  This must be taken into account in the formalization (as it is in mathlib).
+    \item Some much larger space of ``functions'' which represent the possible values which a field operator can take.
+    These will be the space $\cD'$ of distributions and the space $\cS'$ of Schwartz distributions, duals to Schwartz test functions.
+    \item The Schwartz space $\cS$ of functions on spacetime which decrease rapidly at infinity.
+    These are functions which decrease faster than any polynomial at infinity, along with all of their derivatives.
+\end{itemize}
+
+explain basics of distributions...
+
+
+
 We can't review all of the relevant functional analysis, but here are a few relevant function spaces:
 \begin{itemize}
     \item $C^\infty(M)$ are the smooth functions on $M$. 
     %They need not be bounded (if $M$ is not compact) but they must have finite values everywhere (this goes without saying in math).  So, $1/|x|$ for example is not in $C^\infty(M)$.
     \item $C_0^\infty(M) \equiv \cD$ are the smooth functions with compact support, so zero for all $|x|>R$ for some $R$.
     \item $L^2(M,\mu)$ are equivalence classes of functions which are square normalizable in the measure $\mu$.   The equivalence relation
-    is $f \sim g$ if their difference has su pport on a set of measure zero (almost everywhere).
+    is $f \sim g$ if their difference has support on a set of measure zero (almost everywhere).
     \item $\cS \subset C^\infty(\IR^D)$ is the Schwartz space of functions which decrease rapidly at infinity, meaning that
     $|x^m D^n f|$ stays bounded for every $m$ and $n$.
     \item Sobolev spaces, used in nonlinear PDE.
@@ -853,6 +874,13 @@ Probably not Segal as this focuses on general topologies etc.
 
 \subsection{Prerequisites}
 Outline the prerequisites and auxiliary theorems we will need.
+
+These include
+\begin{itemize}
+    \item Plancherel's theorem for $L_2(\IR^D)$.
+    \item Minlos theorem that a characteristic function satisfying a short list of conditions comes from a probability measure.
+\end{itemize}
+
 
 \section{Large scale road map}
 
@@ -1720,8 +1748,50 @@ The integrand has a pole at $p_0 = i\mu$ with residue $1/2\mu$, leading to the c
 What are the underlying definitions we need to formalize this?  We need $L_2(\IR^{d-1})$ functions, and we will
 also need them for other purposes such as to define the QFT Hilbert space.
 
-It would be convenient to have a more abstract function space
+It would be convenient to have a more abstract function space.
 
+Here is the proof that this implies RP for the Gaussian measure.
+
+\begin{theorem}[6.2.2]
+The Gaussian measure $d\phi_C$ satisfies reflection positivity 
+if and only if $C$ does.
+\end{theorem}
+
+\begin{proof}
+Assume that $C$ is reflection positive, and let
+\[
+M_{ij} = S\{ f_i - \theta f_j \} 
+       = S\{ f_i \} S\{ f_j \} \exp \langle \theta f_i, C f_j \rangle ,
+\]
+with $\operatorname{supp} f_i \subset \{ x : t > 0 \}$.
+
+Then $M_{ij}$ has positive eigenvalues (i.e., is a positive matrix) 
+if and only if 
+\[
+N_{ij} = \exp \langle \theta f_i, C f_j \rangle
+\]
+is a positive matrix. By assumption, 
+\[
+R_{ij} = \langle \theta f_i, C f_j \rangle
+\]
+is a positive matrix, and the positivity of $N_{ij} = e^{R_{ij}}$ follows: 
+
+In fact, if $A_{ij}, B_{ij}$ are any positive matrices, then the matrix
+\[
+D_{ij} \equiv A_{ij} B_{ij}
+\]
+is also positive—from which we infer the positivity of
+\[
+N_{ij} = \sum \frac{1}{r!} (R_{ij})^r .
+\]
+
+To show that $D$ is positive, first consider the tensor product matrix 
+$A \otimes B$ with entries $A_{ij} B_{kl}$. 
+Note $A \otimes B$ is positive. Hence $A \otimes B$ is also positive 
+when restricted to the subspace of vectors $\alpha$ with components 
+$\alpha_{jl}$ which vanish unless $j = l$. 
+On this subspace $A \otimes B = D$.
+\end{proof}
 
 
 
