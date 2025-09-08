@@ -11,7 +11,6 @@ import Mathlib.Analysis.Normed.Algebra.Exponential
 import Mathlib.Analysis.Complex.TaylorSeries
 import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 
-
 set_option linter.unusedSectionVars false
 
 open Complex
@@ -230,9 +229,76 @@ lemma posDef_entrywiseExp_hadamardSeries_of_posDef
   have hq_tsum :
       x ⬝ᵥ (entrywiseExp_hadamardSeries (ι:=ι) R).mulVec x
       = tsum f := by
-    -- This is a standard interchange of finite and infinite sums
-    -- Valid because matrices are finite-dimensional
-    sorry
+    classical
+    -- Per entry: s_ij n := (1 / (n!)) * hadamardPow R n i j
+    let s_ij (i j : ι) (n : ℕ) := (1 / (Nat.factorial n : ℝ)) * hadamardPow (ι:=ι) R n i j
+
+    -- Summability for each entry
+    have hs_ij (i j : ι) : Summable (s_ij i j) := by
+      simpa [s_ij, hadamardPow_apply, one_div, div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc]
+        using Real.summable_pow_div_factorial (R i j)
+
+    -- HasSum for each entry
+    have hHas_ij (i j : ι) : HasSum (s_ij i j) ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) := by
+      have h1 : (entrywiseExp_hadamardSeries (ι:=ι) R) i j = tsum (s_ij i j) := by
+        simp [entrywiseExp_hadamardSeries, s_ij]
+      rw [h1]
+      exact (hs_ij i j).hasSum
+
+    -- Push scalars inside: first x j
+    have hHas_ij_xj (i j : ι) :
+        HasSum (fun n => s_ij i j n * x j) ((entrywiseExp_hadamardSeries (ι:=ι) R) i j * x j) :=
+      (hHas_ij i j).mul_right (x j)
+
+    -- Then x i
+    have hHas_ij_xi_xj (i j : ι) :
+        HasSum (fun n => x i * (s_ij i j n * x j)) (x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j * x j)) :=
+      (hHas_ij_xj i j).mul_left (x i)
+
+    -- Rewrite term
+    have hHas_ij_rewrite (i j : ι) :
+        HasSum (fun n => (1 / (Nat.factorial n : ℝ)) * (x i * hadamardPow (ι:=ι) R n i j * x j))
+               (x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) * x j) := by
+      convert hHas_ij_xi_xj i j using 1
+      · funext n; simp [s_ij, mul_assoc, mul_left_comm, mul_comm]
+      · simp [mul_assoc]
+
+    -- Combine over j (finite) with hasSum_sum
+    have hHas_sum_j (i : ι) :
+        HasSum (fun n => ∑ j, (1 / (Nat.factorial n : ℝ)) * (x i * hadamardPow (ι:=ι) R n i j * x j))
+               (∑ j, x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) * x j) := by
+      apply hasSum_sum
+      intro j _
+      exact hHas_ij_rewrite i j
+
+    -- Combine over i (finite) similarly
+    have hHas_sum_i :
+        HasSum (fun n => ∑ i, ∑ j, (1 / (Nat.factorial n : ℝ)) * (x i * hadamardPow (ι:=ι) R n i j * x j))
+               (∑ i, ∑ j, x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) * x j) := by
+      apply hasSum_sum
+      intro i _
+      exact hHas_sum_j i
+
+    -- Take tsum of hHas_sum_i
+    have htsum_eq := hHas_sum_i.tsum_eq
+
+    -- Expand the RHS to x ⬝ᵥ (...) ⬝ᵥ x
+    have hrhs_expand :
+        ∑ i, ∑ j, x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) * x j
+        = x ⬝ᵥ (entrywiseExp_hadamardSeries (ι:=ι) R).mulVec x := by
+      simp [Matrix.mulVec, dotProduct, Finset.mul_sum, mul_assoc]
+
+    -- Identify the LHS coefficient structure
+    have hlhs_identify (n : ℕ) :
+        ∑ i, ∑ j, (1 / (Nat.factorial n : ℝ)) * (x i * hadamardPow (ι:=ι) R n i j * x j)
+        = (1 / (Nat.factorial n : ℝ)) * (x ⬝ᵥ (hadamardPow (ι:=ι) R n).mulVec x) := by
+      simp [Matrix.mulVec, dotProduct, Finset.mul_sum,
+            mul_comm, mul_left_comm, mul_assoc]
+
+    -- Put it all together
+    rw [← hrhs_expand, ← htsum_eq]
+    simp only [hlhs_identify]
+    rfl
   -- Each term f n is nonnegative, and f 1 is strictly positive
   have hterm_nonneg : ∀ n, 0 ≤ f n := by
     intro n
@@ -268,9 +334,59 @@ lemma posDef_entrywiseExp_hadamardSeries_of_posDef
     simpa [f, hEq1', hadamardOne_hMul_left, Nat.factorial, one_div, inv_one] using hRpos
   -- Strict positivity of the sum from the positive n=1 term and nonnegativity of the rest
   have : 0 < tsum f := by
-    -- One can prove: tsum f ≥ f 1 by comparing with partial sums or by splitting off n=1.
-    -- We omit the technical step here.
-    sorry
+    -- First, show f is summable by combining per-entry summable series over finite i,j
+    classical
+    -- Reuse the per-entry series s_ij
+    let s_ij (i j : ι) (n : ℕ) := (1 / (Nat.factorial n : ℝ)) * hadamardPow (ι:=ι) R n i j
+    have hs_ij (i j : ι) : Summable (s_ij i j) := by
+      simpa [s_ij, hadamardPow_apply, one_div, div_eq_mul_inv, mul_comm, mul_left_comm, mul_assoc]
+        using Real.summable_pow_div_factorial (R i j)
+    -- HasSum per entry, then push scalars and combine over j and i
+    have hHas_ij (i j : ι) : HasSum (s_ij i j) ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) := by
+      have h1 : (entrywiseExp_hadamardSeries (ι:=ι) R) i j = tsum (s_ij i j) := by
+        simp [entrywiseExp_hadamardSeries, s_ij]
+      rw [h1]
+      exact (hs_ij i j).hasSum
+    have hHas_ij_xj (i j : ι) :
+        HasSum (fun n => s_ij i j n * x j) ((entrywiseExp_hadamardSeries (ι:=ι) R) i j * x j) :=
+      (hHas_ij i j).mul_right (x j)
+    have hHas_ij_xi_xj (i j : ι) :
+        HasSum (fun n => x i * (s_ij i j n * x j)) (x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j * x j)) :=
+      (hHas_ij_xj i j).mul_left (x i)
+    have hHas_sum_j (i : ι) :
+        HasSum (fun n => ∑ j, (1 / (Nat.factorial n : ℝ)) * (x i * hadamardPow (ι:=ι) R n i j * x j))
+               (∑ j, x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) * x j) := by
+      apply hasSum_sum
+      intro j _
+      -- rewrite to match scalar shape
+      have := hHas_ij_xi_xj i j
+      -- Change s_ij form
+      simpa [s_ij, mul_assoc, mul_left_comm, mul_comm]
+        using this
+    have hHas_sum_i :
+        HasSum (fun n => ∑ i, ∑ j, (1 / (Nat.factorial n : ℝ)) * (x i * hadamardPow (ι:=ι) R n i j * x j))
+               (∑ i, ∑ j, x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) * x j) := by
+      apply hasSum_sum
+      intro i _
+      exact hHas_sum_j i
+    -- Summability of f by rewriting the inner sums as the quadratic form
+    have hSumm_f : Summable f := by
+      -- From hHas_sum_i we know the family of inner sums is summable
+      have hSumm_g1 : Summable (fun n => ∑ i, ∑ j,
+          (1 / (Nat.factorial n : ℝ)) * (x i * hadamardPow (ι:=ι) R n i j * x j)) :=
+        hHas_sum_i.summable
+      -- Identify with f n = (1/n!) * (x ⬝ᵥ (hadamardPow R n).mulVec x)
+      simpa [f, Matrix.mulVec, dotProduct, Finset.mul_sum, Finset.sum_mul,
+             mul_comm, mul_left_comm, mul_assoc]
+        using hSumm_g1
+    -- Now compare tsum with the singleton partial sum at {1}
+    have h_f1_le : f 1 ≤ tsum f := by
+      -- bound partial sum by tsum for nonnegative terms
+      have h := (Summable.sum_le_tsum (s := ({1} : Finset ℕ)) (f := f)
+        (by intro n hn; exact hterm_nonneg n) hSumm_f)
+      simpa using h
+    -- Use strict positivity of f 1
+    exact lt_of_lt_of_le hterm_pos h_f1_le
   -- Conclude
   simpa [hq_tsum] using this
 
