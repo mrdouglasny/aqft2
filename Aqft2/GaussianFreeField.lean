@@ -68,6 +68,7 @@ import Aqft2.FunctionalAnalysis
 import Aqft2.OS4
 import Aqft2.Minlos
 import Aqft2.Covariance
+import Aqft2.SchurProduct
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -462,97 +463,21 @@ lemma diagonal_covariance_is_real_GFF (m : ℝ) [Fact (0 < m)] :
   -- conclude by rewriting
   simpa [hid] using hr
 
-/-- Global Reflection-Positivity embedding packaging the hard construction. -/
-structure RPEmbedding (dμ_config : ProbabilityMeasure FieldConfiguration) where
-  H : Type
-  [seminormed_add_comm_group_H : SeminormedAddCommGroup H]
-  [normed_space_H : NormedSpace ℝ H]
-  T : PositiveTimeTestFunction →ₗ[ℝ] H
-  norm_sq_id :
-    ∀ (F G : PositiveTimeTestFunction),
-      (SchwingerFunctionℂ₂ dμ_config
-        (F.val - QFT.compTimeReflection G.val)
-        (F.val - QFT.compTimeReflection G.val)).re
-      = ‖T F - T G‖^2
+/-- Gaussian measures satisfy reflection positivity (OS3) using Glimm-Jaffe Theorem 6.2.2.
 
-attribute [instance] RPEmbedding.seminormed_add_comm_group_H RPEmbedding.normed_space_H
+    **Strategy (Following Glimm-Jaffe):**
+    For Gaussian measures Z[h] = exp(-½⟨h, Ch⟩), the reflection positivity matrix
+    M_{ij} = Z[f_i - θf_j] can be factored as:
 
-/-- Existence of a global RP embedding from reflection positivity (GNS/quotient-completion).
+    M_{ij} = Z[f_i] Z[f_j] · exp(⟨θf_i, Cf_j⟩)
 
-    **Mathematical Construction (Gelfand-Naimark-Segal for Reflection Positivity):**
+    Since individual Gaussian functionals Z[f_i] are positive, it suffices to show
+    that N_{ij} = exp(R_{ij}) is positive semidefinite, where R_{ij} = ⟨θf_i, Cf_j⟩.
 
-    1. **RP Form**: Define ⟪F,G⟫_RP := S₂(F*, ΘG) where Θ is time reflection
-    2. **Positive Semidefinite**: hRP ensures ⟪F,F⟫_RP ≥ 0 for positive-time F
-    3. **Quotient**: Mod out nullspace N = {F : ⟪F,F⟫_RP = 0}
-    4. **Pre-Hilbert**: Quotient inherits inner product structure
-    5. **Completion**: Complete to Hilbert space H with canonical map T
-    6. **Key Identity**: ‖T(F) - T(G)‖² = Re⟨F - ΘG, C(F - ΘG)⟩
-
-    **Why This Works:**
-    - Reflection positivity → Well-defined inner product on quotient
-    - GNS completion → Concrete Hilbert space representation
-    - Canonical map T preserves the RP geometric structure
-    - Transforms abstract QFT covariance into Hilbert space geometry
-
-    **Connection to OS3:**
-    Once we have T: PositiveTimeTestFunction → H, the matrix inequality
-    ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 follows from Gaussian RBF positive definiteness
-    exp(-½‖x-y‖²) on the Hilbert space H.
-
-    This is the mathematical heart of Osterwalder-Schrader reconstruction:
-    **"Reflection positivity provides the geometry needed for analytic continuation."**
-
-    Implementation note: This version uses ℝ as a placeholder for H. A complete
-    implementation would use Mathlib's quotient and completion constructions. -/
-def rp_embedding_global
-  (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (hRP : CovarianceReflectionPositive dμ_config) :
-  RPEmbedding dμ_config := by
-  classical
-
-  -- For now, use a concrete construction via L² space as the target Hilbert space
-  -- In a full implementation, this would use the proper GNS quotient construction
-
-  -- Define H as a concrete Hilbert space (placeholder - would be the GNS completion)
-  let H : Type := ℝ  -- Simplified for now; should be completion of quotient space
-  let _inst1 : SeminormedAddCommGroup H := by infer_instance
-  let _inst2 : NormedSpace ℝ H := by infer_instance
-
-  -- Define T as the canonical embedding (placeholder implementation)
-  let T : PositiveTimeTestFunction →ₗ[ℝ] H := {
-    toFun := fun F => 0,  -- Placeholder - should extract norm from RP form
-    map_add' := by simp,
-    map_smul' := by simp
-  }
-
-  -- The key property that would follow from proper GNS construction
-  have norm_sq_identity : ∀ (F G : PositiveTimeTestFunction),
-      (SchwingerFunctionℂ₂ dμ_config
-        (F.val - QFT.compTimeReflection G.val)
-        (F.val - QFT.compTimeReflection G.val)).re
-      = ‖T F - T G‖^2 := by
-    intro F G
-    -- This would follow from the GNS construction relating the RP form to the Hilbert space norm
-    -- Key insight: the RP form ⟪f, g⟫ := S₂(f*, Θg) induces a norm via ‖f‖² = ⟪f, f⟫
-    -- The identity connects quantum field covariance to geometric distance in H
-    simp [T]  -- Simplified for placeholder implementation
-    sorry
-
-  -- Package into RPEmbedding structure
-  exact ⟨H, T, norm_sq_identity⟩
-
-/-- Gaussian measures also satisfy the matrix formulation of OS3.
-    Strategy (Minlos-style):
-    1. Build the reflection-positivity pre-Hilbert space H as the completion of
-       PositiveTimeTestFunction modulo the nullspace of the RP form
-       ⟪F,G⟫ := (SchwingerFunctionℂ₂ dμ_config F (QFT.compTimeReflection G)).
-    2. Let T : PositiveTimeTestFunction →ₗ[ℝ] H be the canonical map. Then
-       for all i,j, we have
-         (SchwingerFunctionℂ₂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val)
-                                          ((f i).val - QFT.compTimeReflection (f j).val)).re
-         = ‖T (f i) - T (f j)‖^2.
-    3. Apply positive-definiteness of the Gaussian RBF kernel on H
-       (gaussian_rbf_pd_normed) and precompose with T to get the OS3 matrix inequality. -/
+    This follows from:
+    1. R_{ij} is positive semidefinite (reflection positivity assumption)
+    2. The exponential of a positive semidefinite matrix is positive semidefinite
+    3. The power series exp(R) = ∑ R^n/n! preserves positivity via Schur product theorem -/
 theorem gaussian_satisfies_OS3_matrix
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
@@ -561,81 +486,71 @@ theorem gaussian_satisfies_OS3_matrix
   -- Fix a finite family of positive-time test functions and coefficients
   intro n f c
   classical
-  -- Use the global RP embedding
-  let Eemb := rp_embedding_global dμ_config h_reflection_positive
-  letI : SeminormedAddCommGroup Eemb.H := Eemb.seminormed_add_comm_group_H
-  letI : NormedSpace ℝ Eemb.H := Eemb.normed_space_H
-  let T := Eemb.T
-  -- Notation for the embedded family
-  let Φ : Fin n → Eemb.H := fun i => T (f i)
-  -- Convenient specialization of the identity
-  have h_re_eq : ∀ i j : Fin n,
-      (SchwingerFunctionℂ₂ dμ_config
-        ((f i).val - QFT.compTimeReflection (f j).val)
-        ((f i).val - QFT.compTimeReflection (f j).val)).re
-      = ‖T (f i) - T (f j)‖^2 := by
-    intro i j; simpa using Eemb.norm_sq_id (f i) (f j)
-  -- Goal A' (values are real): upgrade from Re-equality to complex equality via diagonal reality
-  have h_eq_complex : ∀ i j,
-      SchwingerFunctionℂ₂ dμ_config
-        ((f i).val - QFT.compTimeReflection (f j).val)
-        ((f i).val - QFT.compTimeReflection (f j).val)
-      = (‖(Φ i) - (Φ j)‖^2 : ℝ) := by
-    intro i j
-    obtain ⟨r, hr⟩ := diagonal_covariance_is_real dμ_config h_reflection_positive
-      (((f i).val) - QFT.compTimeReflection (f j).val)
-    have hr_re : (SchwingerFunctionℂ₂ dμ_config
-      ((f i).val - QFT.compTimeReflection (f j).val)
-      ((f i).val - QFT.compTimeReflection (f j).val)).re = r := by
-      simp [hr]
-    have h_r_eq : r = ‖(Φ i) - (Φ j)‖^2 := by
-      -- use the established real-part identity
-      simpa [hr_re] using (h_re_eq i j)
-    have hr_to_norm : (r : ℂ) = (‖(Φ i) - (Φ j)‖^2 : ℝ) := by
-      simpa using congrArg (fun x : ℝ => (x : ℂ)) h_r_eq
-    -- chain the equalities
-    exact (by
-      calc
-        SchwingerFunctionℂ₂ dμ_config
-            ((f i).val - QFT.compTimeReflection (f j).val)
-            ((f i).val - QFT.compTimeReflection (f j).val)
-            = (r : ℂ) := hr
-        _ = (‖(Φ i) - (Φ j)‖^2 : ℝ) := hr_to_norm)
-  -- Step 3: Gaussian RBF positive definiteness on H and precompose with Φ
-  let ψ : Eemb.H → ℂ := fun h => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))
-  have hPD_H : IsPositiveDefinite (fun h : Eemb.H => Complex.exp (-(1/2 : ℂ) * (‖h‖^2 : ℝ))) :=
-    gaussian_rbf_pd_normed (H := Eemb.H)
-  -- Goal B (finite PD matrix inequality)
-  have hPD_matrix :
-      0 ≤ (∑ i, ∑ j,
-        (starRingEnd ℂ) (c i) * c j * (Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ)))).re := by
-    simpa using hPD_H n Φ c
-  -- Goal C (Gaussian rewrite)
-  have h_gauss_matrix : ∀ i j,
-      GJGeneratingFunctionalℂ dμ_config
-        (((f i).val) - QFT.compTimeReflection (f j).val)
-      = Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ)) := by
-    intro i j
-    have h_form := h_gaussian.2
-    simpa [h_eq_complex i j] using h_form (((f i).val) - QFT.compTimeReflection (f j).val)
-  -- Substitute and take real parts
-  have hsum_eq :
-      (∑ i, ∑ j,
-        (starRingEnd ℂ) (c i) * c j *
-          GJGeneratingFunctionalℂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val))
-      = (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ))) := by
-    apply Finset.sum_congr rfl
-    intro i _
-    apply Finset.sum_congr rfl
-    intro j _
-    simp [h_gauss_matrix i j]
-  have hsum_re_eq :
-      (∑ i, ∑ j,
-        (starRingEnd ℂ) (c i) * c j *
-          GJGeneratingFunctionalℂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val)).re
-      = (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * Complex.exp (-(1/2 : ℂ) * (‖(Φ i) - (Φ j)‖^2 : ℝ))).re := by
-    exact congrArg (fun z : ℂ => z.re) hsum_eq
-  simpa [hsum_re_eq] using hPD_matrix
+
+  -- Define the reflection matrix M_{ij} = Z[f_i - θf_j]
+  let M : Matrix (Fin n) (Fin n) ℂ := fun i j =>
+    GJGeneratingFunctionalℂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val)
+
+  -- Our goal is to show ∑_{ij} c̄_i c_j M_{ij} has non-negative real part
+  suffices h_matrix_positive :
+    0 ≤ (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * M i j).re by
+    simpa [M] using h_matrix_positive
+
+  -- Step 1: Factor M_{ij} using Gaussian form
+  -- For Gaussian Z[h] = exp(-½⟨h, Ch⟩), we have the factorization:
+  -- Z[f_i - θf_j] = Z[f_i] Z[f_j] exp(⟨f_i, Cθf_j⟩) exp(-½⟨f_i + θf_j, C(f_i + θf_j)⟩ + ½⟨f_i, Cf_i⟩ + ½⟨θf_j, Cθf_j⟩)
+
+  -- For simplicity, we use a direct approach via the Schur product structure
+  -- The key insight is that M_{ij} = N_{ij} where N is built from R_{ij} = ⟨θf_i, Cf_j⟩
+
+  -- Define the covariance matrix R_{ij} = ⟨θf_i, Cf_j⟩ (this should be positive semidefinite)
+  let R : Matrix (Fin n) (Fin n) ℝ := fun i j =>
+    -- This represents the bilinear form ⟨θf_i, Cf_j⟩
+    -- For now, we use the reflection positivity assumption to ensure R is positive semidefinite
+    (SchwingerFunctionℂ₂ dμ_config
+      (QFT.compTimeReflection (f i).val)
+      (f j).val).re
+
+  -- The Gaussian generating functional has the form that allows us to extract the exponential structure
+  -- For the full proof, we would show M_{ij} = (product terms) × exp(R_{ij})
+  -- and apply the Schur product theorem to show exp(R) is positive definite when R is
+
+  -- For now, we use the reflection positivity assumption directly
+  -- The technical details would involve showing that the Gaussian form
+  -- Z[f_i - θf_j] = exp(-½⟨f_i - θf_j, C(f_i - θf_j)⟩)
+  -- can be reorganized to expose the exp(R_{ij}) structure
+
+  -- Use reflection positivity of the covariance directly
+  -- This is where the Schur product theorem would be applied in the complete proof
+  have h_reflection_matrix_pd : Matrix.PosSemidef R := by
+    -- This follows from the reflection positivity assumption
+    -- R_{ij} = Re⟨θf_i, Cf_j⟩ should be positive semidefinite
+    -- The complete proof would extract this from h_reflection_positive
+    sorry
+
+  -- Apply the exponential positivity result
+  -- In the complete proof, this would use the Schur product theorem:
+  -- exp(R) = ∑_{n≥0} R^n/n! is positive semidefinite when R is
+  -- This follows from Aqft2.SchurProduct.schur_product_posDef applied iteratively:
+  -- Each R^n is positive semidefinite (powers of PSD matrices),
+  -- and the Hadamard products R^m ∘ R^n preserve positive semidefiniteness
+  have h_exp_matrix_pd : Matrix.PosSemidef (fun i j => Real.exp (R i j)) := by
+    -- This would follow from Schur product theorem applied to the power series
+    -- Each R^n is positive semidefinite, and the Hadamard product preserves this
+    sorry
+
+  -- The connection between M and exp(R) would be established here
+  -- This requires showing that the Gaussian form factors appropriately
+  have h_matrix_connection : ∀ i j,
+    (M i j).re = (GJGeneratingFunctionalℂ dμ_config (f i).val).re *
+                 (GJGeneratingFunctionalℂ dμ_config (f j).val).re *
+                 Real.exp (R i j) := by
+    -- This is the key factorization from Glimm-Jaffe
+    -- Z[f_i - θf_j] factors into individual Gaussian terms times exp(covariance term)
+    sorry
+
+  -- Conclude positivity from the factorization and Schur product result
+  sorry
 
 /-! ## OS4: Clustering for Gaussian Measures
 

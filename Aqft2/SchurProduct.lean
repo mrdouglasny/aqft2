@@ -4,12 +4,7 @@ Schur product theorem (Hadamard product preserves positive semidefiniteness).
 We prove/record that if A and B are positive semidefinite Hermitian matrices, then their
 entrywise (Hadamard) product D with entries D i j = A i j * B i j is also positive semidefinite.
 
-This is used in the OS3 re       ha         sorry -         sorry -- TODO: Fix alignment without using problematic sum_comm TODO: Fix this sum reordering without using problematic sum_comme h1 :
-         ∑ j, z j * ∑ l, (∑ i, (colSlice (ι:=ι) y j) i * (A.mulVec (colSlice (ι:=ι) y l)) i) * z l
-         = ∑ i, ∑ j, ∑ l, z j * ((colSlice (ι:=ι) y j) i * (A.mulVec (colSlice (ι:=ι) y l)) i) * z l := by
-         -- Use the expansion of dotProduct without problematic sum_comm
-         simp only [dotProduct, star, Matrix.mulVec]
-         congrion positivity argument to deduce positivity of exp(R) from
+This is used in the OS3 reflection positivity argument to deduce positivity of exp(R) from
 positivity of R via power series and Schur products.
 -/
 
@@ -20,6 +15,7 @@ import Mathlib.LinearAlgebra.Matrix.Spectrum
 import Mathlib.LinearAlgebra.Matrix.PosDef
 import Mathlib.Data.Finset.Basic
 import Mathlib.Data.Finset.Prod
+import Mathlib.Analysis.SpecialFunctions.Exp
 import Aqft2.FrobeniusPositivity
 
 set_option linter.unusedSectionVars false
@@ -463,7 +459,7 @@ lemma kronLike_posDef
         have heq_zero : (colSlice (ι:=ι) y j) ⬝ᵥ (A.mulVec (colSlice (ι:=ι) y j)) = 0 := by
           simp [dotProduct, colSlice] at hGjj ⊢
           exact hGjj
-        -- Over reals, star (colSlice y j) = colSlice y j, so we need star x ⬝ᵥ A.mulVec x = 0
+        -- Over reals, star (colSlice y j) = colSlice y j, so we need star colSlice y j ⬝ᵥ A.mulVec colSlice y j = 0
         have star_col : star (colSlice (ι:=ι) y j) = colSlice (ι:=ι) y j := by
           ext k
           simp [star]
