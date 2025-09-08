@@ -68,7 +68,7 @@ import Aqft2.FunctionalAnalysis
 import Aqft2.OS4
 import Aqft2.Minlos
 import Aqft2.Covariance
-import Aqft2.SchurProduct
+import Aqft2.HadamardExp
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -528,16 +528,16 @@ theorem gaussian_satisfies_OS3_matrix
     -- The complete proof would extract this from h_reflection_positive
     sorry
 
-  -- Apply the exponential positivity result
-  -- In the complete proof, this would use the Schur product theorem:
-  -- exp(R) = ∑_{n≥0} R^n/n! is positive semidefinite when R is
-  -- This follows from Aqft2.SchurProduct.schur_product_posDef applied iteratively:
-  -- Each R^n is positive semidefinite (powers of PSD matrices),
-  -- and the Hadamard products R^m ∘ R^n preserve positive semidefiniteness
+  -- Apply the exponential positivity result using entrywise exponential preservation
+  -- The key insight: Real.exp applied entrywise to a PSD matrix preserves positive semidefiniteness
+  -- This follows directly from our HadamardExp result: entrywiseExp preserves PosSemidef
   have h_exp_matrix_pd : Matrix.PosSemidef (fun i j => Real.exp (R i j)) := by
-    -- This would follow from Schur product theorem applied to the power series
-    -- Each R^n is positive semidefinite, and the Hadamard product preserves this
-    sorry
+    -- entrywiseExp is exactly (fun i j => Real.exp (R i j))
+    have hconv : (fun i j => Real.exp (R i j)) = Aqft2.entrywiseExp R := by
+      ext i j; simp [Aqft2.entrywiseExp]
+    rw [hconv]
+    rw [Aqft2.entrywiseExp_eq_hadamardSeries]
+    exact Aqft2.posSemidef_entrywiseExp_hadamardSeries_of_posSemidef R h_reflection_matrix_pd
 
   -- The connection between M and exp(R) would be established here
   -- This requires showing that the Gaussian form factors appropriately

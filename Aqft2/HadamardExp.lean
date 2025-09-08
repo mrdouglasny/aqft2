@@ -390,4 +390,14 @@ lemma posDef_entrywiseExp_hadamardSeries_of_posDef
   -- Conclude
   simpa [hq_tsum] using this
 
+/-- The Hadamard-series entrywise exponential preserves positive semidefiniteness.
+    This follows from the positive definite case by continuity: if R is PSD, then
+    R + εI is PD for ε > 0, so entrywiseExp_hadamardSeries(R + εI) is PD, and
+    taking ε → 0⁺ with continuity of entrywiseExp_hadamardSeries gives that
+    entrywiseExp_hadamardSeries(R) is PSD. -/
+lemma posSemidef_entrywiseExp_hadamardSeries_of_posSemidef
+  (R : Matrix ι ι ℝ) (hR : R.PosSemidef) :
+  (entrywiseExp_hadamardSeries (ι:=ι) R).PosSemidef := by
+  sorry -- Follows from posDef_entrywiseExp_hadamardSeries_of_posDef via continuity argument
+
 end Aqft2
