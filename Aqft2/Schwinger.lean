@@ -173,6 +173,11 @@ def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure FieldConfiguration) (n
   (f : Fin n → TestFunctionℂ) : ℂ :=
   ∫ ω, (∏ i, distributionPairingℂ_real ω (f i)) ∂dμ_config.toMeasure
 
+/-- Local definition of complex 2-point Schwinger function for CLM invariance lemmas -/
+private def SchwingerFunctionℂ₂_local (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (f g : TestFunctionℂ) : ℂ :=
+  SchwingerFunctionℂ dμ_config 2 ![f, g]
+
 /-! ## Exponential Series Connection to Generating Functional
 
 The key insight: Instead of functional derivatives, we use the constructive exponential series:
@@ -369,7 +374,7 @@ lemma schwinger_function_clm_invariant
   (h_invariant : ∀ h : TestFunctionℂ,
     GJGeneratingFunctionalℂ dμ_config (L h) = GJGeneratingFunctionalℂ dμ_config h)
   (f g : TestFunctionℂ) :
-  SchwingerFunctionℂ₂ dμ_config (L f) (L g) = SchwingerFunctionℂ₂ dμ_config f g := by
+  SchwingerFunctionℂ₂_local dμ_config (L f) (L g) = SchwingerFunctionℂ₂_local dμ_config f g := by
   -- Proof strategy:
   -- 1. Express S₂(f,g) in terms of functional derivatives of Z[h] at h=0
   -- 2. Use the chain rule: ∂²Z[h]/∂f∂g = ∂²Z[L⁻¹h]/∂(Lf)∂(Lg) when Z[Lh] = Z[h]

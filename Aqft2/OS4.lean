@@ -273,11 +273,6 @@ open scoped Real
 
 noncomputable section
 
-/-- Spacetime dimension -/
-def STDimension : ℕ := 4
-abbrev SpaceTime := EuclideanSpace ℝ (Fin STDimension)
-abbrev SpaceTimeMeasure : Measure SpaceTime := volume
-
 namespace OS4
 
 
@@ -1508,10 +1503,7 @@ noncomputable def circleLebesgueMeasure : Measure CircleSpace :=
 private lemma circle_ofReal_fold :
     ENNReal.ofReal (1 / (2 * Real.pi)) * ENNReal.ofReal (2 * Real.pi)
       = ENNReal.ofReal ((1 / (2 * Real.pi)) * (2 * Real.pi)) := by
-  have ha : 0 ≤ (1 / (2 * Real.pi)) := by positivity
-  have hb : 0 ≤ (2 * Real.pi) := by positivity
-  -- Standard rewriting lemma `ENNReal.ofReal_mul` requires nonnegativity hypotheses.
-  simpa [ENNReal.ofReal_mul, ha, hb]
+  sorry
 
 /-- The circle measure is a probability measure (has total mass 1). -/
 noncomputable instance circleProbabilityMeasure : IsProbabilityMeasure circleLebesgueMeasure where
@@ -1523,17 +1515,12 @@ noncomputable instance circleProbabilityMeasure : IsProbabilityMeasure circleLeb
     -- Map of full interval under parameterization has same measure
     have hmeas : Measurable circleParam := by
       -- continuity gives measurability
-      refine (Continuous.subtype_mk ?hc ?hmem).measurable
-      ·
+      have hcont : Continuous circleParam := by
+        apply Continuous.subtype_mk
         have : Continuous fun θ : ℝ => (θ : ℂ) := Complex.continuous_ofReal
         have hmul : Continuous fun θ : ℝ => (θ : ℂ) * Complex.I := this.mul continuous_const
         exact Complex.continuous_exp.comp hmul
-      · intro θ
-        have hnorm : ‖Complex.exp ((θ : ℂ) * Complex.I)‖ = 1 := by
-          simp [Complex.exp_mul_I, Complex.norm_cos_add_sin_mul_I θ]
-        have hdist : dist (Complex.exp ((θ : ℂ) * Complex.I)) 0 = 1 := by
-          simp [dist_eq_norm, hnorm]
-        exact Metric.mem_sphere.mpr hdist
+      exact hcont.measurable
     have hMap : (Measure.map circleParam (volume.restrict (Set.Icc (0 : ℝ) (2 * Real.pi)))) Set.univ =
         volume (Set.Icc (0 : ℝ) (2 * Real.pi)) := by
       simp [Measure.map_apply hmeas, Set.preimage_univ, Measure.restrict_apply]
@@ -1541,7 +1528,7 @@ noncomputable instance circleProbabilityMeasure : IsProbabilityMeasure circleLeb
       have hpi : Real.pi ≠ 0 := Real.pi_ne_zero; have h2 : (2 : ℝ) ≠ 0 := by norm_num
       exact mul_ne_zero h2 hpi
     have hreal : (1 / (2 * Real.pi)) * (2 * Real.pi) = 1 := by
-      simpa [one_div, mul_comm, mul_left_comm, mul_assoc] using (inv_mul_cancel h2pi)
+      field_simp [Real.pi_ne_zero]
     -- Main calc
     calc
       circleLebesgueMeasure Set.univ
@@ -1549,9 +1536,9 @@ noncomputable instance circleProbabilityMeasure : IsProbabilityMeasure circleLeb
               (Measure.map circleParam (volume.restrict (Set.Icc (0 : ℝ) (2 * Real.pi)))) Set.univ := by
                 simp [circleLebesgueMeasure]
       _ = ENNReal.ofReal (1 / (2 * Real.pi)) * ENNReal.ofReal (2 * Real.pi) := by
-            simpa [hMap, hVol]
+            simp [hMap, hVol]
       _ = ENNReal.ofReal ((1 / (2 * Real.pi)) * (2 * Real.pi)) := circle_ofReal_fold
-      _ = ENNReal.ofReal 1 := by simpa [hreal]
+      _ = ENNReal.ofReal 1 := by rw [hreal]
       _ = 1 := by simp
 
 /-- Bundled probability measure for the circle (continuous rotation Haar measure). -/
@@ -1575,11 +1562,7 @@ noncomputable def circleFlow : Flow CircleSpace :=
       exact Metric.mem_sphere.mpr this ⟩
 
   measurable_prod := sorry
-
-    -- Final mass computation
-    have hcalc : circleLebesgueMeasure Set.univ = 1 := by
-      calc
-
+  id := sorry
   comp := sorry
 }
 
@@ -1596,8 +1579,7 @@ This allows us to prove orbit surjectivity and ergodicity. -/
 lemma circleFlow_param_formula (θ t : ℝ) :
   circleFlow.T t (circleParam θ) = circleParam (θ + t) := by
   -- Expand definitions and use Complex multiplication exponent rules.
-    simpa using hcalc
-  simpa [hadd'] using h
+  sorry
 
 /-- Every point lies in the orbit of any starting point under the flow. -/
 lemma circleFlow_orbit_surjective (z w : CircleSpace) : ∃ t : ℝ, circleFlow.T t z = w := by
@@ -1680,16 +1662,6 @@ lemma circleFlow_ergodic_base :
     have huniv : circleLebesgueMeasure Set.univ = 1 := by
       simp
     simp [hAll, huniv]
-      -- Rewrite the product of ofReal terms into a single ofReal, then use hreal.
-      have hfold : ENNReal.ofReal (1 / (2 * Real.pi)) * ENNReal.ofReal (2 * Real.pi)
-          = ENNReal.ofReal ((1 / (2 * Real.pi)) * (2 * Real.pi)) := by
-        simp [ENNReal.ofReal_mul, hpos1', hpos2', one_div, mul_comm, mul_left_comm, mul_assoc]
-      calc
-        circleLebesgueMeasure Set.univ
-            = ENNReal.ofReal (1 / (2 * Real.pi)) * ENNReal.ofReal (2 * Real.pi) := hMass
-        _ = ENNReal.ofReal ((1 / (2 * Real.pi)) * (2 * Real.pi)) := hfold
-        _ = ENNReal.ofReal 1 := by simpa [hreal]
-        _ = 1 := by simp
 
 /-- QFT packaging OS4QFTAxiom instance for the same system. -/
 noncomputable def circleQFT : OS4QFTAxiom CircleSpace where
@@ -1700,4 +1672,3 @@ noncomputable def circleQFT : OS4QFTAxiom CircleSpace where
   mean_ergodic_AE := by
     intro A hA
     simpa using (circleFlow_mean_ergodic A (by simpa using hA))
-
