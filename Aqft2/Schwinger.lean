@@ -92,7 +92,9 @@ import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Distribution.SchwartzSpace
 
 -- Import our basic definitions
+import Aqft2.HilbertSpace
 import Aqft2.Basic
+import Aqft2.FunctionalAnalysis
 
 open MeasureTheory Complex
 open TopologicalSpace
@@ -170,11 +172,6 @@ lemma schwinger_vanishes_centered (dμ_config : ProbabilityMeasure FieldConfigur
 def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure FieldConfiguration) (n : ℕ)
   (f : Fin n → TestFunctionℂ) : ℂ :=
   ∫ ω, (∏ i, distributionPairingℂ_real ω (f i)) ∂dμ_config.toMeasure
-
-/-- The complex 2-point Schwinger function -/
-def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (f g : TestFunctionℂ) : ℂ :=
-  SchwingerFunctionℂ dμ_config 2 ![f, g]
 
 /-! ## Exponential Series Connection to Generating Functional
 
