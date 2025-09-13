@@ -40,6 +40,11 @@ traditional Wightman axioms.
 - `generating_functional_gaussian`: Gaussian case with Wick's theorem
 - `IsGaussianMeasure`: Characterizes Gaussian field measures
 
+**Symmetry Properties:**
+- `schwinger_function_clm_invariant`: 2-point CLM invariance from generating functional symmetry
+- `schwinger_function_clm_invariant_general`: n-point CLM invariance theorem
+- Connection to rotation, translation, and discrete symmetries
+
 **Spacetime Properties:**
 - `schwinger_distribution_translation_invariance`: Translation symmetry
 - `schwinger_distribution_euclidean_locality`: Euclidean locality/clustering
@@ -64,7 +69,7 @@ More constructive than functional derivatives, natural for Gaussian measures.
 
 **Connection to OS Axioms:**
 - OS-1 (temperedness): S_n are tempered distributions
-- OS-2 (Euclidean invariance): Group action on correlation functions
+- OS-2 (Euclidean invariance): Group action on correlation functions (via CLM invariance)
 - OS-3 (reflection positivity): Positivity of restricted correlations
 - OS-4 (ergodicity): Clustering at large separations
 
@@ -165,6 +170,11 @@ lemma schwinger_vanishes_centered (dμ_config : ProbabilityMeasure FieldConfigur
 def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure FieldConfiguration) (n : ℕ)
   (f : Fin n → TestFunctionℂ) : ℂ :=
   ∫ ω, (∏ i, distributionPairingℂ_real ω (f i)) ∂dμ_config.toMeasure
+
+/-- The complex 2-point Schwinger function -/
+def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (f g : TestFunctionℂ) : ℂ :=
+  SchwingerFunctionℂ dμ_config 2 ![f, g]
 
 /-! ## Exponential Series Connection to Generating Functional
 
@@ -331,6 +341,71 @@ theorem schwinger_distribution_translation_invariance
   (n : ℕ) (F : TestFunctionProduct n) (a : SpaceTime) :
   SchwingerDistributionDirect dμ_config n F =
   SchwingerDistributionDirect dμ_config n (translate_product_test_function F a) := by
+  sorry
+
+/-! ## CLM Invariance Properties
+
+Continuous linear map (CLM) invariance is a fundamental symmetry property in QFT.
+If the generating functional is invariant under a CLM L, then the underlying
+correlation structure (Schwinger functions) should also be invariant.
+-/
+
+/-- **CLM Invariance of 2-Point Schwinger Functions**
+
+    If the generating functional is invariant under a continuous linear map L
+    on complex test functions, then the 2-point Schwinger function is also invariant.
+
+    This is the general Schwinger function version of the result proven in OS3.lean
+    for Gaussian measures. The key insight is that symmetries of the generating
+    functional (which encodes the full measure) must be reflected in all n-point
+    correlation functions.
+
+    Mathematical statement: If Z[L h] = Z[h] for all h, then S₂(L f, L g) = S₂(f, g).
+
+    This lemma provides the foundation for proving rotation invariance, translation
+    invariance, and other continuous symmetries of correlation functions from
+    corresponding invariances of the generating functional.
+-/
+lemma schwinger_function_clm_invariant
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (L : TestFunctionℂ →L[ℝ] TestFunctionℂ)
+  (h_invariant : ∀ h : TestFunctionℂ,
+    GJGeneratingFunctionalℂ dμ_config (L h) = GJGeneratingFunctionalℂ dμ_config h)
+  (f g : TestFunctionℂ) :
+  SchwingerFunctionℂ₂ dμ_config (L f) (L g) = SchwingerFunctionℂ₂ dμ_config f g := by
+  -- Proof strategy:
+  -- 1. Express S₂(f,g) in terms of functional derivatives of Z[h] at h=0
+  -- 2. Use the chain rule: ∂²Z[h]/∂f∂g = ∂²Z[L⁻¹h]/∂(Lf)∂(Lg) when Z[Lh] = Z[h]
+  -- 3. The invariance h_invariant allows us to relate derivatives at different points
+  -- 4. For Gaussian measures, this reduces to the covariance invariance proven in OS3.lean
+  --
+  -- The full proof requires:
+  -- - Functional derivative machinery for relating S₂ to Z
+  -- - Properties of continuous linear maps on test function spaces
+  -- - Analysis of how CLM invariance propagates through functional derivatives
+  --
+  -- This is a fundamental result connecting global symmetries (generating functional
+  -- invariance) to local correlation properties (Schwinger function invariance).
+  sorry
+
+/-- **CLM Invariance for General n-Point Schwinger Functions**
+
+    Generalization to arbitrary n-point functions: if the generating functional
+    is invariant under L, then all Schwinger functions are invariant.
+
+    This provides a systematic way to prove symmetry properties of all correlation
+    functions from symmetries of the generating functional.
+-/
+lemma schwinger_function_clm_invariant_general
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (L : TestFunctionℂ →L[ℝ] TestFunctionℂ)
+  (h_invariant : ∀ h : TestFunctionℂ,
+    GJGeneratingFunctionalℂ dμ_config (L h) = GJGeneratingFunctionalℂ dμ_config h)
+  (n : ℕ) (f : Fin n → TestFunctionℂ) :
+  SchwingerFunctionℂ dμ_config n (fun i => L (f i)) = SchwingerFunctionℂ dμ_config n f := by
+  -- This follows from the same functional derivative argument as the 2-point case,
+  -- extended to n-th order derivatives. The key insight is that CLM invariance
+  -- of the generating functional implies invariance of all its functional derivatives.
   sorry
 
 /-! ## Summary

@@ -8,7 +8,33 @@ Authors:
 This file contains the proof that Gaussian measures satisfy the OS3 (Reflection Positivity)
 axiom using the Glimm-Jaffe Theorem 6.2.2 approach. The reflection positivity condition
 is verified using the explicit exponential form of Gaussian measures and properties of
-the covariance under time reflection.
+the covariance under time ref   -- Convert the complex exponential equality to a real exponen   -- Move to real exponentials via ofReal in two steps
+   have hZ' : Complex.exp (Complex.ofReal (-(1/2 : ℝ) * rL))
+             = Complex.exp (Complex.ofReal (-(1/2 : ℝ) * r)) := by
+     -- Use substitution
+     have h1 : S (L h) (L h) = (rL : ℂ) := by
+       show SchwingerFunctionℂ₂ dμ_config (L h) (L h) = (rL : ℂ)
+       exact hrL
+     have h2 : S h h = (r : ℂ) := by
+       show SchwingerFunctionℂ₂ dμ_config h h = (r : ℂ)
+       exact hr
+     have hcast1 : (-(1/2 : ℂ) * (rL : ℂ)) = Complex.ofReal (-(1/2 : ℝ) * rL) := by
+       simp [Complex.ofReal_mul]
+     have hcast2 : (-(1/2 : ℂ) * (r : ℂ)) = Complex.ofReal (-(1/2 : ℝ) * r) := by
+       simp [Complex.ofReal_mul]
+     rw [h1, h2, hcast1, hcast2] at hZ
+     exact hZ equality
+   have hZc : Complex.exp (-(1/2 : ℂ) * (rθ : ℂ))
+            = Complex.exp (-(1/2 : ℂ) * (r : ℂ)) := by
+     -- Use substitution via h1, h2
+     have h1 : S (QFT.compTimeReflection h) (QFT.compTimeReflection h) = (rθ : ℂ) := by
+       show SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection h) (QFT.compTimeReflection h) = (rθ : ℂ)
+       exact hrθ
+     have h2 : S h h = (r : ℂ) := by
+       show SchwingerFunctionℂ₂ dμ_config h h = (r : ℂ)
+       exact hr
+     rw [h1, h2] at hZ
+     exact hZion.
 
 ### Key Components:
 
@@ -243,13 +269,37 @@ lemma bilin_expand
     _ = S x x + S y y - S x y - S y x := by
           simp [sub_eq_add_neg, add_comm, add_left_comm, add_assoc]
 
-/-- Time-reflection invariance for diagonal covariance elements (stub) -/
+/-- Time-reflection invariance for diagonal covariance elements.
+
+    This lemma states that the 2-point Schwinger function is invariant under simultaneous
+    time reflection of both arguments. This is a fundamental property that follows from
+    the time-reflection symmetry of the underlying measure and geometric structure.
+
+    The proof strategy uses the fact that:
+    1. Time reflection is an orthogonal transformation (preserves inner products)
+    2. The Schwinger function can be expressed in terms of the underlying field configuration
+    3. If the measure is invariant under time reflection, then expectation values are preserved
+-/
 lemma covariance_reflection_invariant_diag
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h : TestFunctionℂ) :
   SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection h) (QFT.compTimeReflection h) =
   SchwingerFunctionℂ₂ dμ_config h h := by
-  -- TODO: prove using DiscreteSymmetry time reflection invariance
+  -- For a complete proof, we would need to show that:
+  -- 1. The measure dμ_config is invariant under the time reflection transformation
+  --    This means: ∫ F(Θω) dμ(ω) = ∫ F(ω) dμ(ω) for any measurable F
+  -- 2. Apply this invariance to the definition of SchwingerFunctionℂ₂
+  -- 3. Use the fact that QFT.compTimeReflection corresponds to the geometric time reflection
+  --
+  -- The invariance would follow from:
+  -- - Physical requirement: reflection-positive measures should be time-reflection invariant
+  -- - Mathematical structure: time reflection preserves the measure-theoretic structure
+  -- - QFT.timeReflection is an isometry (preserves geometric structure)
+  --
+  -- In practice, this is often taken as an axiom for reflection-positive theories,
+  -- or proven using the specific construction of the measure (e.g., for Gaussian measures,
+  -- using the fact that the covariance function satisfies C(Θx, Θy) = C(x, y))
+
   sorry
 
 /-- Hermitian-reflection cross-term identity (stub) -/
@@ -269,6 +319,7 @@ lemma gaussian_quadratic_real_rewrite
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
   (h_bilinear : CovarianceBilinear dμ_config)
+  (h_reflectInv : OS3_ReflectionInvariance dμ_config)
   {n : ℕ} (f : Fin n → PositiveTimeTestFunction)
   (c : Fin n → ℂ) :
   (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j *
@@ -320,9 +371,56 @@ lemma gaussian_quadratic_real_rewrite
       have hx : S (J i) (ΘJ j) = star (S (QFT.compTimeReflection (J i)) (J j)) :=
         reflection_hermitian_cross dμ_config (J i) (J j)
       simpa [Complex.star_def, Complex.conj_re] using congrArg Complex.re hx
-    -- Diagonal reflection invariance
-    have hdiag : S (ΘJ j) (ΘJ j) = S (J j) (J j) :=
-      covariance_reflection_invariant_diag dμ_config (J j)
+    -- Diagonal reflection invariance via Gaussian and Z-invariance
+    have hdiag : S (ΘJ j) (ΘJ j) = S (J j) (J j) := by
+      -- Gaussian Z-forms at reflected and original arguments
+      have zθ : GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection (J j))
+        = Complex.exp (-(1/2 : ℂ) * S (QFT.compTimeReflection (J j)) (QFT.compTimeReflection (J j))) :=
+        gaussian_Z_form dμ_config h_gaussian (QFT.compTimeReflection (J j))
+      have zh : GJGeneratingFunctionalℂ dμ_config (J j)
+        = Complex.exp (-(1/2 : ℂ) * S (J j) (J j)) :=
+        gaussian_Z_form dμ_config h_gaussian (J j)
+      have hZeq : Complex.exp (-(1/2 : ℂ) * S (QFT.compTimeReflection (J j)) (QFT.compTimeReflection (J j)))
+               = Complex.exp (-(1/2 : ℂ) * S (J j) (J j)) := by
+        simpa [zθ, zh] using (h_reflectInv (J j))
+      -- Convert the complex exponential equality to a real exponential equality
+      rcases diagonal_covariance_is_real dμ_config (QFT.compTimeReflection (J j)) with ⟨rθ, hrθ⟩
+      rcases diagonal_covariance_is_real dμ_config (J j) with ⟨r, hr⟩
+      -- Convert the complex exponential equality to a real exponential equality
+      have hZc : Complex.exp (-(1/2 : ℂ) * (rθ : ℂ))
+               = Complex.exp (-(1/2 : ℂ) * (r : ℂ)) := by
+        -- Substitute the real values using hrθ and hr by congruence
+        have h1 : S (QFT.compTimeReflection (J j)) (QFT.compTimeReflection (J j)) = (rθ : ℂ) := by
+          show SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (J j)) (QFT.compTimeReflection (J j)) = (rθ : ℂ)
+          exact hrθ
+        have h2 : S (J j) (J j) = (r : ℂ) := by
+          show SchwingerFunctionℂ₂ dμ_config (J j) (J j) = (r : ℂ)
+          exact hr
+        rw [h1, h2] at hZeq
+        exact hZeq
+      have hZc' : Complex.exp (Complex.ofReal (-(1/2 : ℝ) * rθ))
+                = Complex.exp (Complex.ofReal (-(1/2 : ℝ) * r)) := by
+        simpa [Complex.ofReal_mul] using hZc
+      have hZ_real_ofReal : Complex.ofReal (Real.exp (-(1/2 : ℝ) * rθ))
+                          = Complex.ofReal (Real.exp (-(1/2 : ℝ) * r)) := by
+        simpa [Complex.ofReal_exp] using hZc'
+      have hZ_real : Real.exp (-(1/2 : ℝ) * rθ) = Real.exp (-(1/2 : ℝ) * r) :=
+        Complex.ofReal_inj.mp hZ_real_ofReal
+      have hlin : (-(1/2 : ℝ) * rθ) = (-(1/2 : ℝ) * r) := by
+        have := congrArg Real.log hZ_real
+        simpa [Real.log_exp] using this
+      have hr_eq : rθ = r := by
+        have := congrArg (fun t : ℝ => (-2 : ℝ) * t) hlin
+        ring_nf at this
+        simpa using this
+      -- Conclude for ΘJ j using definitional equality ΘJ j = compTimeReflection (J j)
+      have hcomp : S (QFT.compTimeReflection (J j)) (QFT.compTimeReflection (J j)) = (r : ℂ) := by
+        simpa [hr_eq] using hrθ
+      have horig : S (J j) (J j) = (r : ℂ) := hr
+      -- therefore S(ΘJ j, ΘJ j) = S(J j, J j)
+      have : S (QFT.compTimeReflection (J j)) (QFT.compTimeReflection (J j)) = S (J j) (J j) := by
+        simp [hcomp, horig]
+      simpa [ΘJ] using this
     -- Rewrite exponent and split: work with A,B,C,D notation
     set A := S (J i) (J i); set B := S (ΘJ j) (ΘJ j); set C := S (J i) (ΘJ j); set D := S (ΘJ j) (J i)
     have hABCD : S (J i - ΘJ j) (J i - ΘJ j) = A + B - C - D := by
@@ -387,3 +485,131 @@ lemma gaussian_quadratic_real_rewrite
   simp only [Z, R, J]
   rw [map_mul, hZreal_i]
   ring
+
+lemma covariance_reflection_invariant_diag_gaussian
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_gaussian : isGaussianGJ dμ_config)
+  (h_reflectInv : OS3_ReflectionInvariance dμ_config)
+  (h : TestFunctionℂ) :
+  SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection h) (QFT.compTimeReflection h)
+  = SchwingerFunctionℂ₂ dμ_config h h := by
+  let S := SchwingerFunctionℂ₂ dμ_config
+  have zθ : GJGeneratingFunctionalℂ dμ_config (QFT.compTimeReflection h)
+    = Complex.exp (-(1/2 : ℂ) * S (QFT.compTimeReflection h) (QFT.compTimeReflection h)) :=
+    gaussian_Z_form dμ_config h_gaussian (QFT.compTimeReflection h)
+  have zh : GJGeneratingFunctionalℂ dμ_config h
+    = Complex.exp (-(1/2 : ℂ) * S h h) :=
+    gaussian_Z_form dμ_config h_gaussian h
+  have hZ : Complex.exp (-(1/2 : ℂ) * S (QFT.compTimeReflection h) (QFT.compTimeReflection h))
+            = Complex.exp (-(1/2 : ℂ) * S h h) := by
+    simpa [zθ, zh] using (h_reflectInv h)
+  -- Realness on the diagonal
+  rcases diagonal_covariance_is_real dμ_config (QFT.compTimeReflection h) with ⟨rθ, hrθ⟩
+  rcases diagonal_covariance_is_real dμ_config h with ⟨r, hr⟩
+  -- Convert the complex exponential equality to a real exponential equality
+  have hZc : Complex.exp (-(1/2 : ℂ) * (rθ : ℂ))
+           = Complex.exp (-(1/2 : ℂ) * (r : ℂ)) := by
+     -- Use substitution
+     have h1 : S (QFT.compTimeReflection h) (QFT.compTimeReflection h) = (rθ : ℂ) := by
+       show SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection h) (QFT.compTimeReflection h) = (rθ : ℂ)
+       exact hrθ
+     have h2 : S h h = (r : ℂ) := by
+       show SchwingerFunctionℂ₂ dμ_config h h = (r : ℂ)
+       exact hr
+     rw [h1, h2] at hZ
+     exact hZ
+  have hZc' : Complex.exp (Complex.ofReal (-(1/2 : ℝ) * rθ))
+            = Complex.exp (Complex.ofReal (-(1/2 : ℝ) * r)) := by
+      simpa [Complex.ofReal_mul] using hZc
+  have hZ_real_ofReal : Complex.ofReal (Real.exp (-(1/2 : ℝ) * rθ))
+                       = Complex.ofReal (Real.exp (-(1/2 : ℝ) * r)) := by
+    simpa [Complex.ofReal_exp] using hZc'
+  have hZ_real : Real.exp (-(1/2 : ℝ) * rθ) = Real.exp (-(1/2 : ℝ) * r) :=
+    Complex.ofReal_inj.mp hZ_real_ofReal
+  have hlin : (-(1/2 : ℝ) * rθ) = (-(1/2 : ℝ) * r) := by
+    have := congrArg Real.log hZ_real
+    simpa [Real.log_exp] using this
+  have hr_eq : rθ = r := by
+    have := congrArg (fun t : ℝ => (-2 : ℝ) * t) hlin
+    ring_nf at this
+    simpa using this
+  -- Conclude with a calc chain rather than simpa
+  calc
+    S (QFT.compTimeReflection h) (QFT.compTimeReflection h)
+        = (rθ : ℂ) := hrθ
+    _ = (r : ℂ) := by simp [hr_eq]
+    _ = S h h := hr.symm
+
+/-- Gaussian: If the generating functional is invariant under a linear map `L`
+    on test functions, then the diagonal two-point Schwinger function is invariant
+    under `L` as well. No functional-derivative machinery required. -/
+lemma gaussian_two_point_diagonal_invariant_under_CLM
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_gaussian : isGaussianGJ dμ_config)
+  (L : TestFunctionℂ →L[ℝ] TestFunctionℂ)
+  (Zinv : ∀ h : TestFunctionℂ,
+    GJGeneratingFunctionalℂ dμ_config (L h) = GJGeneratingFunctionalℂ dμ_config h)
+  (h : TestFunctionℂ) :
+  SchwingerFunctionℂ₂ dμ_config (L h) (L h) = SchwingerFunctionℂ₂ dμ_config h h := by
+  -- abbreviate
+  let S := SchwingerFunctionℂ₂ dμ_config
+  -- Gaussian form for Z[L h] and Z[h]
+  have zL : GJGeneratingFunctionalℂ dμ_config (L h)
+    = Complex.exp (-(1/2 : ℂ) * S (L h) (L h)) :=
+    gaussian_Z_form dμ_config h_gaussian (L h)
+  have zh : GJGeneratingFunctionalℂ dμ_config h
+    = Complex.exp (-(1/2 : ℂ) * S h h) :=
+    gaussian_Z_form dμ_config h_gaussian h
+  -- Invariance of Z transfers to equality of complex exponentials
+  have hZ : Complex.exp (-(1/2 : ℂ) * S (L h) (L h))
+            = Complex.exp (-(1/2 : ℂ) * S h h) := by
+    simpa [zL, zh] using (Zinv h)
+  -- Realness of the diagonal entries
+  rcases diagonal_covariance_is_real dμ_config (L h) with ⟨rL, hrL⟩
+  rcases diagonal_covariance_is_real dμ_config h with ⟨r, hr⟩
+  -- Move to real exponentials via ofReal in two steps
+  have hZ' : Complex.exp (Complex.ofReal (-(1/2 : ℝ) * rL))
+            = Complex.exp (Complex.ofReal (-(1/2 : ℝ) * r)) := by
+    -- Use substitution
+    have h1 : S (L h) (L h) = (rL : ℂ) := by
+      show SchwingerFunctionℂ₂ dμ_config (L h) (L h) = (rL : ℂ)
+      exact hrL
+    have h2 : S h h = (r : ℂ) := by
+      show SchwingerFunctionℂ₂ dμ_config h h = (r : ℂ)
+      exact hr
+    have hcast1 : (-(1/2 : ℂ) * (rL : ℂ)) = Complex.ofReal (-(1/2 : ℝ) * rL) := by
+      simp [Complex.ofReal_mul]
+    have hcast2 : (-(1/2 : ℂ) * (r : ℂ)) = Complex.ofReal (-(1/2 : ℝ) * r) := by
+      simp [Complex.ofReal_mul]
+    rw [h1, h2, hcast1, hcast2] at hZ
+    exact hZ
+  have hZ_ofReal : Complex.ofReal (Real.exp (-(1/2 : ℝ) * rL))
+                 = Complex.ofReal (Real.exp (-(1/2 : ℝ) * r)) := by
+    simpa [Complex.ofReal_exp] using hZ'
+  have hZ_real : Real.exp (-(1/2 : ℝ) * rL) = Real.exp (-(1/2 : ℝ) * r) :=
+    Complex.ofReal_inj.mp hZ_ofReal
+  -- exp is injective on ℝ (via log)
+  have hlin : (-(1/2 : ℝ) * rL) = (-(1/2 : ℝ) * r) := by
+    have := congrArg Real.log hZ_real
+    simpa [Real.log_exp] using this
+  have hr_eq : rL = r := by
+    have := congrArg (fun t : ℝ => (-2 : ℝ) * t) hlin
+    ring_nf at this
+    simpa using this
+  -- conclude back in ℂ
+  calc
+    S (L h) (L h) = (rL : ℂ) := hrL
+    _ = (r : ℂ) := by simp [hr_eq]
+    _ = S h h := by simpa using hr.symm
+
+/-- Specialization to time reflection: if Z is invariant under time reflection,
+    then the diagonal two-point function is invariant under time reflection. -/
+lemma gaussian_two_point_diagonal_reflection_invariant
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_gaussian : isGaussianGJ dμ_config)
+  (h_reflectInv : OS3_ReflectionInvariance dμ_config)
+  (h : TestFunctionℂ) :
+  SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection h) (QFT.compTimeReflection h)
+  = SchwingerFunctionℂ₂ dμ_config h h :=
+  gaussian_two_point_diagonal_invariant_under_CLM dμ_config h_gaussian
+    QFT.compTimeReflection (fun t => h_reflectInv t) h
