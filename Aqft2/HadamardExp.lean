@@ -398,6 +398,17 @@ lemma posDef_entrywiseExp_hadamardSeries_of_posDef
 lemma posSemidef_entrywiseExp_hadamardSeries_of_posSemidef
   (R : Matrix ι ι ℝ) (hR : R.PosSemidef) :
   (entrywiseExp_hadamardSeries (ι:=ι) R).PosSemidef := by
-  sorry -- Follows from posDef_entrywiseExp_hadamardSeries_of_posDef via continuity argument
-
+  -- Continuity proof sketch (to be implemented):
+  -- 1) Define Rε := R + ε • 1 (i.e., add ε to the diagonal). For ε > 0, Rε is PosDef.
+  -- 2) By posDef_entrywiseExp_hadamardSeries_of_posDef, entrywiseExp_hadamardSeries(Rε) is PosDef.
+  -- 3) Use continuity of the map R ↦ entrywiseExp_hadamardSeries(R) (coordinatewise continuity + tsum)
+  --    to pass to the limit ε → 0⁺ and obtain PosSemidef at ε = 0.
+  -- 4) IsHermitian follows termwise, as in the PosDef lemma.
+  --
+  -- Dependencies to wire up precisely:
+  -- - Continuity of R ↦ entrywiseExp_hadamardSeries(R): from continuous_entrywiseExp and
+  --   entrywiseExp_eq_hadamardSeries, or by direct dominated convergence on the Hadamard series.
+  -- - Stability of PosSemidef under limits of PosDef matrices along ε → 0⁺.
+  -- - Standard fact: R PosSemidef ⇒ R + εI PosDef for ε > 0, and diagonal addition is continuous.
+  sorry
 end Aqft2

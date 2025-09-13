@@ -374,3 +374,12 @@ theorem gff_two_point_equals_covarianceℂ_free
   SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ m f g := by
   -- TODO: derive from gaussianFreeField_free construction and the Fourier representation
   sorry
+
+/-- Assumption: SchwingerFunctionℂ₂ is linear in both arguments -/
+def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ),
+    SchwingerFunctionℂ₂ dμ_config (c • φ₁) ψ = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
+    -- DO NOT CHANGE: must be φ₁ + φ₂ (first-arg additivity). Using φ₁ + φ₁ breaks GJcov_bilin and OS0 expansion.
+    SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config φ₁ (ψ + φ₂) = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₁ φ₂
