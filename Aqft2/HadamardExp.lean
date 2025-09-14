@@ -82,9 +82,9 @@ lemma continuous_entrywiseExp (ι : Type u) [Fintype ι] [DecidableEq ι] :
 /-- Hadamard powers act entrywise as usual scalar powers. -/
 lemma hadamardPow_apply (R : Matrix ι ι ℝ) (n : ℕ) (i j : ι) :
   hadamardPow (ι:=ι) R n i j = (R i j) ^ n := by
-  induction' n with n ih
-  · simp [hadamardPow, hadamardOne]
-  · simp [Matrix.hadamard, ih, pow_succ]
+  induction n with
+  | zero => simp [hadamardPow, hadamardOne]
+  | succ n ih => simp [Matrix.hadamard, ih, pow_succ]
 
 /-- One term of the Hadamard-series for the entrywise exponential. -/
 noncomputable def entrywiseExpSeriesTerm (R : Matrix ι ι ℝ) (n : ℕ) : Matrix ι ι ℝ :=
@@ -161,12 +161,14 @@ lemma hadamardPow_posDef_of_posDef
   -- write n = k+1
   obtain ⟨k, hk⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.pos_iff_ne_zero.mp hn)
   subst hk
-  induction' k with k ih
-  · -- n = 1
+  induction k with
+  | zero =>
+    -- n = 1
     have hEq : hadamardPow (ι:=ι) R 1 = R := by
       ext i j; simp
     rw [hEq]; exact hR
-  · -- n = (k+1)+1 = k+2
+  | succ k ih =>
+    -- n = (k+1)+1 = k+2
     have hPD_k1 : (hadamardPow (ι:=ι) R (k+1)).PosDef := ih (Nat.succ_pos _)
     -- Schur product with R preserves PD
     simpa [hadamardPow_succ] using
@@ -188,14 +190,16 @@ lemma posDef_entrywiseExp_hadamardSeries_of_posDef
   -- Each Hadamard power is Hermitian
   have hHermPow : ∀ n, (hadamardPow (ι:=ι) R n).IsHermitian := by
     intro n
-    induction' n with n ih
-    · -- n = 0
+    induction n with
+    | zero =>
+      -- n = 0
       -- hadamardOne is symmetric
       rw [hadamardPow_zero]
       -- direct by entries
       rw [Matrix.IsHermitian]
       ext i j; simp [hadamardOne, Matrix.conjTranspose]
-    · -- succ
+    | succ n ih =>
+      -- succ
       -- (A ∘ₕ R) is Hermitian if both are Hermitian (entrywise symmetry)
       -- use pointwise characterization
       rw [hadamardPow_succ]
