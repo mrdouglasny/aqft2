@@ -149,7 +149,7 @@ instance instNuclear_TestFunctionR : NuclearSpace TestFunctionR := nuclear_TestF
 noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] :
   ProbabilityMeasure FieldConfiguration := by
   classical
-  -- Get the embedding T with ‖T f‖² = freeCovarianceFormR m f f using classical choice
+  -- Build the embedding T with ‖T f‖² = freeCovarianceFormR m f f
   have ex1 := sqrtPropagatorEmbedding m
   let H : Type := Classical.choose ex1
   have ex2 := Classical.choose_spec ex1
@@ -159,26 +159,95 @@ noncomputable def constructGaussianMeasureMinlos_free (m : ℝ) [Fact (0 < m)] :
   have ex4 := Classical.choose_spec ex3
   let T : TestFunctionR →ₗ[ℝ] H := Classical.choose ex4
   have h_eq : ∀ f : TestFunctionR, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
-  -- Continuity of f ↦ C(f,f)
+  -- Continuity and normalization
   have h_cont := freeCovarianceFormR_continuous m
-  -- Normalization at 0
-  have h_zero : freeCovarianceFormR m (0) (0) = 0 := by
-    simp [freeCovarianceFormR]
-  -- Apply Minlos on E = TestFunctionR
+  have h_zero : freeCovarianceFormR m (0) (0) = 0 := by simp [freeCovarianceFormR]
+  -- Use Minlos: directly obtain a ProbabilityMeasure with the Gaussian characteristic functional
   have h_minlos :=
-    minlos_gaussian_construction
-       (E := TestFunctionR) (H := H) T (freeCovarianceFormR m)
-       (by intro f; simpa using h_eq f)
-       True.intro h_zero h_cont
-  -- Extract measure and probability property via classical choice
-  let μ := Classical.choose h_minlos
-  have hspec := Classical.choose_spec h_minlos
-  have hprob : IsProbabilityMeasure μ := hspec.1
-  exact probabilityMeasure_of_isProbability μ hprob
+    gaussian_measure_characteristic_functional
+      (E := TestFunctionR) (H := H) T (freeCovarianceFormR m)
+      (by intro f; simpa using h_eq f)
+      True.intro h_zero h_cont
+  exact Classical.choose h_minlos
 
 /-- The Gaussian Free Field with mass m > 0, constructed via specialized Minlos -/
 noncomputable def gaussianFreeField_free (m : ℝ) [Fact (0 < m)] : ProbabilityMeasure FieldConfiguration :=
   constructGaussianMeasureMinlos_free m
+
+/-- Real characteristic functional of the free GFF: for real test functions f, the generating
+    functional equals the Gaussian form with the real covariance. -/
+theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] :
+  ∀ f : TestFunctionR,
+    GJGeneratingFunctional (gaussianFreeField_free m) f =
+      Complex.exp (-(1/2 : ℂ) * (freeCovarianceFormR m f f : ℝ)) := by
+  classical
+  -- Rebuild the same Minlos construction to access its specification
+  have ex1 := sqrtPropagatorEmbedding m
+  let H : Type := Classical.choose ex1
+  have ex2 := Classical.choose_spec ex1
+  let hSem : SeminormedAddCommGroup H := Classical.choose ex2
+  have ex3 := Classical.choose_spec ex2
+  let hNorm : NormedSpace ℝ H := Classical.choose ex3
+  have ex4 := Classical.choose_spec ex3
+  let T : TestFunctionR →ₗ[ℝ] H := Classical.choose ex4
+  have h_eq : ∀ f : TestFunctionR, freeCovarianceFormR m f f = ‖T f‖^2 := Classical.choose_spec ex4
+  have h_cont := freeCovarianceFormR_continuous m
+  have h_zero : freeCovarianceFormR m (0) (0) = 0 := by simp [freeCovarianceFormR]
+  have h_minlos :=
+    gaussian_measure_characteristic_functional
+      (E := TestFunctionR) (H := H) T (freeCovarianceFormR m)
+      (by intro f; simpa using h_eq f)
+      True.intro h_zero h_cont
+  -- Unfold the definition of our chosen ProbabilityMeasure to reuse the spec
+  have hchar := (Classical.choose_spec h_minlos)
+  intro f
+  -- By definition, gaussianFreeField_free chooses the same ProbabilityMeasure
+  -- returned by gaussian_measure_characteristic_functional
+  simpa [gaussianFreeField_free, constructGaussianMeasureMinlos_free,
+        GJGeneratingFunctional, gaussian_characteristic_functional,
+        distributionPairing]
+    using (hchar f)
+
+/-- Standard fact (placeholder): a Gaussian measure with even real characteristic functional
+    is centered. Will be replaced by a proof via pushforward invariance under ω ↦ -ω. -/
+axiom gaussianFreeField_free_centered (m : ℝ) [Fact (0 < m)] :
+  isCenteredGJ (gaussianFreeField_free m)
+
+/-- WARNING (circularity risk):
+    This statement is currently an axiom placeholder. It must eventually be proved
+    from Minlos without assuming the Gaussian form of the complex generating functional,
+    otherwise we are circular with `isGaussianGJ`.
+
+    Acceptable strategies to replace this axiom:
+    1) Start from the real Minlos result `gaussian_measure_characteristic_functional` and
+       extend to complex test functions J = J_re + i J_im by computing the joint Gaussian
+       of the two real linear forms ω ↦ ⟨ω, J_re⟩ and ω ↦ ⟨ω, J_im⟩, using the complex
+       covariance built from the real covariance plus polarization. This yields the exponential
+       form for all complex J.
+    2) Prove analyticity in a one-dimensional complex parameter λ ↦ G(λ) :=
+       GJGeneratingFunctionalℂ μ (λ · J) from Minlos (Bochner-type arguments give
+       that G is positive-definite and continuous; for Gaussians, it is entire).
+       Combine with the known equality on the real axis (from Minlos) and uniqueness
+       of analytic continuation to deduce the complex formula. This must be carried out
+       carefully in the infinite-dimensional setting by reducing to one complex parameter.
+
+    Do NOT use `isGaussianGJ` or the desired formula itself to justify this lemma; that would
+    be circular. -/
+axiom gff_complex_generating (m : ℝ) [Fact (0 < m)] :
+  ∀ J : TestFunctionℂ,
+    GJGeneratingFunctionalℂ (gaussianFreeField_free m) J =
+      Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ (gaussianFreeField_free m) J J)
+
+/-- The Gaussian Free Field constructed via Minlos is Gaussian. -/
+theorem isGaussianGJ_gaussianFreeField_free (m : ℝ) [Fact (0 < m)] :
+  isGaussianGJ (gaussianFreeField_free m) := by
+  constructor
+  · -- Centered
+    exact gaussianFreeField_free_centered m
+  · -- Complex generating functional equals Gaussian exponential
+    intro J
+    -- Option 1: directly use the complex Gaussian generating identity
+    simpa using (gff_complex_generating m J)
 
 /-- Bridge axiom: equality of complex generating functionals implies equality of
     real-characteristic integrals for all real test functions. -/
@@ -189,64 +258,8 @@ axiom equal_complex_generating_implies_equal_real
     ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ₁.toMeasure =
     ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ₂.toMeasure)
 
-/-- Uniqueness: any two Gaussian measures with the same covariance are equal -/
-theorem gaussian_measure_unique (μ₁ μ₂ : ProbabilityMeasure FieldConfiguration)
-  (h₁ : isGaussianGJ μ₁) (h₂ : isGaussianGJ μ₂)
-  (h_same_covar : ∀ f g, SchwingerFunctionℂ₂ μ₁ f g = SchwingerFunctionℂ₂ μ₂ f g) :
-  μ₁ = μ₂ := by
-  -- Strategy: Show that μ₁ and μ₂ have the same generating functional
-  have h_same_generating : ∀ J, GJGeneratingFunctionalℂ μ₁ J = GJGeneratingFunctionalℂ μ₂ J := by
-    intro J
-    rw [h₁.2 J, h₂.2 J]
-    rw [h_same_covar J J]
-  -- Deduce equality of real-characteristic integrals for all real test functions
-  have h_real := equal_complex_generating_implies_equal_real μ₁ μ₂ h_same_generating
-  -- Apply general Minlos uniqueness with E = real Schwartz space; FieldConfiguration = WeakDual ℝ E
-  have _inst : NuclearSpace TestFunctionR := instNuclear_TestFunctionR
-  exact minlos_uniqueness (E := TestFunctionR) μ₁ μ₂ h_real
+/-! ## Construction via General Minlos (incomplete)
 
-
-/-! ## Free Field Covariance
-
-The free field covariance is given by the propagator (Green's function) of the
-Klein-Gordon equation. In momentum space: C(k) = 1/(k² + m²).
--/
-
-/-- The free field propagator in momentum space -/
-noncomputable def freeFieldPropagator (m : ℝ) (k : SpaceTime) : ℂ :=
-  let k_norm_sq := ∑ i, (k i)^2
-  1 / (Complex.I * k_norm_sq + (m^2 : ℂ))
-
-/-- Placeholder for Fourier transform of Schwartz functions -/
-noncomputable def schwartzFourierTransform (f : TestFunctionℂ) (k : SpaceTime) : ℂ := sorry
-
-/-- The free field covariance function constructed from the propagator -/
-noncomputable def freeFieldCovariance (m : ℝ) : CovarianceFunction := {
-  covar := fun f g => ∫ k, (schwartzFourierTransform f k) * (starRingEnd ℂ) (schwartzFourierTransform g k) * freeFieldPropagator m k ∂volume
-  symmetric := by sorry -- Use Fourier transform properties and propagator symmetry
-  bilinear_left := by sorry -- Use linearity of Fourier transform
-  bilinear_right := by sorry -- Use linearity of Fourier transform
-  positive_semidefinite := by sorry -- Use positivity of the propagator
-  bounded := by sorry -- Use bounds on the propagator and Fourier transform
-}
-
-/-- The free field covariance is nuclear in dimensions d < 4.
-    This is the key condition for Minlos theorem to apply. -/
-theorem freeFieldCovariance_nuclear (m : ℝ) (hm : m > 0) :
-  CovarianceNuclear (freeFieldCovariance m) := by
-  -- For the Klein-Gordon propagator C(k) = 1/(k² + m²):
-  -- Tr(C) = ∫ 1/(k² + m²) dk
-  -- This integral converges in dimensions d < 4 when m > 0
-  -- In d = 4, need infrared cutoff; in d > 4, need UV cutoff
-  sorry
-
-/-- The Gaussian Free Field with mass m > 0, constructed via Minlos theorem -/
-noncomputable def gaussianFreeField (m : ℝ) (hm : m > 0) : ProbabilityMeasure FieldConfiguration := by
-  -- Prefer the specialized constructor; the general one is incomplete and isolated.
-  letI : Fact (0 < m) := ⟨hm⟩
-  simpa using gaussianFreeField_free m
-
-/-! ### General (incomplete) Minlos-based constructor
 These are kept in a dedicated namespace to avoid accidental usage elsewhere.
 They provide a more general pathway via an abstract nuclear covariance, but remain unfinished. -/
 namespace GeneralMinlos
@@ -283,6 +296,27 @@ noncomputable def constructGaussianMeasureMinlos (C : CovarianceFunction)
     rw [h_covar]
     -- The generating functional has the Gaussian form by Minlos theorem
     sorry
+
+/-- Uniqueness: any two Gaussian measures with the same covariance are equal -/
+theorem gaussian_measure_unique (μ₁ μ₂ : ProbabilityMeasure FieldConfiguration)
+  (h₁ : isGaussianGJ μ₁) (h₂ : isGaussianGJ μ₂)
+  (h_same_covar : ∀ f g, SchwingerFunctionℂ₂ μ₁ f g = SchwingerFunctionℂ₂ μ₂ f g) :
+  μ₁ = μ₂ := by
+  -- Same complex generating functionals
+  have h_same_generating : ∀ J : TestFunctionℂ,
+      GJGeneratingFunctionalℂ μ₁ J = GJGeneratingFunctionalℂ μ₂ J := by
+    intro J
+    have h1 := h₁.2 J
+    have h2 := h₂.2 J
+    -- Rewrite exponent via same covariance
+    have hc : SchwingerFunctionℂ₂ μ₁ J J = SchwingerFunctionℂ₂ μ₂ J J := h_same_covar J J
+    -- Conclude equality of exponentials
+    simp [h1, h2, hc]
+  -- Deduce equality of real-characteristic integrals for all real test functions
+  have h_real := equal_complex_generating_implies_equal_real μ₁ μ₂ h_same_generating
+  -- Apply general Minlos uniqueness with E = real Schwartz space
+  have _inst : NuclearSpace TestFunctionR := instNuclear_TestFunctionR
+  exact minlos_uniqueness (E := TestFunctionR) μ₁ μ₂ h_real
 
 /-- Existence theorem via Minlos: Given a nuclear covariance function, there exists a unique
     Gaussian probability measure on FieldConfiguration with that covariance -/
@@ -383,3 +417,24 @@ def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Pr
     SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
     SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
     SchwingerFunctionℂ₂ dμ_config φ₁ (ψ + φ₂) = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₁ φ₂
+
+/-- Uniqueness: any two Gaussian measures with the same covariance are equal -/
+theorem gaussian_measure_unique (μ₁ μ₂ : ProbabilityMeasure FieldConfiguration)
+  (h₁ : isGaussianGJ μ₁) (h₂ : isGaussianGJ μ₂)
+  (h_same_covar : ∀ f g, SchwingerFunctionℂ₂ μ₁ f g = SchwingerFunctionℂ₂ μ₂ f g) :
+  μ₁ = μ₂ := by
+  -- Same complex generating functionals
+  have h_same_generating : ∀ J : TestFunctionℂ,
+      GJGeneratingFunctionalℂ μ₁ J = GJGeneratingFunctionalℂ μ₂ J := by
+    intro J
+    have h1 := h₁.2 J
+    have h2 := h₂.2 J
+    -- Rewrite exponent via same covariance
+    have hc : SchwingerFunctionℂ₂ μ₁ J J = SchwingerFunctionℂ₂ μ₂ J J := h_same_covar J J
+    -- Conclude equality of exponentials
+    simp [h1, h2, hc]
+  -- Deduce equality of real-characteristic integrals for all real test functions
+  have h_real := equal_complex_generating_implies_equal_real μ₁ μ₂ h_same_generating
+  -- Apply general Minlos uniqueness with E = real Schwartz space
+  have _inst : NuclearSpace TestFunctionR := instNuclear_TestFunctionR
+  exact minlos_uniqueness (E := TestFunctionR) μ₁ μ₂ h_real

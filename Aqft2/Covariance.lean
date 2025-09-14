@@ -689,6 +689,22 @@ theorem freeCovariance_euclidean_invariant (m : ℝ) (R : SpaceTime ≃ₗᵢ[�
 def freeCovarianceℂ (m : ℝ) (f g : TestFunctionℂ) : ℂ :=
   ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (starRingEnd ℂ (g y)) ∂volume ∂volume
 
+/-- Hermiticity of the complex covariance: Cℂ(f,g) = conj Cℂ(g,f).
+    This follows from kernel-level hermiticity and Fubini/Tonelli for Schwartz functions. -/
+theorem freeCovarianceℂ_hermitian (m : ℝ) :
+  ∀ f g : TestFunctionℂ, freeCovarianceℂ m f g = star (freeCovarianceℂ m g f) := by
+  classical
+  intro f g
+  -- Proof outline:
+  -- 1) Expand both sides via definitions (double integrals)
+  -- 2) On the RHS, push star inside the integrals and use star-product rules
+  -- 3) Swap the integration variables (Fubini/Tonelli) and apply hK pointwise
+  -- 4) Rename bound variables to match the LHS integrand
+  -- The detailed measure-theoretic justifications (integrability/Bochner) follow
+  -- from Schwartz decay of f, g and boundedness properties of the kernel.
+  -- Full proof deferred.
+  sorry
+
 /-- The complex covariance is positive definite -/
 theorem freeCovarianceℂ_positive (m : ℝ) (f : TestFunctionℂ) :
   0 ≤ (freeCovarianceℂ m f f).re := by
@@ -699,8 +715,6 @@ theorem freeCovarianceℂ_diagonal_real (m : ℝ) (h : TestFunctionℂ) :
   ∃ r : ℝ, freeCovarianceℂ m h h = (r : ℂ) := by
   -- Follows from symmetry and real-valued kernel; proof deferred.
   sorry
-
-/-! ## Connection to Schwinger Functions -/
 
 /-- Placeholder for Gaussian measure -/
 def gaussianMeasureGFF (m : ℝ) : ProbabilityMeasure FieldConfiguration := sorry
@@ -809,7 +823,7 @@ lemma momentum_integrand_hermitian
   star ((star (f k)) * (freePropagatorMomentum m k : ℂ) * g k)
     = (star (g k)) * (freePropagatorMomentum m k : ℂ) * f k := by
   -- star distributes over products and `star (star (f k)) = f k`; the propagator is real
-  simp [mul_comm, mul_left_comm, mul_assoc]
+  simp [mul_comm, mul_assoc]
 
 /-- Momentum-space covariance bilinear form (Fourier side). -/
 noncomputable def momentumCovarianceForm (m : ℝ) (f g : SpaceTime → ℂ) : ℂ :=
