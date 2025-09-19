@@ -1,0 +1,7 @@
+{
+    "terminal.integrated.shellIntegration.enabled": true,
+    "terminal.integrated.shellIntegration.showWelcome": false,
+    "terminal.integrated.shellIntegration.decorationsEnabled": "both",
+    "terminal.integrated.enablePersistentSessions": true,
+    "terminal.integrated.persistentSessionReviveProcess": "onExit"
+}
