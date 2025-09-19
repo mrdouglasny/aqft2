@@ -76,7 +76,7 @@ More constructive than functional derivatives, natural for Gaussian measures.
 **Relation to Other Modules:**
 - Foundation: `Basic` (field configurations, distributions)
 - Symmetries: `Euclidean` (spacetime symmetries), `DiscreteSymmetry` (time reflection)
-- Measures: `Minlos`, `GFFconstruct` (Gaussian realizations)
+- Measures: `Minlos`, `GFFMconstruct` (Gaussian realizations)
 - Analysis: `FunctionalAnalysis` (Fourier theory), `SCV` (complex analyticity)
 
 This provides the computational core for proving the Osterwalder-Schrader axioms

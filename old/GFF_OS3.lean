@@ -42,7 +42,7 @@ import Mathlib.Analysis.Complex.Exponential
 
 import Aqft2.Basic
 import Aqft2.OS_Axioms
-import Aqft2.GFFconstruct
+import Aqft2.GFFMconstruct
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
@@ -487,7 +487,7 @@ theorem gaussian_satisfies_OS3_reflection_positivity
 /-- The Gaussian Free Field satisfies OS3 reflection positivity.
 
     This is the main result connecting our Gaussian measure theory to the concrete
-    Gaussian Free Field construction from GFFconstruct.lean.
+    Gaussian Free Field construction from GFFMconstruct.lean.
 -/
 theorem gaussianFreeField_satisfies_OS3 (m : ℝ) [Fact (0 < m)]
   (h_covar_reflect_pos : CovarianceReflectionPositive (gaussianFreeField_free m))

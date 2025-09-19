@@ -40,7 +40,7 @@ import Aqft2.OS3
 import Aqft2.Covariance
 import Aqft2.HadamardExp
 import Aqft2.SchurProduct
-import Aqft2.GFFconstruct
+import Aqft2.GFFMconstruct
 
 --it is ok to use results in old.GFF_OS3 but these should be
 --textually copied into this file to use them.

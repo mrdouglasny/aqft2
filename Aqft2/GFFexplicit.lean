@@ -35,7 +35,7 @@ Once we have the explicit formula, the OS axiom properties become much more trac
 This provides a concrete foundation for proving all the properties needed in GFF_OS3.lean.
 -/
 
-import Aqft2.GFFconstruct
+import Aqft2.GFFMconstruct
 import Aqft2.Covariance
 import Aqft2.OS3
 import Mathlib.MeasureTheory.Measure.WithDensity

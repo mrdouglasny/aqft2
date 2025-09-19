@@ -50,7 +50,7 @@ This implements the distribution-based approach where:
 **Connection to Other Modules:**
 - Schwinger functions and correlations → `Aqft2.Schwinger`
 - Osterwalder-Schrader axioms → `Aqft2.OS_Axioms`
-- Gaussian measures and Minlos theorem → `Aqft2.Minlos`, `Aqft2.GFFconstruct`
+- Gaussian measures and Minlos theorem → `Aqft2.Minlos`, `Aqft2.GFFMconstruct`
 - Euclidean group actions → `Aqft2.Euclidean`
 
 This provides the mathematical foundation for constructive quantum field theory

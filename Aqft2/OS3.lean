@@ -68,7 +68,7 @@ import Mathlib.Analysis.Complex.Exponential
 
 import Aqft2.Basic
 import Aqft2.OS_Axioms
-import Aqft2.GFFconstruct
+import Aqft2.GFFMconstruct
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
