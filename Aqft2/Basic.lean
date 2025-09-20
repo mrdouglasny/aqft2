@@ -66,7 +66,8 @@ import Mathlib.Analysis.Distribution.SchwartzSpace
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Analysis.Normed.Module.RCLike.Basic
 import Mathlib.Analysis.Normed.Module.RCLike.Real
-import Mathlib.Analysis.NormedSpace.Extend
+import Mathlib.Analysis.Normed.Module.RCLike.Extend
+import Mathlib.Analysis.RCLike.Extend
 import Mathlib.Analysis.Complex.Basic
 import Mathlib.Analysis.Normed.Group.Uniform
 import Mathlib.Analysis.Analytic.Basic
