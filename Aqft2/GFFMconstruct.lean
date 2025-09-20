@@ -88,6 +88,7 @@ import Aqft2.Basic
 import Aqft2.Schwinger
 import Aqft2.Minlos
 import Aqft2.Covariance
+import Aqft2.MinlosAnalytic
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -418,23 +419,36 @@ def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Pr
     SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
     SchwingerFunctionℂ₂ dμ_config φ₁ (ψ + φ₂) = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₁ φ₂
 
-/-- Uniqueness: any two Gaussian measures with the same covariance are equal -/
-theorem gaussian_measure_unique (μ₁ μ₂ : ProbabilityMeasure FieldConfiguration)
-  (h₁ : isGaussianGJ μ₁) (h₂ : isGaussianGJ μ₂)
-  (h_same_covar : ∀ f g, SchwingerFunctionℂ₂ μ₁ f g = SchwingerFunctionℂ₂ μ₂ f g) :
-  μ₁ = μ₂ := by
-  -- Same complex generating functionals
-  have h_same_generating : ∀ J : TestFunctionℂ,
-      GJGeneratingFunctionalℂ μ₁ J = GJGeneratingFunctionalℂ μ₂ J := by
-    intro J
-    have h1 := h₁.2 J
-    have h2 := h₂.2 J
-    -- Rewrite exponent via same covariance
-    have hc : SchwingerFunctionℂ₂ μ₁ J J = SchwingerFunctionℂ₂ μ₂ J J := h_same_covar J J
-    -- Conclude equality of exponentials
-    simp [h1, h2, hc]
-  -- Deduce equality of real-characteristic integrals for all real test functions
-  have h_real := equal_complex_generating_implies_equal_real μ₁ μ₂ h_same_generating
-  -- Apply general Minlos uniqueness with E = real Schwartz space
-  have _inst : NuclearSpace TestFunctionR := instNuclear_TestFunctionR
-  exact minlos_uniqueness (E := TestFunctionR) μ₁ μ₂ h_real
+namespace GFF_Minlos_Complex
+
+open MinlosAnalytic
+
+/-- Package the real free covariance as a CovarianceForm for MinlosAnalytic. -/
+noncomputable def freeCovarianceForm_struct (m : ℝ) : MinlosAnalytic.CovarianceForm where
+  Q := fun f g => freeCovarianceFormR m f g
+  symm := by intro f g; simpa using freeCovarianceFormR_symm m f g
+  psd := by intro f; simpa using freeCovarianceFormR_pos m f
+  cont_diag := by
+    -- `freeCovarianceFormR_continuous` is exactly continuity of f ↦ Q f f
+    simpa using freeCovarianceFormR_continuous m
+
+/-- Complex generating functional for the free GFF (via Minlos analyticity).
+    This avoids any circularity: we use the proven real characteristic functional
+    `gff_real_characteristic` and the general complex extension theorem. -/
+ theorem gff_complex_characteristic_minlos (m : ℝ) [Fact (0 < m)] :
+  ∀ J : TestFunctionℂ,
+    GJGeneratingFunctionalℂ (gaussianFreeField_free m) J
+      = Complex.exp (-(1/2 : ℂ) * (MinlosAnalytic.Qc (freeCovarianceForm_struct m) J J)) := by
+  classical
+  intro J
+  -- Apply the general complex CF theorem with C = freeCovarianceForm_struct m
+  refine MinlosAnalytic.gaussian_CF_complex (C := freeCovarianceForm_struct m)
+    (μ := gaussianFreeField_free m)
+    (h_realCF := ?hreal) J
+  -- Real characteristic functional already established
+  intro f
+  -- Definitional equality of real test-function type aliases lets this `simpa` work
+  simpa [GJGeneratingFunctional, distributionPairing]
+    using (gff_real_characteristic (m := m) (f := f))
+
+end GFF_Minlos_Complex
