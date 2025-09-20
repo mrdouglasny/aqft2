@@ -93,6 +93,7 @@ import Mathlib.LinearAlgebra.BilinearForm.Basic
 import Aqft2.Basic
 import Aqft2.Schwinger
 import Aqft2.Covariance
+import KolmogorovExtension4
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -159,51 +160,6 @@ noncomputable def reproductingKernelEmbedding (m : ℝ) [Fact (0 < m)] :
 /-- The Hilbert space completion where the Gaussian measure lives -/
 noncomputable def covarianceHilbertSpace (m : ℝ) [Fact (0 < m)] : Type := ℝ
 
-/-- Construction of finite-dimensional Gaussian measures for cylindrical approximation -/
-noncomputable def finiteDimensionalGaussian (n : ℕ) (proj : FiniteDimensionalProjection n) :
-  ProbabilityMeasure (Fin n → ℝ) := by
-  sorry -- Use Mathlib.Probability.Distributions.Gaussian.Basic
-
-/-- Kolmogorov extension to infinite dimensions -/
-noncomputable def constructGaussianMeasureMathlib (m : ℝ) [Fact (0 < m)] :
-  ProbabilityMeasure FieldConfiguration := by
-  sorry -- Construct via cylindrical measures and Kolmogorov extension
-
-/-- The Gaussian Free Field with mass m > 0, constructed via Mathlib framework -/
-noncomputable def gaussianFreeFieldMathlib (m : ℝ) [Fact (0 < m)] : ProbabilityMeasure FieldConfiguration :=
-  constructGaussianMeasureMathlib m
-
-/-- Real characteristic functional of the Mathlib GFF: for real test functions f, the generating
-    functional equals the Gaussian form with the real covariance. -/
-theorem gff_mathlib_real_characteristic (m : ℝ) [Fact (0 < m)] :
-  ∀ f : TestFunctionR,
-    GJGeneratingFunctional (gaussianFreeFieldMathlib m) f =
-      Complex.exp (-(1/2 : ℂ) * (freeCovarianceFormR m f f : ℝ)) := by
-  sorry -- Prove using Mathlib Gaussian theory
-
-/-- Standard fact: a Gaussian measure with even real characteristic functional
-    is centered. Proven using symmetry of the Gaussian distribution. -/
-axiom gaussianFreeFieldMathlib_centered (m : ℝ) [Fact (0 < m)] :
-  isCenteredGJ (gaussianFreeFieldMathlib m)
-
-/-- Complex generating functional for Mathlib Gaussian construction.
-    This extends the real characteristic functional to complex test functions
-    using the standard Mathlib theory of complex Gaussian distributions. -/
-axiom gff_mathlib_complex_generating (m : ℝ) [Fact (0 < m)] :
-  ∀ J : TestFunctionℂ,
-    GJGeneratingFunctionalℂ (gaussianFreeFieldMathlib m) J =
-      Complex.exp (-(1/2 : ℂ) * SchwingerFunctionℂ₂ (gaussianFreeFieldMathlib m) J J)
-
-/-- The Gaussian Free Field constructed via Mathlib is Gaussian. -/
-theorem isGaussianGJ_gaussianFreeFieldMathlib (m : ℝ) [Fact (0 < m)] :
-  isGaussianGJ (gaussianFreeFieldMathlib m) := by
-  constructor
-  · -- Centered
-    exact gaussianFreeFieldMathlib_centered m
-  · -- Complex generating functional equals Gaussian exponential
-    intro J
-    exact gff_mathlib_complex_generating m J
-
 /-- Bridge axiom: equality of complex generating functionals implies equality of
     real-characteristic integrals for all real test functions. -/
 axiom equal_complex_generating_implies_equal_real
@@ -254,28 +210,6 @@ structure Diagonalization {H : Type*}
 private def ip {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] (h x : H) : ℝ :=
   @inner ℝ H _ h x
 
-/-- Placeholder Gaussian law for the sketch: replace `dirac 0` with the pushforward of the
-convergent random series `∑ √eigₙ ξₙ eₙ` once available. -/
-noncomputable def gaussianLaw
-  {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
-  [SeparableSpace H] [MeasurableSpace H] [BorelSpace H]
-  {C : H →L[ℝ] H} (_D : Diagonalization C) : ProbabilityMeasure H := by
-  classical
-  exact probabilityMeasure_of_isProbability (Measure.dirac (0 : H)) (by infer_instance)
-
-/-- Characteristic functional of the Gaussian law built from `C` via the random series. -/
-theorem char_fun_gaussianLaw
-  {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] [CompleteSpace H]
-  [SeparableSpace H] [MeasurableSpace H] [BorelSpace H]
-  {C : H →L[ℝ] H} (D : Diagonalization C) :
-  ∀ h : H,
-    ∫ x, Complex.exp (Complex.I * Complex.ofReal (ip h x)) ∂(gaussianLaw D).toMeasure
-      = Complex.exp (-(1/2 : ℂ) * Complex.ofReal (@inner ℝ H _ (C h) h)) := by
-  classical
-  intro h
-  -- Outline proof as comments; full details rely on the true series definition of `X`.
-  sorry
-
 /-- Finite-dimensional approximation map associated to diagonalization data. -/
 noncomputable def finiteApproxLinear
   {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H]
@@ -285,7 +219,6 @@ noncomputable def finiteApproxLinear
     { toFun := fun v => ∑ i : Fin n, (Real.sqrt (D.eig i) * v i) • (D.e i)
       map_add' := by
         intro v w
-        -- Expand and use additivity of sum and smul
         have :
           ∑ i : Fin n, (Real.sqrt (D.eig i) * (v i + w i)) • (D.e i)
             = ∑ i : Fin n,
@@ -293,54 +226,71 @@ noncomputable def finiteApproxLinear
                  + (Real.sqrt (D.eig i) * w i) • (D.e i)) := by
           apply Finset.sum_congr rfl
           intro i _
-          simp [mul_add, smul_add]
-        simpa [this, Finset.sum_add_distrib]
+          simp [mul_add, add_smul]
+        simp [this, Finset.sum_add_distrib]
       map_smul' := by
         intro a v
-        -- Factor the scalar through the sum
         have :
           ∑ i : Fin n, (Real.sqrt (D.eig i) * (a * v i)) • (D.e i)
             = ∑ i : Fin n, a • ((Real.sqrt (D.eig i) * v i) • (D.e i)) := by
           apply Finset.sum_congr rfl
           intro i _
-          -- (√eig * (a * v i)) • e = a • ((√eig * v i) • e)
           have : (Real.sqrt (D.eig i) * (a * v i)) = a * (Real.sqrt (D.eig i) * v i) := by
             ring_nf
-          simpa [this, smul_smul]
-        simpa [this, Finset.smul_sum] }
+          simp [this, smul_smul]
+        simp [this, Finset.smul_sum] }
+
+/-- Change-of-variables for integrals under Measure.map (axiomatized for this sketch). -/
+axiom integral_map_comp'
+  {α β : Type*} [MeasurableSpace α] [MeasurableSpace β]
+  (μ : Measure α) (f : β → ℂ) (g : α → β) :
+  ∫ y, f y ∂(Measure.map g μ) = ∫ x, f (g x) ∂μ
+
+/-- Characteristic function of the standard normal vector on `Fin n → ℝ` along a linear form. -/
+axiom stdNormalFin (n : ℕ) : ProbabilityMeasure (Fin n → ℝ)
+axiom stdNormalFin_char (n : ℕ) (a : Fin n → ℝ) :
+  ∫ v, Complex.exp (Complex.I * Complex.ofReal (∑ i, a i * v i)) ∂((stdNormalFin n).toMeasure)
+    = Complex.exp (-(1/2 : ℂ) * Complex.ofReal (∑ i, (a i)^2))
+
+/-- Inner product with the finiteApproxLinear is the corresponding finite sum. -/
+lemma inner_finiteApprox
+  {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H]
+  {C : H →L[ℝ] H} (D : Diagonalization C) (n : ℕ) (h : H) (v : Fin n → ℝ) :
+  @inner ℝ H _ h (finiteApproxLinear (H:=H) D n v)
+    = ∑ i : Fin n, (Real.sqrt (D.eig i) * (@inner ℝ H _ h (D.e i))) * v i := by
+  classical
+  -- Expand the definition and move `inner` inside the finite sum
+  simp [finiteApproxLinear, inner_sum, inner_smul_right, mul_comm, mul_left_comm]
+
+/-- Algebraic identity: (√a · b)^2 = a · b^2 for a ≥ 0. -/
+lemma sqrt_scale_square {a b : ℝ} (ha : 0 ≤ a) : (Real.sqrt a * b)^2 = a * b^2 := by
+  have hsq : (Real.sqrt a)^2 = a := by
+    simpa [pow_two] using (Real.mul_self_sqrt ha)
+  -- (√a · b)^2 = (√a)^2 · b^2 = a · b^2
+  have : (Real.sqrt a * b)^2 = (Real.sqrt a)^2 * b^2 := by
+    ring
+  simp [this, hsq]
+
+/-- Pushforward finite-dimensional Gaussian approximation on `H`. -/
+noncomputable def finiteApproxMeasure
+  {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H]
+  {C : H →L[ℝ] H} (D : Diagonalization C) (n : ℕ)
+  [MeasurableSpace H] [BorelSpace H] : ProbabilityMeasure H := by
+  classical
+  let L := finiteApproxLinear (H:=H) D n
+  have hcont : Continuous fun v : (Fin n → ℝ) => L v :=
+    LinearMap.continuous_of_finiteDimensional L
+  have h_ae : AEMeasurable (fun v => L v) ((stdNormalFin n).toMeasure) := by
+    simpa using hcont.aemeasurable
+  let mapped : Measure H := Measure.map (fun v => L v) ((stdNormalFin n).toMeasure)
+  have h_isprob : IsProbabilityMeasure mapped := by
+    simpa using isProbabilityMeasure_map h_ae
+  exact probabilityMeasure_of_isProbability mapped h_isprob
 
 end RandomSeriesConstruction
 
 /-! ## Construction via Mathlib Gaussian Framework -/
 
-/-- Covariance operator structure for Mathlib Gaussian construction.
-    This represents the covariance as a continuous linear operator on a Hilbert space. -/
-structure CovarianceOperator (H : Type*) [NormedAddCommGroup H] [InnerProductSpace ℝ H] where
-  operator : H →L[ℝ] H
-  symmetric : ∀ x y : H, @inner ℝ H _ (operator x) y = @inner ℝ H _ x (operator y)
-  positive_semidefinite : ∀ x : H, 0 ≤ @inner ℝ H _ (operator x) x
-
-/-- Finite-dimensional projection for cylindrical measure construction -/
-def FiniteDimensionalProjection (n : ℕ) : Type :=
-  TestFunctionR →ₗ[ℝ] (Fin n → ℝ)
-
-/-- Helper: build a `ProbabilityMeasure` from a measure with `IsProbabilityMeasure`. -/
-axiom probabilityMeasure_of_isProbability {α : Type*} [MeasurableSpace α] (μ : Measure α) :
-  IsProbabilityMeasure μ → ProbabilityMeasure α
-
-/-- The underlying measure of `probabilityMeasure_of_isProbability μ h` is `μ`. -/
-axiom toMeasure_probabilityMeasure_of_isProbability_eq
-  {α : Type*} [MeasurableSpace α] (μ : Measure α) (h : IsProbabilityMeasure μ) :
-  (probabilityMeasure_of_isProbability μ h).toMeasure = μ
-
-/-- Embedding test functions into a reproducing kernel Hilbert space -/
-noncomputable def reproductingKernelEmbedding (m : ℝ) [Fact (0 < m)] :
-  TestFunctionR →ₗ[ℝ] ℝ := by
-  sorry
-
-/-- The Hilbert space completion where the Gaussian measure lives -/
-noncomputable def covarianceHilbertSpace (m : ℝ) [Fact (0 < m)] : Type := ℝ
-
 /-- Construction of finite-dimensional Gaussian measures for cylindrical approximation -/
 noncomputable def finiteDimensionalGaussian (n : ℕ) (proj : FiniteDimensionalProjection n) :
   ProbabilityMeasure (Fin n → ℝ) := by
@@ -386,15 +336,6 @@ theorem isGaussianGJ_gaussianFreeFieldMathlib (m : ℝ) [Fact (0 < m)] :
     intro J
     exact gff_mathlib_complex_generating m J
 
-/-- Bridge axiom: equality of complex generating functionals implies equality of
-    real-characteristic integrals for all real test functions. -/
-axiom equal_complex_generating_implies_equal_real
-  (μ₁ μ₂ : ProbabilityMeasure FieldConfiguration) :
-  (∀ J : TestFunctionℂ, GJGeneratingFunctionalℂ μ₁ J = GJGeneratingFunctionalℂ μ₂ J) →
-  (∀ f : TestFunctionR,
-    ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ₁.toMeasure =
-    ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ₂.toMeasure)
-
 /-! ## Random-series (Karhunen–Loève) construction on a Hilbert space
 
 A pragmatic route in Mathlib today: build the Gaussian measure on a separable real Hilbert
@@ -416,25 +357,6 @@ open Finset
 
 variable {H : Type*}
 variable [NormedAddCommGroup H] [InnerProductSpace ℝ H]
-
-/-- Diagonalization data for a positive self-adjoint trace-class operator `C`:
-- an orthonormal family `e : ℕ → H`,
-- nonnegative eigenvalues `eig : ℕ → ℝ` with `Summable eig`,
-- and `C (e n) = eig n • e n` for all `n`.
-This avoids typeclass issues of `OrthonormalBasis` while keeping the intended content. -/
-structure Diagonalization {H : Type*}
-  [NormedAddCommGroup H] [InnerProductSpace ℝ H]
-  (C : H →L[ℝ] H) : Type _ where
-  e : ℕ → H
-  orthonormal_e : Orthonormal ℝ e
-  eig : ℕ → ℝ
-  eig_nonneg : ∀ n, 0 ≤ eig n
-  diag : ∀ n, C (e n) = (eig n) • (e n)
-  trace_summable : Summable eig
-
--- Helper to avoid parser hiccups with the inner product notation inside complex expressions
-private def ip {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H] (h x : H) : ℝ :=
-  @inner ℝ H _ h x
 
 /-- Placeholder Gaussian law for the sketch: replace `dirac 0` with the pushforward of the
 convergent random series `∑ √eigₙ ξₙ eₙ` once available. -/
@@ -458,40 +380,47 @@ theorem char_fun_gaussianLaw
   -- Outline proof as comments; full details rely on the true series definition of `X`.
   sorry
 
-/-- Finite-dimensional approximation map associated to diagonalization data. -/
-noncomputable def finiteApproxLinear
+/-- Finite-dimensional characteristic functional matches the finite sum quadratic form. -/
+theorem char_fun_finiteApprox
   {H : Type*} [NormedAddCommGroup H] [InnerProductSpace ℝ H]
-  {C : H →L[ℝ] H} (D : Diagonalization C) (n : ℕ) : (Fin n → ℝ) →ₗ[ℝ] H := by
+  [MeasurableSpace H] [BorelSpace H]
+  {C : H →L[ℝ] H} (D : Diagonalization C) (n : ℕ) :
+  ∀ h : H,
+    ∫ x, Complex.exp (Complex.I * Complex.ofReal (@inner ℝ H _ h x)) ∂(finiteApproxMeasure (H:=H) D n).toMeasure
+      = Complex.exp (-(1/2 : ℂ) * Complex.ofReal (∑ i : Fin n, (D.eig i) * (@inner ℝ H _ h (D.e i))^2)) := by
   classical
-  refine
-    { toFun := fun v => ∑ i : Fin n, (Real.sqrt (D.eig i) * v i) • (D.e i)
-      map_add' := by
-        intro v w
-        -- Expand and use additivity of sum and smul
-        have :
-          ∑ i : Fin n, (Real.sqrt (D.eig i) * (v i + w i)) • (D.e i)
-            = ∑ i : Fin n,
-                ((Real.sqrt (D.eig i) * v i) • (D.e i)
-                 + (Real.sqrt (D.eig i) * w i) • (D.e i)) := by
-          apply Finset.sum_congr rfl
-          intro i _
-          simp [mul_add, smul_add]
-        simpa [this, Finset.sum_add_distrib]
-      map_smul' := by
-        intro a v
-        -- Factor the scalar through the sum
-        have :
-          ∑ i : Fin n, (Real.sqrt (D.eig i) * (a * v i)) • (D.e i)
-            = ∑ i : Fin n, a • ((Real.sqrt (D.eig i) * v i) • (D.e i)) := by
-          apply Finset.sum_congr rfl
-          intro i _
-          -- (√eig * (a * v i)) • e = a • ((√eig * v i) • e)
-          have : (Real.sqrt (D.eig i) * (a * v i)) = a * (Real.sqrt (D.eig i) * v i) := by
-            ring_nf
-          simpa [this, smul_smul]
-        simpa [this, Finset.smul_sum] }
-
-end RandomSeriesConstruction
+  intro h
+  -- Abbreviations
+  let μ := (stdNormalFin n).toMeasure
+  let L := finiteApproxLinear (H:=H) D n
+  -- Change-of-variables under Measure.map
+  have h_map :=
+    integral_map_comp' μ (fun x : H => Complex.exp (Complex.I * Complex.ofReal (@inner ℝ H _ h x))) (fun v => L v)
+  -- Identify toMeasure of pushforward
+  have h_toMeasure : (finiteApproxMeasure (H:=H) D n).toMeasure = Measure.map (fun v => L v) μ := by
+    -- Unfold definitions and observe that L = finiteApproxLinear D n by definition
+    simp only [finiteApproxMeasure, toMeasure_probabilityMeasure_of_isProbability_eq, μ, L]
+  have h_pull :
+    (∫ x, Complex.exp (Complex.I * Complex.ofReal (@inner ℝ H _ h x)) ∂(finiteApproxMeasure (H:=H) D n).toMeasure)
+      = ∫ v, Complex.exp (Complex.I * Complex.ofReal (@inner ℝ H _ h (L v))) ∂μ := by
+    simpa [h_toMeasure] using h_map
+  -- Expand inner product with the finite approximation
+  have hinner :
+    ∀ v, @inner ℝ H _ h (L v) = ∑ i : Fin n, (Real.sqrt (D.eig i) * (@inner ℝ H _ h (D.e i))) * v i :=
+    inner_finiteApprox (H:=H) D n h
+  -- Define coefficients aᵢ
+  let a : Fin n → ℝ := fun i => Real.sqrt (D.eig i) * (@inner ℝ H _ h (D.e i))
+  -- Apply the standard normal CF on ℝ^n
+  have hcf := stdNormalFin_char n a
+  -- Reexpress the quadratic form
+  have hsq : ∑ i : Fin n, (a i)^2 = ∑ i : Fin n, (D.eig i) * (@inner ℝ H _ h (D.e i))^2 := by
+    apply Finset.sum_congr rfl; intro i _
+    unfold a; simpa [pow_two] using sqrt_scale_square (D.eig_nonneg i) (b := @inner ℝ H _ h (D.e i))
+  -- Conclude
+  have : ∫ v, Complex.exp (Complex.I * Complex.ofReal (@inner ℝ H _ h (L v))) ∂μ
+      = Complex.exp (-(1/2 : ℂ) * Complex.ofReal (∑ i : Fin n, (D.eig i) * (@inner ℝ H _ h (D.e i))^2)) := by
+    simpa [hinner, a, hsq] using hcf
+  simpa [h_pull] using this
 
 /-! ## Construction via General Mathlib Framework
 
@@ -618,7 +547,7 @@ The Mathlib approach provides a complementary foundation for Gaussian Free Field
 offering standard probability theory methods alongside the specialized Minlos approach.
 -/
 
-end
+end RandomSeriesConstruction
 
 /-- For the Mathlib-constructed GFF, the complex 2-point function equals the complex
     free covariance. Proof follows from the Mathlib Gaussian construction. -/

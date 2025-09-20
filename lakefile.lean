@@ -14,3 +14,7 @@ require mathlib from git
 @[default_target]
 lean_lib «Aqft2» where
   -- add any library configuration options here
+
+lean_lib «KolmogorovExtension4» where
+  -- Kolmogorov extension theorem library
+  roots := #[`KolmogorovExtension4]
