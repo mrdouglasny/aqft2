@@ -162,6 +162,12 @@ instance : MeasurableSpace FieldConfiguration := borel _
     weak-* topology, making evaluation maps x ↦ ω(x) continuous for each test function x. -/
 def distributionPairing (ω : FieldConfiguration) (f : TestFunction) : ℝ := ω f
 
+@[simp] lemma pairing_smul_real (ω : FieldConfiguration) (s : ℝ) (a : TestFunction) :
+  ω (s • a) = s * (ω a) := by
+  -- Follows from ℝ-linearity of ω as a continuous linear functional.
+  -- TODO: fill in using map_smul for ContinuousLinearMap.
+  sorry
+
 /-! ## Glimm-Jaffe Generating Functional
 
 The generating functional in the distribution framework:
