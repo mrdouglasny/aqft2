@@ -510,4 +510,4 @@ theorem gaussianFreeField_satisfies_OS0 (m : ℝ) [Fact (0 < m)] :
   OS0_Analyticity (gaussianFreeField_free m) := by
   exact gaussian_satisfies_OS0 (gaussianFreeField_free m)
     (isGaussianGJ_gaussianFreeField_free m)
-    (GFF_Minlos_Complex.covarianceBilinear_free_from_Qc m)
+    (covarianceBilinear_gaussianFreeField m)

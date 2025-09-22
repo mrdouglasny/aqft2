@@ -55,6 +55,19 @@ This implements the distribution-based approach where:
 
 This provides the mathematical foundation for constructive quantum field theory
 using the Osterwalder-Schrader framework.
+
+Design notes (possible future changes):
+
+- Spacetime model: We currently use Euclidean ℝ^d (here d = STDimension) with Lebesgue measure.
+  In some applications it may be preferable to work on a compact Riemannian manifold (M, g).
+  This would affect the definitions of `SpaceTime`, the reference measure μ, Fourier-analytic
+  tools, and Euclidean invariance statements.
+
+- Distribution class: We currently model field configurations as tempered distributions on
+  Schwartz test functions. In the stochastic quantization literature, smaller configuration
+  spaces are often used, e.g. negative Hölder/Besov regularity classes C^{-α}. Migrating to
+  such classes would change the test-function space, the topology on the dual, and the way
+  Minlos/characteristic functionals are formulated.
 -/
 
 import Mathlib.Algebra.Algebra.Defs
