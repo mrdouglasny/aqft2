@@ -532,25 +532,26 @@ lemma mixed_deriv_schwinger
   deriv (fun t : ℂ => deriv (fun s : ℂ => GJGeneratingFunctionalℂ μ (t • f + s • g)) 0) 0
     = -(SchwingerFunctionℂ₂ μ f g) := by
   intro μ
-  -- This lemma computes the mixed derivative via Gaussian integral moments.
-  --
-  -- Mathematical background: For a centered Gaussian measure μ and the generating functional
-  -- Φ(t,s) = ∫ exp(i⟨ω, t•f + s•g⟩) dμ(ω), the mixed derivative at (0,0) gives:
-  --
-  -- ∂²Φ/∂t∂s|₀ = ∂²/∂t∂s ∫ exp(i⟨ω, t•f + s•g⟩) dμ(ω)|₀
-  --             = ∫ ∂²/∂t∂s exp(i⟨ω, t•f + s•g⟩) dμ(ω)|₀  (differentiation under integral)
-  --             = ∫ exp(i⟨ω, 0⟩) · (i⟨ω,f⟩)(i⟨ω,g⟩) dμ(ω)  (chain rule)
-  --             = ∫ 1 · (-⟨ω,f⟩⟨ω,g⟩) dμ(ω)               (i² = -1)
-  --             = -∫ ⟨ω,f⟩⟨ω,g⟩ dμ(ω)
-  --             = -SchwingerFunctionℂ₂ μ f g               (by definition)
-  --
-  -- The technical details involve:
-  -- 1. Dominated convergence theorem for complex-valued integrands
-  -- 2. Regularity of Schwartz test functions
-  -- 3. Integrability conditions for the Gaussian measure
-  --
-  -- These are standard in the theory of Gaussian measures on Schwartz distributions.
-  -- We defer the rigorous functional analysis to focus on the algebraic structure.
+  -- PROOF OUTLINE: Use the Minlos-based complex generating functional
+  -- and the fact that both sides represent the same mixed derivative
+
+  -- Step 1: Express the LHS using the complex characteristic functional
+  -- From gff_complex_characteristic_minlos: Z[J] = exp(-½ Qc(J,J))
+  -- So ∂²/∂t∂s Z[t•f + s•g]|₀ = -Qc(f,g)
+  have h_minlos := GFF_Minlos_Complex.mixed_deriv_minlos_Qc m f g
+
+  -- Step 2: The bridge lemma shows Qc(f,g) = S₂(f,g) for centered Gaussian μ
+  -- This follows from the fact that both represent the same mixed derivative
+  -- of the generating functional via different representations
+
+  -- Step 3: Therefore -Qc(f,g) = -S₂(f,g)
+  -- Completing this proof requires:
+  -- (a) Showing the bridge equality Qc(f,g) = S₂(f,g) via mixed derivative uniqueness
+  -- (b) This can be done by proving both equal the same analytic continuation
+  --     from real test functions to complex test functions
+
+  -- The complete proof involves dominated convergence theorem and
+  -- complex analytic continuation - details in mixed_deriv_schwinger_gff.lean
   sorry
 
 /-- Polarization identity for complex bilinear forms.

@@ -1,6 +1,9 @@
 /-
-Draft implementation of mixed_deriv_schwinger for testing and development.
-This is a standalone file to work on the proof before copying back to GFFMconstruct.lean.
+Draft implementation of mixed_deriv_schwinger for testing and developme-- Import the proved lemmas from the GFF file
+open MixedDerivGFF
+
+-- NOTE: This file is a WORKING TEMPLATE that should be implemented directly
+-- in GFFMconstruct.lean where all the actual types and definitions exist. a standalone file to work on the proof before copying back to GFFMconstruct.lean.
 
 ## PROOF PLAN FOR mixed_deriv_schwinger
 
@@ -67,19 +70,24 @@ import Aqft2.Schwinger
 import Aqft2.FunctionalAnalysis
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
+import Aqft2.mixed_deriv_schwinger_gff
 -- import Aqft2.GFFMconstruct  -- removed to avoid access to `schwinger_eq_Qc_free`
 
 open MeasureTheory Complex
 
--- Local definition copied from before line 529 of `GFFMconstruct.lean`
-/-- The complex 2-point Schwinger function for complex test functions. -/
-noncomputable def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (φ ψ : TestFunctionℂ) : ℂ :=
-  SchwingerFunctionℂ dμ_config 2 ![φ, ψ]
+-- Import the proved lemmas from the GFF file
+open MixedDerivGFF
 
 -- NOTE: This file is a WORKING TEMPLATE that should be implemented directly
 -- in GFFMconstruct.lean where all the actual types and definitions exist.
--- The structure below shows the proof outline with placeholder sorrys.
+-- The structure below shows the proof outline with placeholder axioms.
+
+-- TODO: For the GFF case, we can use the proved lemmas from MixedDerivGFF:
+-- - pairing_linear_combo (proved)
+-- - schwinger_eq_integral_product (proved)
+-- - deriv_under_integral_s' (proved for GFF case with m : ℝ)
+-- - deriv_under_integral_t' (proved for GFF case with m : ℝ)
+-- These would replace the general axioms when μ = gaussianFreeField_free m
 
 -- Axioms supplying the analysis pieces we will later discharge from Gaussian facts
 axiom integrable_pairing_L1
@@ -90,28 +98,25 @@ axiom integrable_pairing_product_L1
   (μ : ProbabilityMeasure FieldConfiguration) (f g : TestFunctionℂ) :
   Integrable (fun ω => distributionPairingℂ_real ω f * distributionPairingℂ_real ω g) μ.toMeasure
 
-axiom deriv_under_integral_s'
+-- Note: The following axioms are now proved lemmas in mixed_deriv_schwinger_gff:
+-- - pairing_linear_combo (proved)
+-- - schwinger_eq_integral_product (proved)
+-- - deriv_under_integral_s' (proved for GFF case)
+-- - deriv_under_integral_t' (proved for GFF case)
+
+-- For general probability measures, we still need these as axioms:
+
+-- For general probability measures, we still need these as axioms:
+axiom deriv_under_integral_s'_general
   (μ : ProbabilityMeasure FieldConfiguration) (f g : TestFunctionℂ) :
   ∀ t : ℂ,
     deriv (fun s => ∫ ω, Complex.exp (Complex.I * (t * distributionPairingℂ_real ω f + s * distributionPairingℂ_real ω g)) ∂μ.toMeasure) 0
       = ∫ ω, deriv (fun s => Complex.exp (Complex.I * (t * distributionPairingℂ_real ω f + s * distributionPairingℂ_real ω g))) 0 ∂μ.toMeasure
 
-axiom deriv_under_integral_t'
+axiom deriv_under_integral_t'_general
   (μ : ProbabilityMeasure FieldConfiguration) (f g : TestFunctionℂ) :
   deriv (fun t => ∫ ω, (deriv (fun s => Complex.exp (Complex.I * (t * distributionPairingℂ_real ω f + s * distributionPairingℂ_real ω g))) 0) ∂μ.toMeasure) 0
     = ∫ ω, deriv (fun t => deriv (fun s => Complex.exp (Complex.I * (t * distributionPairingℂ_real ω f + s * distributionPairingℂ_real ω g))) 0) 0 ∂μ.toMeasure
-
--- Linearity of the complex pairing in the test-function argument
-axiom pairing_linear_combo
-  (ω : FieldConfiguration) (f g : TestFunctionℂ) (t s : ℂ) :
-  distributionPairingℂ_real ω (t • f + s • g)
-    = t * distributionPairingℂ_real ω f + s * distributionPairingℂ_real ω g
-
--- Schwinger function at n=2 equals the product integral
-axiom schwinger_eq_integral_product
-  (μ : ProbabilityMeasure FieldConfiguration) (f g : TestFunctionℂ) :
-  SchwingerFunctionℂ₂ μ f g
-    = ∫ ω, distributionPairingℂ_real ω f * distributionPairingℂ_real ω g ∂μ.toMeasure
 
 -- Remove circular Minlos/bridge lemma to avoid dependency cycles
 -- lemma mixed_deriv_schwinger'
@@ -191,8 +196,8 @@ lemma mixed_deriv_schwinger_direct
       funext ω
       simp [ϕω, pairing_linear_combo ω f g t s, mul_add]
     simp [hfun]
-  have diff_s := deriv_under_integral_s' μ f g
-  have diff_t := deriv_under_integral_t' μ f g
+  have diff_s := deriv_under_integral_s'_general μ f g
+  have diff_t := deriv_under_integral_t'_general μ f g
   have pointwise_mixed_deriv : ∀ ω : FieldConfiguration,
       deriv (fun t => deriv (fun s => ϕω ω t s) 0) 0
         = -(distributionPairingℂ_real ω f * distributionPairingℂ_real ω g) := by
