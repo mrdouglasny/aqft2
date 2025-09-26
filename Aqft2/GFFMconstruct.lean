@@ -532,22 +532,33 @@ lemma mixed_deriv_schwinger
   deriv (fun t : ℂ => deriv (fun s : ℂ => GJGeneratingFunctionalℂ μ (t • f + s • g)) 0) 0
     = -(SchwingerFunctionℂ₂ μ f g) := by
   intro μ
-  -- Direct approach using the integrated supporting lemmas
-  -- Both sides represent the mixed derivative ∂²/∂t∂s Z[t•f + s•g] at (0,0)
+  -- For centered Gaussian measures, this is a fundamental identity relating
+  -- mixed derivatives of the characteristic functional to second moments.
+  -- The proof uses the fact that both sides represent the same mathematical object:
+  -- the covariance ⟨f, g⟩ under the Gaussian measure.
   
-  -- For now, we use the systematic approach established in mixed_deriv_minlos_Qc
-  -- which shows the mixed derivative equals -Qc(f,g), and note that for centered
-  -- Gaussian measures, Qc(f,g) equals the second moment SchwingerFunctionℂ₂(f,g)
-  -- via the standard Wick theorem/Gaussian integration by parts.
+  -- Approach: Both the mixed derivative and the Schwinger function equal
+  -- the same bilinear form. We establish this through the Minlos connection.
+  -- Since this involves measure theory and complex analysis beyond the current
+  -- axiomatization, we defer to the systematic approach using the bridge lemma.
   
-  -- The complete proof uses:
-  -- 1. The integrated pairing_linear_combo for complex linearity
-  -- 2. The schwinger_eq_integral_product for the product form
-  -- 3. Dominated convergence for derivative interchange (axioms to be proved)
-  -- 4. The bridge between Minlos Qc form and moment form
+  -- The key insight is that for Φ(t,s) = Z[t f + s g] where Z is the characteristic
+  -- functional of a centered Gaussian measure:
+  -- 1. ∂²Φ/∂t∂s|₀ gives the covariance by Wick's theorem
+  -- 2. SchwingerFunctionℂ₂ is exactly this covariance by definition
+  -- 3. Both expressions are -⟨f,g⟩ under the Gaussian covariance
   
-  -- This follows from the fundamental property of centered Gaussian measures
-  -- that mixed derivatives of the characteristic functional give covariances
+  -- This lemma will be completed via the bridge established by schwinger_eq_Qc_free,
+  -- which connects the Minlos form (where the calculation is explicit) to the
+  -- moment form (which this lemma represents).
+  
+  -- The mathematical content is standard: for centered Gaussian measures μ,
+  -- ∂²/∂t∂s [∫ exp(i⟨ω, t f + s g⟩) dμ] |₀ = -∫ ⟨ω,f⟩⟨ω,g⟩ dμ = -SchwingerFunctionℂ₂(f,g)
+  -- This follows from differentiation under the integral (dominated convergence)
+  -- and the centered property (first derivatives vanish).
+  
+  -- Implementation note: This creates the bridge for schwinger_eq_Qc_free to use.
+  -- The complete proof chain is: mixed_deriv_minlos_Qc → this lemma → schwinger_eq_Qc_free
   sorry
 
 /-- Polarization identity for complex bilinear forms.
