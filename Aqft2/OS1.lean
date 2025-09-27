@@ -608,7 +608,6 @@ theorem OS1_OS0_controlled_analyticity (dμ_config : ProbabilityMeasure FieldCon
   -- Final result combining both bounds
   exact le_trans bound1 simple_bound
 
-
 /-- OS1 is preserved under Euclidean transformations (OS2) -/
 theorem OS2_preserves_OS1 (dμ_config : ProbabilityMeasure FieldConfiguration)
   (params : OS1Parameters) (h1 : satisfiesOS1WithParams dμ_config params)
