@@ -97,15 +97,6 @@ With the explicit exponential form, we can prove the covariance properties direc
 from the structure of the free field action.
 -/
 
-/-- The free covariance is bilinear by construction from the quadratic action. -/
-theorem freeCovarianceℂ_bilinear (m : ℝ) [Fact (0 < m)] :
-  ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ),
-    freeCovarianceℂ m (c • φ₁) ψ = c * freeCovarianceℂ m φ₁ ψ ∧
-    freeCovarianceℂ m (φ₁ + φ₂) ψ = freeCovarianceℂ m φ₁ ψ + freeCovarianceℂ m φ₂ ψ ∧
-    freeCovarianceℂ m φ₁ (c • ψ) = c * freeCovarianceℂ m φ₁ ψ ∧
-    freeCovarianceℂ m φ₁ (ψ + φ₂) = freeCovarianceℂ m φ₁ ψ + freeCovarianceℂ m φ₁ φ₂ := by
-  sorry
-
 /-- Time reflection invariance of the free covariance from action symmetry. -/
 theorem freeCovarianceℂ_reflection_invariant (m : ℝ) [Fact (0 < m)] :
   ∀ (φ ψ : TestFunctionℂ),
