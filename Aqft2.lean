@@ -16,3 +16,5 @@ import «Aqft2».OS_Axioms
 import «Aqft2».OS4
 import «Aqft2».GaussianFreeField
 import «Aqft2».HadamardExp
+import «Aqft2».GFF_OS3
+import «Aqft2».GFFfinish
