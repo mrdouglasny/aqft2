@@ -41,6 +41,7 @@ import Aqft2.Covariance
 import Aqft2.HadamardExp
 import Aqft2.SchurProduct
 import Aqft2.GFFMconstruct
+import Aqft2.GaussianFreeField
 
 --it is ok to use results in old.GFF_OS3 but these should be
 --textually copied into this file to use them.
@@ -54,21 +55,6 @@ noncomputable section
 open scoped BigOperators
 open Finset
 
-/-! ## Free Field Covariance Reflection Positivity
-
-The free field covariance satisfies the reflection positivity condition required
-for OS3. This is a fundamental property of the free field theory.
--/
-
-/-- The free field satisfies hermitian symmetry of the covariance. -/
-lemma freeCovarianceHermitian (m : ℝ) [Fact (0 < m)] :
-  ∀ f g : TestFunctionℂ,
-    SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g =
-    star (SchwingerFunctionℂ₂ (gaussianFreeField_free m) g f) := by
-  -- TODO: derive from the explicit covariance once available
-  -- For now, keep as a stub to unblock compilation.
-  intro f g; sorry
-
 /-! ## Gaussian Free Field Properties via Covariance Function
 
 Instead of axiomatizing properties of the complex measure gaussianFreeField_free directly,
@@ -79,14 +65,8 @@ gff_two_point_equals_covarianceℂ_free. This avoids the complex Minlos construc
 /-- The 2-point Schwinger function is bilinear via freeCovarianceℂ properties. -/
 lemma covarianceBilinear_gaussianFreeField_free (m : ℝ) [Fact (0 < m)] :
   CovarianceBilinear (gaussianFreeField_free m) := by
-  -- Use gff_two_point_equals_covarianceℂ_free to reduce to freeCovarianceℂ bilinearity
-  intro c φ₁ φ₂ ψ
-  have h₁ := gff_two_point_equals_covarianceℂ_free m (c • φ₁) ψ
-  have h₂ := gff_two_point_equals_covarianceℂ_free m φ₁ ψ
-  have h₃ := gff_two_point_equals_covarianceℂ_free m (φ₁ + φ₂) ψ
-  have h₄ := gff_two_point_equals_covarianceℂ_free m φ₁ φ₂
-  -- TODO: prove freeCovarianceℂ is bilinear using its explicit Fourier form
-  sorry
+  -- Reuse the bilinearity proved in `GaussianFreeField.lean`
+  simpa using covarianceBilinear_gaussianFreeField m
 
 /-- Time reflection invariance follows from freeCovarianceℂ properties. -/
 lemma reflectionInvariance_gaussianFreeField_free (m : ℝ) [Fact (0 < m)] :
@@ -108,8 +88,15 @@ lemma covarianceReflectionPositive_gaussianFreeField_free (m : ℝ) [Fact (0 < m
 private lemma entrywiseExp_posSemidef_of_posSemidef
   {n : ℕ} (R : Matrix (Fin n) (Fin n) ℝ)
   (hR : R.PosSemidef) : Matrix.PosSemidef (fun i j => Real.exp (R i j)) := by
-  -- TODO: use Aqft2.HadamardExp once the corresponding lemma is complete.
-  sorry
+  classical
+  -- PSD for the Hadamard-series exponential
+  have hS : (Aqft2.entrywiseExp_hadamardSeries (ι:=Fin n) R).PosSemidef :=
+    Aqft2.posSemidef_entrywiseExp_hadamardSeries_of_posSemidef (ι:=Fin n) R hR
+  -- Convert to PSD for the entrywise exponential
+  have hExp : (Aqft2.entrywiseExp (ι:=Fin n) R).PosSemidef := by
+    simpa [Aqft2.entrywiseExp_eq_hadamardSeries (ι:=Fin n) R] using hS
+  -- Unfold the definition of entrywiseExp
+  simpa [Aqft2.entrywiseExp] using hExp
 
 /-- If E is a real symmetric PSD matrix, then for any complex vector y,
     the Hermitian quadratic form with kernel E is real and nonnegative. -/
