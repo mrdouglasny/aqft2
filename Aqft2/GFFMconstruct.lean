@@ -280,18 +280,23 @@ noncomputable def freeCovarianceForm_struct (m : ℝ) : MinlosAnalytic.Covarianc
     exact freeCovarianceFormR_smul_left m c f g
 
 /-- Bridge: identify the Minlos complexification Qc of the real free covariance with the
-    explicitly defined complex free covariance `freeCovarianceℂ`. -/
+    explicitly defined complex free covariance `freeCovarianceℂ`.
+
+    Proof strategy (extracted to free_Qc_eq_freeCovarianceℂ_proof.lean for development):
+    1. Both sides are ℂ-bilinear extensions of the same real form freeCovarianceFormR
+    2. Decompose f, g into real and imaginary parts using complex_testfunction_decompose
+    3. Use simp lemmas from Basic.lean to show (decompose f).1 x = (f x).re, etc.
+    4. Expand freeCovarianceℂ m f g using pointwise f = re + i·im, star(g) = re - i·im
+    5. Apply freeCovarianceℂ_agrees_on_reals to each of the 4 resulting double integrals
+    6. Match with Qc's canonical complexification formula
+
+    This is the key technical bridge connecting the Minlos analytic continuation
+    with the explicitly defined complex covariance. -/
 lemma free_Qc_eq_freeCovarianceℂ
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
   MinlosAnalytic.Qc (freeCovarianceForm_struct m) f g = freeCovarianceℂ m f g := by
-  -- This requires proving that the Minlos complexification Qc of the real covariance
-  -- equals the explicit complex covariance via Fourier transforms.
-  -- Key steps would be:
-  -- 1. Unfold Qc as the canonical complexification: Qc(f,g) = Q(Re f, Re g) + Q(Im f, Im g) + i[Q(Im f, Re g) - Q(Re f, Im g)]
-  -- 2. Show that freeCovarianceℂ has the same complex extension form
-  -- 3. Use the fact that both are derived from the same momentum space propagator 1/(‖k‖²+m²)
-  -- This is a foundational bridge lemma connecting two representations of the same mathematical object
   sorry
+
 
 /-- Complex generating functional for the free GFF (via Minlos analyticity).
     This avoids any circularity: we use the proven real characteristic functional

@@ -843,7 +843,7 @@ theorem freeCovarianceReflectionPositiveMomentum_obvious {m : ℝ} [Fact (0 < m)
   have h_fourier_equiv : (∫ (k : SpaceTime),
         (starRingEnd ℂ) ((fourierTransform (QFT.compTimeReflection f)) k) * ↑(freePropagatorMomentum m k) *
           (fourierTransform f) k).re =
-        ∫ (k : SpaceTime), ‖((SchwartzMap.fourierTransformCLM ℂ) f) k‖ ^ 2 * freePropagatorMomentum m k := by
+        ∫ (k : SpaceTime), ‖((SchwartzMap.fourierTransformCLM ℂ) f) k‖ ^ 2 * freePropagatorMomentum m k ∂volume := by
     -- The key mathematical insight: for functions with negative time support,
     -- time reflection in Fourier space creates the relationship (θf)̂*(k) · f̂(k) = |f̂(k)|²
     -- This is the essence of why momentum space makes reflection positivity "obvious"
@@ -916,39 +916,6 @@ theorem freeCovarianceReflectionPositiveMomentum_obvious {m : ℝ} [Fact (0 < m)
       -- ∫ F[θf]*(k) · (1/(k²+m²)) · F[f](k) dk = ∫ |F[f](k)|² · (1/(k²+m²)) dk
       --
       -- The mathematical content involves:
-      -- 1. Analyticity properties from time support restrictions
-      -- 2. Properties of Fourier transforms under time reflection
-      -- 3. Complex analysis ensuring the sesquilinear form becomes a quadratic form
-      -- 4. The fact that 1/(k²+m²) > 0 provides the positive weight
-      --
-      -- This identity is fundamental to constructive QFT and is either:
-      -- - Established via deep harmonic analysis
-      -- - Assumed as part of the OS1  framework
-      -- - Proven using explicit Fourier integral methods
-      --
-      -- Since this represents the essential mathematical insight that makes
-      -- momentum space reflection positivity "obvious", we state it as the
-      -- fundamental theorem that connects time reflection to positive definiteness
-
-      -- The identity follows from the mathematical principle that time reflection
-      -- combined with appropriate support conditions produces the desired equivalence
-      -- This is exactly the content that transforms a complex sesquilinear form
-      -- into a manifestly positive quadratic form
-
-      -- This is the fundamental mathematical theorem that establishes the equivalence
-      -- between time reflection in position space and positive definiteness in momentum space
-      --
-      -- Mathematical principle: For functions f with support on x₀ ≤ 0 (negative times),
-      -- the time-reflected function θf has support on x₀ ≥ 0 (positive times).
-      -- Their Fourier transforms satisfy a fundamental identity that transforms
-      -- the complex sesquilinear form into a manifestly positive quadratic form:
-      --
-      -- ∫ F[θf]*(k) · (1/(k²+m²)) · F[f](k) dk = ∫ |F[f](k)|² · (1/(k²+m²)) dk
-      --
-      -- This identity is the mathematical essence that makes reflection positivity
-      -- "obvious" in momentum space: the RHS is manifestly ≥ 0.
-      --
-      -- The proof involves deep results from harmonic analysis:
       -- 1. Analyticity properties from time support restrictions
       -- 2. Plancherel/Parseval theorems for weighted L² spaces
       -- 3. Complex analysis and residue calculus
@@ -1885,7 +1852,7 @@ axiom freeCovarianceFormR_smul_left (m : ℝ) : ∀ (c : ℝ) (f g : TestFunctio
   star (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
   simp
 
-/-- Same statement via the star ring endomorphism (complex conjugation). -/
+/-- Same statement via the star ring endomorphism (complex conjugate). -/
 @[simp] lemma freePropagatorMomentum_starRing (m : ℝ) (k : SpaceTime) :
   (starRingEnd ℂ) (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
   simp
@@ -1952,11 +1919,8 @@ lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime) :
   unfold freeCovariance
 
   -- Both sides use Classical.choose with the same witness ⟨0, trivial⟩
-  -- Since exists_real_function always returns the same proof regardless of arguments,
-  -- both Classical.choose expressions are applied to identical proofs
-
-  -- We can simplify this by noting that both expressions are definitionally equal
-  -- because they apply Classical.choose to the same existence proof
+  -- Classical.choose (⟨0, trivial⟩) = Classical.choose (⟨0, trivial⟩)
+  -- Since Classical.choose is deterministic, this is reflexive equality
   rfl
 
 /-- The position-space free covariance is real-valued after ℂ coercion. -/
@@ -1970,3 +1934,41 @@ lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime) :
   -- symmetry plus real-valuedness
   simp [freeCovariance_symmetric m x y]
 
+/-- Agreement on reals: if both arguments are real test functions (coerced to ℂ pointwise),
+    the complex covariance equals the real covariance coerced to ℂ. -/
+lemma freeCovarianceℂ_agrees_on_reals (m : ℝ)
+  (f g : TestFunction) :
+  freeCovarianceℂ m (toComplex f) (toComplex g)
+    = (freeCovarianceFormR m f g : ℂ) := by
+  -- Unfold both sides and use pointwise equality of toComplex
+  unfold freeCovarianceℂ freeCovarianceFormR
+  -- The key insight: toComplex f applied to x gives (f x : ℂ)
+  simp only [toComplex_apply, starRingEnd_apply]
+  -- Use that star of real numbers is identity
+  have h : ∀ (x y : SpaceTime),
+    ((f x : ℂ)) * ((freeCovariance m x y : ℂ)) * star ((g y : ℂ))
+    = ((f x * freeCovariance m x y * g y : ℝ) : ℂ) := by
+    intros x y
+    rw [RCLike.star_def, conj_ofReal]
+    push_cast
+    rfl
+  simp_rw [h]
+  -- Now we need: ∫ x, ∫ y, ↑(f x * K * g y) = ↑(∫ x, ∫ y, f x * K * g y)
+  -- Apply integral_ofReal to the inner integral first
+  have step1 : ∫ x, ∫ y, ((f x * freeCovariance m x y * g y : ℝ) : ℂ)
+             = ∫ x, ((∫ y, f x * freeCovariance m x y * g y : ℝ) : ℂ) := by
+    congr 1 with x
+    exact integral_ofReal
+  rw [step1]
+  -- Then apply integral_ofReal to the outer integral
+  exact integral_ofReal
+
+/-- Agreement on reals via the canonical embedding `toComplex`. -/
+lemma freeCovarianceℂ_agrees_on_reals_toComplex (m : ℝ)
+  (f g : TestFunction) :
+  freeCovarianceℂ m (toComplex f) (toComplex g)
+    = (freeCovarianceFormR m f g : ℂ) := by
+  -- Reduce to the previous lemma using the pointwise characterization of `toComplex`
+  have hf : (toComplex f) = (fun x => (f x : ℂ)) := rfl
+  have hg : (toComplex g) = (fun x => (g x : ℂ)) := rfl
+  simpa [hf, hg] using freeCovarianceℂ_agrees_on_reals (m := m) f g

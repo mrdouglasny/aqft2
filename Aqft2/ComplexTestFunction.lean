@@ -162,4 +162,75 @@ lemma pairing_linear_combo
     simpa [him_rhs, add_comm, add_left_comm, add_assoc]
       using him
 
-end
+/-- Pointwise identity: for any complex-valued test function f, we have
+    f(x) = re(f(x)) + i · im(f(x)). -/
+lemma eval_re_add_im (f : TestFunctionℂ) : ∀ x, f x = (Complex.re (f x) : ℂ) + Complex.I * (Complex.im (f x) : ℂ) := by
+  intro x
+  -- Start from z = re z + im z * I (symmetric of re_add_im)
+  calc
+    f x = (Complex.re (f x) : ℂ) + (Complex.im (f x) : ℂ) * Complex.I := by
+      exact (Complex.re_add_im (f x)).symm
+    _ = (Complex.re (f x) : ℂ) + Complex.I * (Complex.im (f x) : ℂ) := by
+      ring
+
+/-- Pointwise identity for conjugation in terms of re/im parts of a complex test function. -/
+lemma eval_conj_re_sub_im (g : TestFunctionℂ) :
+  ∀ x, (starRingEnd ℂ) (g x) = (Complex.re (g x) : ℂ) - Complex.I * (Complex.im (g x) : ℂ) := by
+  intro x
+  -- Notation
+  set a : ℂ := (Complex.re (g x) : ℂ) with ha
+  set b : ℂ := (Complex.im (g x) : ℂ) with hb
+  have hx : g x = a + Complex.I * b := by
+    -- expand a,b
+    rw [ha, hb]
+    exact eval_re_add_im g x
+  -- Apply star to both sides and compute explicitly on RHS
+  have hstar := congrArg (starRingEnd ℂ) hx
+  -- Compute star of RHS using ring-hom axioms
+  have hRHS : (starRingEnd ℂ) (a + Complex.I * b) = a + (-Complex.I) * b := by
+    -- map addition and multiplication
+    calc
+      (starRingEnd ℂ) (a + Complex.I * b)
+          = (starRingEnd ℂ) a + (starRingEnd ℂ) (Complex.I * b) := by
+              simp [map_add]
+      _ = a + (starRingEnd ℂ) Complex.I * (starRingEnd ℂ) b := by
+              rw [map_mul]
+              -- Now need to show (starRingEnd ℂ) a = a
+              rw [ha, hb]
+              simp
+      _ = a + (-Complex.I) * b := by
+              -- star of real-coerced a,b is themselves; star I = -I
+              congr 2
+              · exact Complex.conj_I
+              · rw [hb]
+                exact Complex.conj_ofReal _
+  -- Put together
+  calc
+    (starRingEnd ℂ) (g x)
+        = (starRingEnd ℂ) (a + Complex.I * b) := hstar
+    _ = a + (-Complex.I) * b := hRHS
+    _ = a - Complex.I * b := by ring
+
+/-- Embed a real test function as a complex-valued test function by coercing values via ℝ → ℂ. -/
+def toComplex (f : TestFunction) : TestFunctionℂ :=
+  SchwartzMap.mk (fun x => (f x : ℂ)) (by
+    -- ℝ → ℂ coercion is smooth
+    exact ContDiff.comp Complex.ofRealCLM.contDiff f.smooth'
+  ) (by
+    -- Polynomial growth is preserved since ℝ → ℂ coercion preserves norms
+    intro k n
+    obtain ⟨C, hC⟩ := f.decay' k n
+    use C
+    intro x
+    -- Use the fact that iteratedFDeriv commutes with continuous linear maps
+    have h_norm_eq : ‖iteratedFDeriv ℝ n (fun x ↦ (f x : ℂ)) x‖ = ‖iteratedFDeriv ℝ n f.toFun x‖ := by
+      -- This follows from derivatives of compositions with continuous linear maps
+      sorry -- Technical lemma about iteratedFDeriv and ofRealCLM
+    rw [h_norm_eq]
+    exact hC x
+  )
+
+@[simp] lemma toComplex_apply (f : TestFunction) (x : SpaceTime) :
+  toComplex f x = (f x : ℂ) := by
+  -- Follows from definition of toComplex
+  rfl

@@ -196,7 +196,7 @@ def GJGeneratingFunctional (dμ_config : ProbabilityMeasure FieldConfiguration)
 
 /-- Helper function to create a Schwartz map from a complex test function by applying a continuous linear map.
     This factors out the common pattern for extracting real/imaginary parts. -/
-private def schwartz_comp_clm (f : TestFunctionℂ) (L : ℂ →L[ℝ] ℝ) : TestFunction :=
+def schwartz_comp_clm (f : TestFunctionℂ) (L : ℂ →L[ℝ] ℝ) : TestFunction :=
   SchwartzMap.mk (fun x => L (f x)) (by
     -- L is a continuous linear map, hence smooth
     exact ContDiff.comp L.contDiff f.smooth'
@@ -210,10 +210,53 @@ private def schwartz_comp_clm (f : TestFunctionℂ) (L : ℂ →L[ℝ] ℝ) : Te
     sorry -- Technical: derivatives of L ∘ f are controlled by ||L|| * derivatives of f
   )
 
+omit [SigmaFinite μ]
+
+/-- Evaluate `schwartz_comp_clm` pointwise. -/
+@[simp] lemma schwartz_comp_clm_apply (f : TestFunctionℂ) (L : ℂ →L[ℝ] ℝ) (x : SpaceTime) :
+  (schwartz_comp_clm f L) x = L (f x) := rfl
+
 /-- Decompose a complex test function into its real and imaginary parts as real test functions.
     This is more efficient than separate extraction functions. -/
 def complex_testfunction_decompose (f : TestFunctionℂ) : TestFunction × TestFunction :=
   (schwartz_comp_clm f Complex.reCLM, schwartz_comp_clm f Complex.imCLM)
+
+/-- First component of the decomposition evaluates to the real part pointwise. -/
+@[simp] lemma complex_testfunction_decompose_fst_apply
+  (f : TestFunctionℂ) (x : SpaceTime) :
+  (complex_testfunction_decompose f).1 x = (f x).re := by
+  simp [complex_testfunction_decompose]
+
+/-- Second component of the decomposition evaluates to the imaginary part pointwise. -/
+@[simp] lemma complex_testfunction_decompose_snd_apply
+  (f : TestFunctionℂ) (x : SpaceTime) :
+  (complex_testfunction_decompose f).2 x = (f x).im := by
+  simp [complex_testfunction_decompose]
+
+/-- Coerced-to-ℂ version (useful for complex-side algebra). -/
+@[simp] lemma complex_testfunction_decompose_fst_apply_coe
+  (f : TestFunctionℂ) (x : SpaceTime) :
+  ((complex_testfunction_decompose f).1 x : ℂ) = ((f x).re : ℂ) := by
+  simp [complex_testfunction_decompose]
+
+/-- Coerced-to-ℂ version (useful for complex-side algebra). -/
+@[simp] lemma complex_testfunction_decompose_snd_apply_coe
+  (f : TestFunctionℂ) (x : SpaceTime) :
+  ((complex_testfunction_decompose f).2 x : ℂ) = ((f x).im : ℂ) := by
+  simp [complex_testfunction_decompose]
+
+/-- Recomposition at a point via the decomposition. -/
+lemma complex_testfunction_decompose_recompose
+  (f : TestFunctionℂ) (x : SpaceTime) :
+  f x = ((complex_testfunction_decompose f).1 x : ℂ)
+          + Complex.I * ((complex_testfunction_decompose f).2 x : ℂ) := by
+  -- Reduce to the standard identity z = re z + i im z
+  have h1 : f x = (Complex.re (f x) : ℂ) + (Complex.im (f x) : ℂ) * Complex.I :=
+    (Complex.re_add_im (f x)).symm
+  have h2 : f x = (Complex.re (f x) : ℂ) + Complex.I * (Complex.im (f x) : ℂ) := by
+    simpa [mul_comm] using h1
+  -- Rewrite re/im via the decomposition
+  simpa using h2
 
 /-- Complex version of the pairing: real field configuration with complex test function
     We extend the pairing by treating the complex test function as f(x) = f_re(x) + i*f_im(x)
