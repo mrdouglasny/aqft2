@@ -1872,6 +1872,14 @@ axiom freeCovarianceFormR_continuous (m : ℝ) :
 axiom freeCovarianceFormR_pos (m : ℝ) : ∀ f : TestFunctionR, 0 ≤ freeCovarianceFormR m f f
 /-- Symmetry of the real covariance bilinear form. -/
 axiom freeCovarianceFormR_symm (m : ℝ) : ∀ f g : TestFunctionR, freeCovarianceFormR m f g = freeCovarianceFormR m g f
+
+/-- Linearity in the first argument of the real covariance bilinear form. -/
+axiom freeCovarianceFormR_add_left (m : ℝ) : ∀ f₁ f₂ g : TestFunctionR,
+  freeCovarianceFormR m (f₁ + f₂) g = freeCovarianceFormR m f₁ g + freeCovarianceFormR m f₂ g
+
+/-- Scalar multiplication in the first argument of the real covariance bilinear form. -/
+axiom freeCovarianceFormR_smul_left (m : ℝ) : ∀ (c : ℝ) (f g : TestFunctionR),
+  freeCovarianceFormR m (c • f) g = c * freeCovarianceFormR m f g
 /-- The momentum-space propagator is real-valued: its star (complex conjugate) equals itself. -/
 @[simp] lemma freePropagatorMomentum_star (m : ℝ) (k : SpaceTime) :
   star (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
