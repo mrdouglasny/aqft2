@@ -68,7 +68,7 @@ lemma mixed_deriv_exp_bilinear (a b : ℂ) :
   simp [I_sq]
 
 -- Simplified test cases that we can verify the final algebra step
-example : -(I * I) = (1 : ℂ) := by simp [I_sq]
+example : -(I * I) = (1 : ℂ) := by simp
 example : -(I * 1) * (I * 1) = -(I * I) := by ring
 
 end

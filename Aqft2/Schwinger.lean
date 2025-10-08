@@ -173,10 +173,20 @@ def SchwingerFunctionℂ (dμ_config : ProbabilityMeasure FieldConfiguration) (n
   (f : Fin n → TestFunctionℂ) : ℂ :=
   ∫ ω, (∏ i, distributionPairingℂ_real ω (f i)) ∂dμ_config.toMeasure
 
-/-- Local definition of complex 2-point Schwinger function for CLM invariance lemmas -/
-private def SchwingerFunctionℂ₂_local (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (f g : TestFunctionℂ) : ℂ :=
-  SchwingerFunctionℂ dμ_config 2 ![f, g]
+/-- The complex 2-point Schwinger function for complex test functions.
+    This is the natural extension of SchwingerFunction₂ to complex test functions. -/
+def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (φ ψ : TestFunctionℂ) : ℂ :=
+  SchwingerFunctionℂ dμ_config 2 ![φ, ψ]
+
+/-- Property that SchwingerFunctionℂ₂ is ℂ-bilinear in both arguments.
+    This is a key property for Gaussian measures and essential for OS0 analyticity. -/
+def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ),
+    SchwingerFunctionℂ₂ dμ_config (c • φ₁) ψ = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
+    SchwingerFunctionℂ₂ dμ_config φ₁ (ψ + φ₂) = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₁ φ₂
 
 /-! ## Exponential Series Connection to Generating Functional
 
@@ -374,7 +384,7 @@ lemma schwinger_function_clm_invariant
   (h_invariant : ∀ h : TestFunctionℂ,
     GJGeneratingFunctionalℂ dμ_config (L h) = GJGeneratingFunctionalℂ dμ_config h)
   (f g : TestFunctionℂ) :
-  SchwingerFunctionℂ₂_local dμ_config (L f) (L g) = SchwingerFunctionℂ₂_local dμ_config f g := by
+  SchwingerFunctionℂ₂ dμ_config (L f) (L g) = SchwingerFunctionℂ₂ dμ_config f g := by
   -- Proof strategy:
   -- 1. Express S₂(f,g) in terms of functional derivatives of Z[h] at h=0
   -- 2. Use the chain rule: ∂²Z[h]/∂f∂g = ∂²Z[L⁻¹h]/∂(Lf)∂(Lg) when Z[Lh] = Z[h]

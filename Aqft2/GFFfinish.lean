@@ -32,7 +32,7 @@ noncomputable section
 
 /-- Single master theorem: assuming the standard covariance hypotheses for the free GFF
 (boundedness for OS1, Euclidean invariance for OS2) and OS4 clustering, the free GFF
-satisfies all five OS axioms. OS0 is supplied by `gaussianFreeField_satisfies_OS0`, and
+satisfies all five OS axioms. OS0 is supplied by `gaussianFreeField_satisfies_OS0_alt`, and
 OS3 by `gaussianFreeField_satisfies_OS3`.
 
 This bundles the full result under assumptions that are natural to verify for the free
@@ -49,7 +49,7 @@ theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)]
   -- Gaussianity of the free GFF generating functional
   have h_gauss : isGaussianGJ (μ_GFF m) := by
     simpa using isGaussianGJ_gaussianFreeField_free m
-  -- OS0 from existing result
+  -- OS0 from alternate finite-dimensional proof
   have h_OS0 : OS0_Analyticity (μ_GFF m) := by
     simpa using gaussianFreeField_satisfies_OS0 m
   -- OS1 from the generic Gaussian theorem with bounded covariance

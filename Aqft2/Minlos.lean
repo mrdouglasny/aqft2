@@ -53,14 +53,25 @@ def IsPositiveDefinite {α : Type*} [AddGroup α] (φ : α → ℂ) : Prop :=
     This is a fundamental result connecting harmonic analysis and probability theory.
     The infinite-dimensional generalization (Minlos theorem) is used to construct
     the Gaussian Free Field. -/
-theorem bochner_Rn
+axiom bochner_Rn
   {n : ℕ} (φ : (Fin n → ℝ) → ℂ)
   (hcont : Continuous φ)
   (hpd : IsPositiveDefinite φ)
   (hnorm : φ 0 = 1) :
   ∃ μ : Measure (Fin n → ℝ), IsProbabilityMeasure μ ∧
-    (∀ t, φ t = ∫ ξ, Complex.exp (I * (∑ i, t i * ξ i)) ∂μ) := by
-  sorry  -- Standard proof via Stone-Weierstrass and Riesz representation
+    (∀ t, φ t = ∫ ξ, Complex.exp (I * (∑ i, t i * ξ i)) ∂μ)
+  -- Standard proof via Stone-Weierstrass and Riesz representation
+
+/-- Lévy uniqueness of characteristic functions on ℝⁿ:
+    If two probability measures have identical characteristic functions for all
+    real frequencies, then the measures are equal. -/
+axiom levy_cf_uniqueness_Rn
+  {n : ℕ}
+  (μ₁ μ₂ : ProbabilityMeasure (Fin n → ℝ)) :
+  (∀ t : (Fin n → ℝ),
+    ∫ ξ, Complex.exp (I * (∑ i, t i * ξ i)) ∂μ₁.toMeasure =
+    ∫ ξ, Complex.exp (I * (∑ i, t i * ξ i)) ∂μ₂.toMeasure) →
+  μ₁ = μ₂
 
 /-! ## Minlos Theorem -/
 

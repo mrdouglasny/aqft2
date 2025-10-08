@@ -89,6 +89,7 @@ import Aqft2.Minlos
 import Aqft2.Covariance
 import Aqft2.MinlosAnalytic
 import Aqft2.MixedDerivLemma
+import Aqft2.ComplexTestFunction
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -110,12 +111,6 @@ structure CovarianceFunction where
 /-- A measure is centered (has zero mean) -/
 def isCenteredGJ (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (f : TestFunction), GJMean dμ_config f = 0
-
-/-- The complex 2-point Schwinger function for complex test functions.
-    This is the natural extension of SchwingerFunction₂ to complex test functions. -/
-def SchwingerFunctionℂ₂ (dμ_config : ProbabilityMeasure FieldConfiguration)
-  (φ ψ : TestFunctionℂ) : ℂ :=
-  SchwingerFunctionℂ dμ_config 2 ![φ, ψ]
 
 /-- A measure is Gaussian if its generating functional has the Gaussian form.
     For a centered Gaussian measure, Z[J] = exp(-½⟨J, CJ⟩) where C is the covariance. -/
@@ -201,68 +196,6 @@ theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] :
 axiom gaussianFreeField_free_centered (m : ℝ) [Fact (0 < m)] :
   isCenteredGJ (gaussianFreeField_free m)
 
-/-! ## Summary: Gaussian Free Field Construction via Minlos Theorem
-
-We have established the mathematical framework for constructing Gaussian Free Fields using the Minlos theorem:
-
-**Note:** The general Minlos construction for arbitrary nuclear covariance functions
-has been moved to `Aqft2.GeneralMinlos` as it remains incomplete with sorry statements.
-The actual GFF construction uses the specialized `constructGaussianMeasureMinlos_free` approach.
-
-### 1. **Free Field Construction** ✅ Structure Complete
-- `freeFieldPropagator`: The Klein-Gordon propagator C(k) = 1/(k² + m²)
-- `freeFieldCovariance`: Covariance function built from the propagator via Fourier transform
-- `freeFieldCovariance_nuclear`: Proof that the free field covariance is nuclear for m > 0
-- `gaussianFreeField`: The actual Gaussian Free Field measure via Minlos theorem
-
-### 2. **Mathematical Foundation** ✅ Framework Established
-- `freeFieldPropagator`: The Klein-Gordon propagator C(k) = 1/(k² + m²)
-- `freeFieldCovariance`: Covariance function built from the propagator via Fourier transform
-- `freeFieldCovariance_nuclear`: Proof that the free field covariance is nuclear for m > 0
-- `gaussianFreeField`: The actual Gaussian Free Field measure via Minlos theorem
-
-### 3. **Mathematical Foundation** ✅ Framework Established
-- **Minlos Theorem**: Standard approach in constructive QFT for infinite-dimensional Gaussian measures
-- **Nuclear Condition**: Ensures the measure extends from cylindrical to σ-additive on S'(ℝᵈ)
-- **Characteristic Functional**: Z[f] = exp(-½⟨f, Cf⟩) with nuclear covariance C
-
-### 4. **Key Advantages of Minlos Approach**
-- **Direct Construction**: No need for Kolmogorov extension - goes straight to infinite dimensions
-- **Standard in QFT**: This is how GFF is actually constructed in the literature
-- **Clear Conditions**: Nuclear condition is well-understood and computable
-- **Dimension Dependence**: Naturally handles the d < 4 restriction for massless fields
-
-### 5. **Implementation Status**
-The mathematical structure is complete with well-defined interfaces:
-
-**Priority 1: Nuclear Covariance Verification**
-- Complete proof of `freeFieldCovariance_nuclear` using integral bounds
-- Show Tr(C) = ∫ 1/(k² + m²) dk < ∞ for d < 4, m > 0
-
-**Priority 2: Minlos Construction Details**
-- Implement `constructGaussianMeasureMinlos` using standard functional analysis
-- Connect to Schwartz space nuclear topology and dual space measures
-
-**Priority 3: Fourier Transform**
-- Implement `schwartzFourierTransform` for explicit covariance computation
-- Verify all properties of `freeFieldCovariance` structure
-
-### 6. **Connection to Literature**
-This implementation directly follows:
-- **Glimm-Jaffe**: Section 6.6 "Construction of P(φ)₂ via Gaussian Integration"
-- **Simon**: "The P(φ)₂ Euclidean (Quantum) Field Theory" (nuclear spaces approach)
-- **Feldman**: "The λφ⁴₃ Field Theory in a Finite Volume" (Minlos theorem application)
-
-### 7. **Mathematical Rigor**
-- **Nuclear Spaces**: Proper treatment of infinite-dimensional integration
-- **Measure Theory**: σ-additive measures on Polish spaces (tempered distributions)
-- **Functional Analysis**: Nuclear operators and trace class conditions
-
-The Minlos theorem approach provides the most direct and mathematically rigorous
-foundation for the Gaussian Free Field construction, avoiding the complexities
-of Kolmogorov extension while giving explicit dimension-dependent conditions.
--/
-
 end
 
 /-- For the specialized free-field GFF, the complex 2-point function equals the complex
@@ -273,21 +206,11 @@ theorem gff_two_point_equals_covarianceℂ_free
   -- TODO: derive from gaussianFreeField_free construction and the Fourier representation
   sorry
 
-/-- Assumption: SchwingerFunctionℂ₂ is linear in both arguments -/
-def CovarianceBilinear (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
-  ∀ (c : ℂ) (φ₁ φ₂ ψ : TestFunctionℂ),
-    SchwingerFunctionℂ₂ dμ_config (c • φ₁) ψ = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
-    -- DO NOT CHANGE: must be φ₁ + φ₂ (first-arg additivity). Using φ₁ + φ₁ breaks GJcov_bilin and OS0 expansion.
-    SchwingerFunctionℂ₂ dμ_config (φ₁ + φ₂) ψ = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₂ ψ ∧
-    SchwingerFunctionℂ₂ dμ_config φ₁ (c • ψ) = c * SchwingerFunctionℂ₂ dμ_config φ₁ ψ ∧
-    SchwingerFunctionℂ₂ dμ_config φ₁ (ψ + φ₂) = SchwingerFunctionℂ₂ dμ_config φ₁ ψ + SchwingerFunctionℂ₂ dμ_config φ₁ φ₂
-
 namespace GFF_Minlos_Complex
 
 open MinlosAnalytic
 
 -- Supporting lemmas moved early to enable integral proof of mixed_deriv_schwinger
-
 
 /-- Mixed differentiation under the integral for characteristic functions.
     For F(t,s) = ∫ exp(i(t*u(ω) + s*v(ω))) dμ(ω) where μ is a measure with finite second moments,
@@ -330,133 +253,6 @@ private lemma gaussian_pairing_product_integrable
   -- 3. The pairing ⟨ω, φ⟩ has Gaussian distribution for fixed φ
   -- 4. Products of Gaussian random variables have finite moments
   sorry
-
--- Key lemma: how reCLM behaves with complex operations
-private lemma re_of_complex_combination (a b : ℂ) (u v : ℂ) :
-  Complex.re (a * u + b * v) = a.re * u.re - a.im * u.im + b.re * v.re - b.im * v.im := by
-  -- Use basic complex arithmetic
-  simp only [add_re, mul_re]
-  ring
-
--- Key lemma: how imCLM behaves with complex operations
-private lemma im_of_complex_combination (a b : ℂ) (u v : ℂ) :
-  Complex.im (a * u + b * v) = a.re * u.im + a.im * u.re + b.re * v.im + b.im * v.re := by
-  -- Use basic complex arithmetic
-  simp only [add_im, mul_im]
-  ring
-
-/-- ω-linearity of the real component of the complex test-function decomposition under
-    complex linear combinations. This follows from ℝ-linearity of ω and pointwise
-    behavior of complex operations on Schwartz functions. -/
-lemma ω_re_decompose_linear
-  (ω : FieldConfiguration) (f g : TestFunctionℂ) (t s : ℂ) :
-  ω ((complex_testfunction_decompose (t • f + s • g)).1)
-    = t.re * ω ((complex_testfunction_decompose f).1)
-      - t.im * ω ((complex_testfunction_decompose f).2)
-      + s.re * ω ((complex_testfunction_decompose g).1)
-      - s.im * ω ((complex_testfunction_decompose g).2) := by
-  -- First, identify the real-part test function of t•f + s•g as a linear combination
-  have h_sum_re_eq :
-      (complex_testfunction_decompose (t • f + s • g)).1
-        = t.re • (complex_testfunction_decompose f).1
-          - t.im • (complex_testfunction_decompose f).2
-          + s.re • (complex_testfunction_decompose g).1
-          - s.im • (complex_testfunction_decompose g).2 := by
-    ext x
-    -- Rewrite to Complex.re/Complex.im and use algebra on ℂ
-    change Complex.reCLM ((t • f + s • g) x)
-        = t.re * Complex.reCLM (f x) - t.im * Complex.imCLM (f x)
-          + s.re * Complex.reCLM (g x) - s.im * Complex.imCLM (g x)
-    -- Evaluate pointwise scalar multiplication and addition
-    simp
-    -- Switch CLMs to the scalar functions and finish with the algebraic identity
-    change Complex.re (t * f x + s * g x)
-        = t.re * Complex.re (f x) - t.im * Complex.im (f x)
-          + s.re * Complex.re (g x) - s.im * Complex.im (g x)
-    simpa using re_of_complex_combination t s (f x) (g x)
-  -- Apply ω (a real-linear functional) to both sides
-  have := congrArg (fun (φ : TestFunction) => ω φ) h_sum_re_eq
-  -- Simplify using linearity of ω over ℝ
-  simpa [map_add, map_sub, map_smul]
-    using this
-
-/-- ω-linearity of the imaginary component of the complex test-function decomposition under
-    complex linear combinations. -/
-lemma ω_im_decompose_linear
-  (ω : FieldConfiguration) (f g : TestFunctionℂ) (t s : ℂ) :
-  ω ((complex_testfunction_decompose (t • f + s • g)).2)
-    = t.re * ω ((complex_testfunction_decompose f).2)
-      + t.im * ω ((complex_testfunction_decompose f).1)
-      + s.re * ω ((complex_testfunction_decompose g).2)
-      + s.im * ω ((complex_testfunction_decompose g).1) := by
-  -- Identify the imaginary-part test function of t•f + s•g as a linear combination
-  have h_sum_im_eq :
-      (complex_testfunction_decompose (t • f + s • g)).2
-        = t.re • (complex_testfunction_decompose f).2
-          + t.im • (complex_testfunction_decompose f).1
-          + s.re • (complex_testfunction_decompose g).2
-          + s.im • (complex_testfunction_decompose g).1 := by
-    ext x
-    -- Rewrite to Complex.im/Complex.re and use algebra on ℂ
-    change Complex.imCLM ((t • f + s • g) x)
-        = t.re * Complex.imCLM (f x) + t.im * Complex.reCLM (f x)
-          + s.re * Complex.imCLM (g x) + s.im * Complex.reCLM (g x)
-    -- Evaluate pointwise scalar multiplication and addition
-    simp
-    -- Switch CLMs to scalar functions and finish with the algebraic identity
-    change Complex.im (t * f x + s * g x)
-        = t.re * Complex.im (f x) + t.im * Complex.re (f x)
-          + s.re * Complex.im (g x) + s.im * Complex.re (g x)
-    simpa using im_of_complex_combination t s (f x) (g x)
-  -- Apply ω (a real-linear functional) to both sides
-  have := congrArg (fun (φ : TestFunction) => ω φ) h_sum_im_eq
-  -- Simplify using linearity of ω over ℝ
-  simpa [map_add, map_smul]
-    using this
-
-/-- Linearity of the complex pairing in the test-function argument. -/
-lemma pairing_linear_combo
-  (ω : FieldConfiguration) (f g : TestFunctionℂ) (t s : ℂ) :
-  distributionPairingℂ_real ω (t • f + s • g)
-    = t * distributionPairingℂ_real ω f + s * distributionPairingℂ_real ω g := by
-  classical
-  apply Complex.ext
-  · -- Real parts
-    -- Expand both sides to re/imag pieces
-    simp [distributionPairingℂ_real]
-    -- Goal is now: ω ((complex_testfunction_decompose (t•f+s•g)).1)
-    --              = (t * ((ω (..f..).1 + i ω (..f..).2)) + s * ((ω (..g..).1 + i ω (..g..).2))).re
-    -- Use algebraic identity on the RHS
-    have hre_rhs :
-        (t * ((ω ((complex_testfunction_decompose f).1) : ℂ) + I * (ω ((complex_testfunction_decompose f).2) : ℂ))
-            + s * ((ω ((complex_testfunction_decompose g).1) : ℂ) + I * (ω ((complex_testfunction_decompose g).2) : ℂ))).re
-          = t.re * ω ((complex_testfunction_decompose f).1)
-              - t.im * ω ((complex_testfunction_decompose f).2)
-              + s.re * ω ((complex_testfunction_decompose g).1)
-              - s.im * ω ((complex_testfunction_decompose g).2) := by
-      simpa using re_of_complex_combination t s
-        ((ω ((complex_testfunction_decompose f).1) : ℂ) + I * (ω ((complex_testfunction_decompose f).2) : ℂ))
-        ((ω ((complex_testfunction_decompose g).1) : ℂ) + I * (ω ((complex_testfunction_decompose g).2) : ℂ))
-    -- Use ω-linearity identity on the LHS
-    have hre := ω_re_decompose_linear ω f g t s
-    -- Finish by rewriting both sides to the same expression
-    simpa [hre_rhs, add_comm, add_left_comm, add_assoc, sub_eq_add_neg]
-      using hre
-  · -- Imag parts
-    simp [distributionPairingℂ_real]
-    have him_rhs :
-        (t * ((ω ((complex_testfunction_decompose f).1) : ℂ) + I * (ω ((complex_testfunction_decompose f).2) : ℂ))
-            + s * ((ω ((complex_testfunction_decompose g).1) : ℂ) + I * (ω ((complex_testfunction_decompose g).2) : ℂ))).im
-          = t.re * ω ((complex_testfunction_decompose f).2)
-              + t.im * ω ((complex_testfunction_decompose f).1)
-              + s.re * ω ((complex_testfunction_decompose g).2)
-              + s.im * ω ((complex_testfunction_decompose g).1) := by
-      simpa using im_of_complex_combination t s
-        ((ω ((complex_testfunction_decompose f).1) : ℂ) + I * (ω ((complex_testfunction_decompose f).2) : ℂ))
-        ((ω ((complex_testfunction_decompose g).1) : ℂ) + I * (ω ((complex_testfunction_decompose g).2) : ℂ))
-    have him := ω_im_decompose_linear ω f g t s
-    simpa [him_rhs, add_comm, add_left_comm, add_assoc]
-      using him
 
 /-- Schwinger function at n=2 equals the product integral (complex version). -/
 lemma schwinger_eq_integral_product

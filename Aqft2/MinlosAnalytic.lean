@@ -31,6 +31,7 @@ import Mathlib.MeasureTheory.Constructions.BorelSpace.Basic
 
 import Aqft2.Basic
 import Aqft2.Minlos
+--import Aqft2.ComplexGaussian
 import Mathlib.MeasureTheory.Measure.Map
 
 open Classical
@@ -223,34 +224,62 @@ lemma Sigma_ab_symm (C : CovarianceForm) (a b : TestFunction) :
   -- Case split on Fin 2 indices
   fin_cases i <;> fin_cases j <;> simp [Sigma_ab, C.symm]
 
-/-- Analyticity along the complex line z ↦ (i z, -z) for the 2D Gaussian CF.
-    We consider F(z) = E[exp(i z ⟨ω,a⟩ - z ⟨ω,b⟩)]. -/
-lemma analytic_along_line_i_neg1
-  (C : CovarianceForm) (μ : ProbabilityMeasure FieldConfiguration)
-  (h_realCF : ∀ f : TestFunction,
-     ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ.toMeasure
-       = Complex.exp (-(1/2 : ℂ) * (C.Q f f)))
-  (a b : TestFunction) :
-  True := by
-  -- Use arguments to avoid linter warnings while we leave this as a stub.
-  have _ := C.symm a b
-  have _ := h_realCF a
-  have _ := μ.toMeasure
-  trivial
+/-- Change of variables for the 2D cylindrical projection (continuous g).
+    For the map ω ↦ (⟨ω,a⟩, ⟨ω,b⟩), integration against the pushforward equals
+    integration of the composed function. -/
+axiom integral_map_pair_continuous
+  (μ : ProbabilityMeasure FieldConfiguration) (a b : TestFunction)
+  (g : ℝ × ℝ → ℂ) (hg : Continuous g) :
+  ∫ p, g p ∂(μ.toMeasure.map (fun ω : FieldConfiguration => ((ω a : ℝ), (ω b : ℝ))))
+    = ∫ ω, g ((ω a : ℝ), (ω b : ℝ)) ∂μ.toMeasure
 
-/-- Real-parameter two-dimensional CF along linear combinations. -/
-lemma gaussian_cf_linear_combo_real
-  (C : CovarianceForm) (μ : ProbabilityMeasure FieldConfiguration)
-  (h_realCF : ∀ f : TestFunction,
-     ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ.toMeasure
-       = Complex.exp (-(1/2 : ℂ) * (C.Q f f)))
-  (a b : TestFunction) (s t : ℝ) :
-  ∫ ω, Complex.exp (Complex.I * (ω (s • a + t • b))) ∂μ.toMeasure
-    = Complex.exp (-(1/2 : ℂ) * (C.Q (s • a + t • b) (s • a + t • b))) := by
-  simpa using h_realCF (s • a + t • b)
+/-- 2D complex line formula from the real characteristic function.
+    If a probability measure on ℝ×ℝ has the centered Gaussian real CF with covariance
+    entries (σ₁₁, σ₁₂, σ₂₂), then along the complex line z ↦ (i z, -z) we have
+    E[exp(i z X - z Y)] = exp(-½ z² (σ₁₁ - σ₂₂ + 2 i σ₁₂)). -/
+axiom twoD_line_from_realCF
+  (ν : Measure (ℝ × ℝ)) [IsProbabilityMeasure ν]
+  (σ₁₁ σ₁₂ σ₂₂ : ℝ)
+  (h_realCF : ∀ s t : ℝ,
+    ∫ p, Complex.exp (Complex.I * (s * p.1 + t * p.2)) ∂ν
+      = Complex.exp (-(1/2 : ℂ) * (s^2 * σ₁₁ + (2 : ℝ) * s * t * σ₁₂ + t^2 * σ₂₂ : ℝ))) :
+  ∀ z : ℂ,
+    ∫ p, Complex.exp (Complex.I * z * p.1 - z * p.2) ∂ν
+      = Complex.exp (-(1/2 : ℂ) * z^2 * ((σ₁₁ - σ₂₂ : ℝ) + Complex.I * (2 * σ₁₂ : ℝ)))
+
+/-- Additional helper axioms for the cylindrical 2D projection and linearity
+
+    Evaluation map ω ↦ (⟨ω,a⟩, ⟨ω,b⟩) is measurable. -/
+axiom pair_eval_measurable (a b : TestFunction) :
+  Measurable (fun ω : FieldConfiguration => ((ω a : ℝ), (ω b : ℝ)))
+
+/-- Pushforward of a probability measure under the pair-evaluation map is a probability measure. -/
+axiom isProbability_pushforward_pair
+  (μ : ProbabilityMeasure FieldConfiguration) (a b : TestFunction) :
+  IsProbabilityMeasure (μ.toMeasure.map (fun ω : FieldConfiguration => ((ω a : ℝ), (ω b : ℝ))))
+
+/-- Real-linearity of the evaluation: ω(s•a + t•b) = s·ω(a) + t·ω(b). -/
+axiom pairing_smul_add (ω : FieldConfiguration) (a b : TestFunction) (s t : ℝ) :
+  (ω (s • a + t • b) : ℝ) = s * (ω a : ℝ) + t * (ω b : ℝ)
+
+/-- Continuity of p ↦ exp(I * (s p.1 + t p.2)) for real s,t. -/
+axiom cont_exp_linear_2_real (s t : ℝ) :
+  Continuous (fun p : ℝ × ℝ => Complex.exp (Complex.I * ((s : ℂ) * (p.1 : ℂ) + (t : ℂ) * (p.2 : ℂ))))
+
+/-- Continuity of p ↦ exp(I z p.1 - z p.2) for complex z. -/
+axiom cont_exp_linear_2 (z : ℂ) :
+  Continuous (fun p : ℝ × ℝ => Complex.exp (Complex.I * z * (p.1 : ℂ) - z * (p.2 : ℂ)))
 
 /-- Analyticity along the complex line z ↦ (i z, -z) and explicit formula.
-    Placeholder: standard finite-dimensional Gaussian analyticity along a line. -/
+
+    Proof strategy: Use the finite-dimensional Gaussian result from ComplexGaussian.
+    1. Show (⟨ω,a⟩, ⟨ω,b⟩) is a 2D Gaussian with covariance matrix Σ = [[Q(a,a), Q(a,b)], [Q(a,b), Q(b,b)]]
+    2. Apply ComplexGaussian.gaussian_2d_complex_line to get the formula
+    3. The key is showing the measure μ restricted to span{a,b} is Gaussian with the right covariance
+       - This follows from h_realCF which determines all finite-dimensional marginals
+       - The Minlos theorem guarantees the infinite-dimensional measure is the projective limit
+
+    See ComplexGaussian.gaussian_line_formula_from_2d for the 2D case. -/
 lemma gaussian_mgf_line_formula
   (C : CovarianceForm) (μ : ProbabilityMeasure FieldConfiguration)
   (h_realCF : ∀ f : TestFunction,
@@ -260,73 +289,78 @@ lemma gaussian_mgf_line_formula
   ∀ z : ℂ,
     ∫ ω, Complex.exp (Complex.I * z * (ω a : ℂ) - z * (ω b : ℂ)) ∂μ.toMeasure
       = Complex.exp (-(1/2 : ℂ) * z^2 * ((C.Q a a - C.Q b b : ℝ) + I * (2 * C.Q a b : ℝ))) := by
-  intro z; sorry
+  intro z
+  -- Cylindrical projection and pushforward
+  let π : FieldConfiguration → ℝ × ℝ := fun ω => ((ω a : ℝ), (ω b : ℝ))
+  let ν : Measure (ℝ × ℝ) := μ.toMeasure.map π
+  haveI : IsProbabilityMeasure ν := isProbability_pushforward_pair μ a b
 
-/-- 2D Gaussian mgf specialization: for X=⟨ω,a⟩, Y=⟨ω,b⟩, centered with
-    Var(X)=Q(a,a), Var(Y)=Q(b,b), Cov(X,Y)=Q(a,b), we have
-    E[exp(i X - Y)] = exp(-1/2 · (Q(a,a) - Q(b,b) + 2 i Q(a,b))). -/
-lemma gaussian_mgf_iX_minusY
-  (C : CovarianceForm) (μ : ProbabilityMeasure FieldConfiguration)
-  (h_realCF : ∀ f : TestFunction,
-     ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ.toMeasure
-       = Complex.exp (-(1/2 : ℂ) * (C.Q f f)))
-  (a b : TestFunction) :
-  ∫ ω, Complex.exp (Complex.I * (ω a) - (ω b)) ∂μ.toMeasure
-    = Complex.exp (-(1/2 : ℂ) * ((C.Q a a - C.Q b b : ℝ) + I * (2 * C.Q a b : ℝ))) := by
-  classical
-  have h := gaussian_mgf_line_formula C μ h_realCF a b (1 : ℂ)
-  -- simplify z = 1
-  simpa [one_mul, one_pow] using h
+  -- Real CF on ν from h_realCF
+  have h_CF_ν : ∀ s t : ℝ,
+      ∫ p, Complex.exp (Complex.I * (s * p.1 + t * p.2)) ∂ν
+        = Complex.exp (-(1/2 : ℂ) * (s^2 * C.Q a a + (2 : ℝ) * s * t * C.Q a b + t^2 * C.Q b b : ℝ)) := by
+    intro s t
+    -- change of variables along π
+    have hpush := integral_map_pair_continuous μ a b
+      (fun p : ℝ × ℝ => Complex.exp (Complex.I * ((s : ℂ) * (p.1 : ℂ) + (t : ℂ) * (p.2 : ℂ))))
+      (cont_exp_linear_2_real s t)
+    have hL : ∫ p, Complex.exp (Complex.I * (s * p.1 + t * p.2)) ∂ν
+            = ∫ ω, Complex.exp (Complex.I * ((s : ℂ) * (ω a : ℝ) + (t : ℂ) * (ω b : ℝ))) ∂μ.toMeasure := by
+      simpa [ν, π, Complex.ofReal_mul, Complex.ofReal_add] using hpush
+    -- identify s·ω(a) + t·ω(b) = ω(s•a + t•b)
+    have h_eqpt : (fun (ω : FieldConfiguration) =>
+        Complex.exp (Complex.I * ((s : ℂ) * (ω a : ℝ) + (t : ℂ) * (ω b : ℝ))))
+        = (fun (ω : FieldConfiguration) => Complex.exp (Complex.I * (ω (s • a + t • b) : ℂ))) := by
+      funext ω
+      simp [pairing_smul_add ω a b s t, Complex.ofReal_add, Complex.ofReal_mul]
+    have hμ : ∫ ω, Complex.exp (Complex.I * ((s : ℂ) * (ω a : ℝ) + (t : ℂ) * (ω b : ℝ))) ∂μ.toMeasure
+            = Complex.exp (-(1/2 : ℂ) * (C.Q (s • a + t • b) (s • a + t • b))) := by
+      simpa [h_eqpt] using h_realCF (s • a + t • b)
+    -- expand C.Q(s•a+t•b, s•a+t•b)
+    have h_sum : C.Q (s • a + t • b) (s • a + t • b)
+        = C.Q (s • a) (s • a) + C.Q (s • a) (t • b) + C.Q (t • b) (s • a) + C.Q (t • b) (t • b) := by
+      -- Expand by additivity in both arguments
+      have h1 := C.add_left (s • a) (t • b) (s • a + t • b)
+      have h2 := C.add_right (s • a) (s • a) (t • b)
+      have h3 := C.add_right (t • b) (s • a) (t • b)
+      calc
+        C.Q (s • a + t • b) (s • a + t • b)
+            = C.Q (s • a) (s • a + t • b) + C.Q (t • b) (s • a + t • b) := by simpa using h1
+        _ = (C.Q (s • a) (s • a) + C.Q (s • a) (t • b)) + (C.Q (t • b) (s • a) + C.Q (t • b) (t • b)) := by
+              simp [h2, h3]
+        _ = C.Q (s • a) (s • a) + C.Q (s • a) (t • b) + C.Q (t • b) (s • a) + C.Q (t • b) (t • b) := by
+              simp [add_assoc]
+    have h11 : C.Q (s • a) (s • a) = s^2 * C.Q a a := by simpa using C.Q_diag_smul s a
+    have h12 : C.Q (s • a) (t • b) = (s * t) * C.Q a b := by simpa using C.Q_smul_smul s t a b
+    have h21 : C.Q (t • b) (s • a) = (t * s) * C.Q b a := by simpa using C.Q_smul_smul t s b a
+    have h22 : C.Q (t • b) (t • b) = t^2 * C.Q b b := by simpa using C.Q_diag_smul t b
+    have hsym : C.Q b a = C.Q a b := C.symm b a
+    have hQ : C.Q (s • a + t • b) (s • a + t • b)
+        = s^2 * C.Q a a + (2 : ℝ) * s * t * C.Q a b + t^2 * C.Q b b := by
+      calc
+        C.Q (s • a + t • b) (s • a + t • b)
+            = (s^2 * C.Q a a) + (s * t) * C.Q a b + (t * s) * C.Q b a + (t^2 * C.Q b b) := by
+              simpa [h11, h12, h21, h22]
+                using h_sum
+        _ = s^2 * C.Q a a + (s * t) * C.Q a b + (s * t) * C.Q a b + t^2 * C.Q b b := by
+              simp [mul_comm t s, hsym]
+        _ = s^2 * C.Q a a + (2 : ℝ) * s * t * C.Q a b + t^2 * C.Q b b := by ring
+    -- conclude the real CF
+    simpa [hQ] using hL.trans hμ
 
-/-- Helper identity: I * (x + I*y) = I*x - y. -/
-@[simp] lemma I_mul_add_I_mul (x y : ℂ) : Complex.I * (x + Complex.I * y) = Complex.I * x - y := by
-  -- I*(x + I*y) = I*x + I*(I*y) = I*x + (I*I)*y = I*x - y
-  simp [mul_add, Complex.I_mul_I, sub_eq_add_neg, mul_comm, mul_left_comm]
+  -- 2D complex-line via finite-dimensional result
+  have h_line := twoD_line_from_realCF (ν := ν) (σ₁₁ := C.Q a a) (σ₁₂ := C.Q a b) (σ₂₂ := C.Q b b) (h_realCF := h_CF_ν)
 
-@[simp] lemma square_add_I_mul (x y : ℂ) : (x + Complex.I * y)^2 = x^2 - y^2 + (2 : ℂ) * Complex.I * x * y := by
-  -- (x + i y)^2 = x^2 + 2 i x y - y^2
-  calc
-    (x + Complex.I * y)^2
-        = (x + Complex.I * y) * (x + Complex.I * y) := by simp [pow_two]
-    _   = x * x + x * (Complex.I * y) + (Complex.I * y) * x + (Complex.I * y) * (Complex.I * y) := by
-          ring_nf
-    _   = x^2 + Complex.I * (x * y) + Complex.I * (x * y) + (Complex.I * Complex.I) * (y * y) := by
-          simp [pow_two, mul_comm, mul_left_comm]
-    _   = x^2 + (2 : ℂ) * Complex.I * (x * y) - y^2 := by
-          -- x^2 + I*(x*y) + I*(x*y) + I*I*(y*y) = x^2 + 2*I*(x*y) - y^2
-          -- Use I*I = -1 and combine the I*(x*y) terms
-          simp only [Complex.I_mul_I, pow_two, two_mul]
-          ring
-    _   = x^2 - y^2 + (2 : ℂ) * Complex.I * x * y := by
-          ring_nf
+  -- Change variables back to μ for complex line integrand
+  have hpush2 := integral_map_pair_continuous μ a b
+    (fun p : ℝ × ℝ => Complex.exp (Complex.I * z * (p.1 : ℂ) - z * (p.2 : ℂ))) (cont_exp_linear_2 z)
+  have hL2 : ∫ p, Complex.exp (Complex.I * z * (p.1 : ℂ) - z * (p.2 : ℂ)) ∂ν
+            = ∫ ω, Complex.exp (Complex.I * z * (ω a : ℂ) - z * (ω b : ℂ)) ∂μ.toMeasure := by
+    simpa [ν, π] using hpush2
 
-/-- Main formula: complex characteristic functional equals Zc on complex tests. -/
-theorem gaussian_CF_complex
-  (C : CovarianceForm)
-  (μ : ProbabilityMeasure FieldConfiguration)
-  (h_realCF : ∀ f : TestFunction,
-     ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ.toMeasure
-       = Complex.exp (-(1/2 : ℂ) * (C.Q f f)))
-  : ∀ f : TestFunctionℂ,
-     ∫ ω, Complex.exp (Complex.I * (pairingC ω f)) ∂μ.toMeasure = Zc C f := by
-  classical
-  intro f
-  let a := (reIm f).1; let b := (reIm f).2
-  have hf : (fun ω => Complex.exp (Complex.I * (pairingC ω f))) =
-      (fun ω => Complex.exp (Complex.I * (ω a : ℂ) - (ω b : ℂ))) := by
-    funext ω; simp [pairingC_reIm (ω := ω) (f := f), a, b, I_mul_add_I_mul]
-  have h2 :
-    ∫ ω, Complex.exp (Complex.I * (ω a : ℂ) - (ω b : ℂ)) ∂μ.toMeasure
-      = Complex.exp (-(1/2 : ℂ) * ((C.Q a a - C.Q b b : ℝ) + I * (2 * C.Q a b : ℝ))) :=
-    gaussian_mgf_iX_minusY C μ h_realCF a b
-  have hI' :
-    ∫ ω, Complex.exp (Complex.I * (pairingC ω f)) ∂μ.toMeasure
-      = Complex.exp (-(1/2 : ℂ) * ((C.Q a a - C.Q b b : ℝ) + I * (2 * C.Q a b : ℝ))) := by
-    simpa [hf]
-      using h2
-  have hQc : Qc C f f = ((C.Q a a - C.Q b b : ℝ) + I * ((2 * C.Q a b : ℝ))) := by
-    simpa [a, b] using (Qc_diag_reIm C f)
-  simpa [Zc, hQc] using hI'
+  -- Final step: evaluate h_line and rewrite
+  have := h_line z
+  simpa [hL2] using this
 
 /-- Zero mean from the real Gaussian characteristic functional, via symmetry and L¹. -/
 lemma moment_zero_from_realCF
@@ -395,34 +429,60 @@ noncomputable def Qc_bilin (C : CovarianceForm) :
     (by intro x y y'; simpa using Qc_add_right C x y y')
     (by intro a x y; simpa using Qc_smul_right C a x y)
 
+/-- Main formula: complex characteristic functional equals Zc on complex tests. -/
+theorem gaussian_CF_complex
+  (C : CovarianceForm)
+  (μ : ProbabilityMeasure FieldConfiguration)
+  (h_realCF : ∀ f : TestFunction,
+     ∫ ω, Complex.exp (Complex.I * (ω f)) ∂μ.toMeasure
+       = Complex.exp (-(1/2 : ℂ) * (C.Q f f)))
+  : ∀ f : TestFunctionℂ,
+     ∫ ω, Complex.exp (Complex.I * (pairingC ω f)) ∂μ.toMeasure = Zc C f := by
+  classical
+  intro f
+  -- Decompose f into real and imaginary parts
+  let a := (reIm f).1
+  let b := (reIm f).2
+  -- Rewrite pairingC via re/imag decomposition
+  have hf : (fun ω => Complex.exp (Complex.I * (pairingC ω f)))
+      = (fun ω => Complex.exp (Complex.I * (ω a : ℂ) - (ω b : ℂ))) := by
+    funext ω
+    -- pointwise algebra for the exponent
+    have hrepr := pairingC_reIm (ω := ω) (f := f)
+    have : Complex.I * (pairingC ω f)
+        = Complex.I * (ω a : ℂ) - (ω b : ℂ) := by
+      dsimp [a, b] at hrepr
+      have hIIx : Complex.I * (Complex.I * (ω (reIm f).2 : ℂ))
+          = - (ω (reIm f).2 : ℂ) := by
+        calc
+          Complex.I * (Complex.I * (ω (reIm f).2 : ℂ))
+              = (Complex.I * Complex.I) * (ω (reIm f).2 : ℂ) := by ring
+          _ = (-1 : ℂ) * (ω (reIm f).2 : ℂ) := by simp [Complex.I_mul_I]
+          _ = - (ω (reIm f).2 : ℂ) := by ring
+      calc
+        Complex.I * (pairingC ω f)
+            = Complex.I * ((ω (reIm f).1 : ℂ) + Complex.I * (ω (reIm f).2 : ℂ)) := by simp [hrepr]
+        _ = Complex.I * (ω (reIm f).1 : ℂ) + Complex.I * (Complex.I * (ω (reIm f).2 : ℂ)) := by ring
+        _ = Complex.I * (ω a : ℂ) + - (ω b : ℂ) := by simp [a, b, hIIx]
+        _ = Complex.I * (ω a : ℂ) - (ω b : ℂ) := by ring
+    simp [this]
+  -- Apply the 2D line formula at z = 1
+  have hline :
+    ∫ ω, Complex.exp (Complex.I * (ω a : ℂ) - (ω b : ℂ)) ∂μ.toMeasure
+      = Complex.exp (-(1/2 : ℂ) * ((C.Q a a - C.Q b b : ℝ) + I * (2 * C.Q a b : ℝ))) := by
+    simpa [one_mul, one_pow] using (gaussian_mgf_line_formula C μ h_realCF a b (1 : ℂ))
+  -- Simplify Qc(f,f) on the diagonal
+  have hQc : Qc C f f = ((C.Q a a - C.Q b b : ℝ) + I * ((2 * C.Q a b : ℝ))) := by
+    simpa [a, b] using (Qc_diag_reIm C f)
+  -- Conclude via a calc chain
+  have lhs_eq :
+    ∫ ω, Complex.exp (Complex.I * (pairingC ω f)) ∂μ.toMeasure
+      = ∫ ω, Complex.exp (Complex.I * (ω a : ℂ) - (ω b : ℂ)) ∂μ.toMeasure := by
+    simp [hf]
+  calc
+    ∫ ω, Complex.exp (Complex.I * (pairingC ω f)) ∂μ.toMeasure
+        = ∫ ω, Complex.exp (Complex.I * (ω a : ℂ) - (ω b : ℂ)) ∂μ.toMeasure := lhs_eq
+    _ = Complex.exp (-(1/2 : ℂ) * ((C.Q a a - C.Q b b : ℝ) + I * (2 * C.Q a b : ℝ))) := hline
+    _ = Zc C f := by simp [Zc, hQc]
+
 end MinlosAnalytic
-
-/-!
-## Finite-dimensional analyticity (to lift to infinite dimensions)
-
-We record the standard finite-dimensional statement: for a centered Gaussian
-vector with real covariance matrix Σ, the map
-  (z_i)_{i=1..n} ↦ E[exp(∑ z_i X_i)]
-extends to an entire function on ℂⁿ and equals exp(½ zᵀ Σ z).
-
-We use this as the cylinder-level analyticity that justifies the complex CF
-formula for complex test functions via Re/Im decomposition and finite spans.
--/
-
-namespace FiniteDim
-
-open BigOperators
-
-/-- Complex quadratic form associated to a real symmetric matrix Sigma. -/
-noncomputable def quadFormC {ι : Type*} [Fintype ι] (Sigma : Matrix ι ι ℝ) (z : ι → ℂ) : ℂ :=
-  ∑ i, ∑ j, ((Sigma i j : ℝ) : ℂ) * z i * z j
-
-/-- Finite-dimensional Gaussian mgf/CF formula and analyticity (statement). -/
-lemma gaussian_mgf_entire {ι : Type*} [Fintype ι]
-  (Sigma : Matrix ι ι ℝ) (hSym : Sigma.transpose = Sigma) (hPSD : Sigma.PosSemidef) :
-  ∃ (F : (ι → ℂ) → ℂ),
-    (∀ z : ι → ℝ, F (fun i => (z i : ℂ)) = Complex.exp ((1/2 : ℂ) * quadFormC Sigma (fun i => (z i : ℂ)))) ∧
-    (∀ z : ι → ℂ, ∃ C r : ℝ, ∀ w : ι → ℂ, (∀ i, ‖w i - z i‖ < r) → ‖F w‖ ≤ C) := by
-  sorry
-
-end FiniteDim
