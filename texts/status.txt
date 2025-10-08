@@ -1,246 +1,109 @@
-Status report (Oct 1, 2025)
+Status report (Oct 8, 2025)
 
-Goal
------
-Complete the proof of
+Overview
+--------
+Major refactors and progress across Schwinger, GFFMconstruct, and GaussianFreeField modules:
 
-  theorem Aqft2.gaussianFreeField_satisfies_all_OS_axioms
-    (m : ℝ) [Fact (0 < m)]
-    (h_bound : CovarianceBoundedComplex (μ_GFF m))
-    (h_euc   : CovarianceEuclideanInvariantℂ (μ_GFF m))
-    (h_OS4   : OS4_Clustering (μ_GFF m)) :
-    OS0_Analyticity (μ_GFF m) ∧ OS1_Regularity (μ_GFF m) ∧ OS2_EuclideanInvariance (μ_GFF m)
-    ∧ OS3_ReflectionPositivity (μ_GFF m) ∧ OS4_Clustering (μ_GFF m)
+- Organization
+  • Moved SchwingerFunctionℂ₂ and CovarianceBilinear definitions to Aqft2/Schwinger.lean.
+  • Extracted complex pairing algebra to new file Aqft2/ComplexTestFunction.lean:
+    re/im combination lemmas, ω-linearity decompositions, and pairing_linear_combo.
+  • Removed private wrapper SchwingerFunctionℂ₂_local and updated its usages.
 
-where μ_GFF m := gaussianFreeField_free m. This theorem currently compiles and bundles the five axioms from existing pieces, but relies on upstream lemmas that still contain sorries. This document evaluates what is needed to discharge all sorries and make the theorem unconditional (i.e., with GFF-specific proofs of the assumptions).
+- Bilinearity from integrability
+  • Added CovarianceBilinear_of_integrable in Schwinger.lean:
+    assumes Integrable (⟨ω,φ⟩⟨ω,ψ⟩) for all φ, ψ and proves full ℂ-bilinearity of S₂.
+  • Simplifies proving CovarianceBilinear for specific measures by separating the analytic
+    (integrability) input from the algebraic linearity of pairing.
 
-High-level dependency graph
----------------------------
-Within GFFfinish.lean, the master theorem uses the following inputs and results:
+- Gaussian Free Field (GFF)
+  • Reproved covarianceBilinear_gaussianFreeField via CovarianceBilinear_of_integrable.
+    Introduced gaussian_pairing_product_integrable_free (placeholder) for the required integrability.
+  • gaussianFreeField_satisfies_OS0 now uses gaussian_satisfies_OS0 with the new bilinearity proof.
+  • Moved alternate OS0 proofs (gaussian_satisfies_OS0_alt, gaussianFreeField_satisfies_OS0_alt)
+    to old/GaussianFreeField_OS0_alt.lean.
 
-- isGaussianGJ (μ_GFF m)
-  • Source: Aqft2/GFFMconstruct.lean (isGaussianGJ_gaussianFreeField_free)
+- Minlos/Schwinger bridge
+  • Kept schwinger_eq_Qc_free (GFF_Minlos_Complex) equating S₂ with MinlosAnalytic.Qc.
+  • Began plan to prove gff_two_point_equals_covarianceℂ_free via a bridge lemma
+    free_Qc_eq_freeCovarianceℂ (currently a placeholder) identifying Qc with the explicit
+    Fourier-defined free covariance.
 
-- OS0_Analyticity (μ_GFF m)
-  • Source: Aqft2/GaussianFreeField.lean (gaussianFreeField_satisfies_OS0)
-  • Depends on: gaussian_satisfies_OS0 (complete) + CovarianceBilinear (for μ_GFF m)
+- Lint and hygiene
+  • Removed global [SigmaFinite μ] section var in Schwinger.lean to satisfy linter.
+  • Replaced fragile congr/ext goals in integrals with simp-based steps.
 
-- OS1_Regularity (μ_GFF m)
-  • Source: Aqft2/GaussianFreeField.lean (gaussian_satisfies_OS1)
-  • Depends on: isGaussianGJ μ, CovarianceBoundedComplex μ
+Current status by file
+----------------------
+Aqft2/Schwinger.lean
+- DONE: SchwingerFunctionℂ₂ and CovarianceBilinear centralized here.
+- DONE: CovarianceBilinear_of_integrable implemented.
+- Lint: cleaned; only unrelated placeholders remain.
 
-- OS2_EuclideanInvariance (μ_GFF m)
-  • Source: Aqft2/GaussianFreeField.lean (gaussian_satisfies_OS2)
-  • Depends on: isGaussianGJ μ, CovarianceEuclideanInvariantℂ μ
+Aqft2/ComplexTestFunction.lean
+- NEW: Houses pairing_linear_combo and helper lemmas (re/im combination, ω linearity).
+- Used by Schwinger/GFFMconstruct.
 
-- OS3_ReflectionPositivity (μ_GFF m)
-  • Source: Aqft2/GFF_OS3.lean (gaussianFreeField_satisfies_OS3)
-  • Depends on: factorization lemma from OS3.lean and GFF-specific covariance properties
-
-- OS4_Clustering (μ_GFF m)
-  • Source: to be supplied (either directly or via gaussian_satisfies_OS4_clustering)
-
-Current file-by-file status and required work
---------------------------------------------
-1) Aqft2/GFFMconstruct.lean
-   - isGaussianGJ_gaussianFreeField_free (m) : isGaussianGJ (μ_GFF m)
-     • Present; compiles; presumed complete (no explicit warning lines pointed here in build logs).
-     • Action: Verify it does not depend on any sorry-based lemmas (notably mixed_deriv_schwinger). If it does, we need to close that dependency loop.
-   - gff_two_point_equals_covarianceℂ_free (m f g) : S₂(μ_GFF) = freeCovarianceℂ
-     • Referenced from several places (OS3 factorization and elsewhere). Grep shows a lemma at ~line 272. Build warnings showed sorries around 270–298 in GFFMconstruct, so this identity may still be incomplete.
-     • Action: Confirm and complete the proof (either via Minlos analytic differentiation or by importing an explicit argument from GFFexplicit).
-
-2) Aqft2/GaussianFreeField.lean
-   - gaussian_satisfies_OS0
-     • Complete and generic.
-   - gaussianFreeField_satisfies_OS0 (m)
-     • Present; reduces to gaussian_satisfies_OS0 using:
-       - isGaussianGJ_gaussianFreeField_free m (ok)
-       - covarianceBilinear_gaussianFreeField m (currently TODO with sorries in this file)
-     • Action: Prove CovarianceBilinear (μ_GFF m). Suggested route: reduce to freeCovarianceℂ bilinearity via gff_two_point_equals_covarianceℂ_free.
-       - Either prove freeCovarianceℂ_bilinear in GFFexplicit (see below), or keep a direct proof here using the explicit integral representation if available.
-
-   - gaussian_satisfies_OS1 (dμ)
-     • Present but contains sorries:
-       1) Product-to-sum inequality to get a clean exponential bound.
-       2) TwoPointIntegrable proof for p = 2 branch.
-     • Action: Close these sorries once and for all. A workable plan:
-       - Use |Re z| ≤ |z| and then bound ‖S₂ f f‖ by M · ‖f‖₁ · ‖f‖₂ (given by CovarianceBoundedComplex). Convert the product into a sum with Young’s inequality or 2ab ≤ a² + b² and adjust constants to match the target bound shape.
-       - Provide a lemma TwoPointIntegrable for Gaussian measures with bounded covariance or directly for μ_GFF using the explicit kernel bounds.
-
-   - gaussian_satisfies_OS2 (dμ)
-     • Present and complete (no sorries). Given isGaussianGJ and CovarianceEuclideanInvariantℂ, it proves OS2.
-
-   - OS4 section (gaussian_satisfies_OS4_clustering)
-     • Currently a skeleton with sorries; translation function translate_test_function is undefined; clustering lemma is unproven.
-     • Action: Either:
-       (A) Provide a GFF-specific OS4 lemma directly, or
-       (B) Complete the generic gaussian_satisfies_OS4_clustering by:
-           - implementing translate_test_function (spatial translation on Schwartz/TestFunction),
-           - proving CovarianceClustering for μ_GFF from known decay of the massive propagator, then
-           - applying the generic lemma to conclude OS4.
-
-3) Aqft2/GFF_OS3.lean
-   - gaussianFreeField_satisfies_OS3 (m)
-     • Current status:
-       - covarianceBilinear_gaussianFreeField_free m : DONE. Reused
-         `covarianceBilinear_gaussianFreeField m` from `GaussianFreeField.lean`.
-       - entrywiseExp_posSemidef_of_posSemidef : DONE (wiring). Implemented via a
-         small wrapper using `Aqft2.posSemidef_entrywiseExp_hadamardSeries_of_posSemidef`
-         and `entrywiseExp_eq_hadamardSeries`. Note: the HadamardExp lemma itself is
-         still a sorry; see point 6.
-       - reflectionInvariance_gaussianFreeField_free m : TODO. Reduce to
-         `freeCovarianceℂ_reflection_invariant` (GFFexplicit) +
-         `gff_two_point_equals_covarianceℂ_free`, or provide a direct μ_GFF lemma.
-       - covarianceReflectionPositive_gaussianFreeField_free m : TODO. Use
-         `reflection_matrix_posSemidef` (Covariance.lean) with
-         `freeCovarianceℂ_reflection_positive` (GFFexplicit), then transfer to S₂ via
-         `gff_two_point_equals_covarianceℂ_free`.
-       - freeCovarianceHermitian : removed (not required for the OS3 factorization proof).
-     • Action: Finish the two remaining properties (reflection invariance and reflection
-       positivity) by importing/finishing the explicit covariance lemmas and ensure
-       `gff_two_point_equals_covarianceℂ_free` is available without circularity.
-
-4) Aqft2/OS3.lean (shared infrastructure)
-   - gaussian_quadratic_real_rewrite (factorization lemma used in GFF_OS3)
-     • Ensure this lemma is fully proven (the file still has some sorries per build output). If gaussian_quadratic_real_rewrite itself has sorries, OS3 for GFF remains blocked.
-     • Action: Finish the generic factorization (no GFF-specific content required here), keeping hypotheses only on Gaussianity, bilinearity, and reflection invariance.
-
-5) Aqft2/GFFexplicit.lean (optional but recommended path to close GFF-specific properties)
-   - This file outlines explicit exponential and covariance properties for the free field but is mostly stubs. Completing it would cleanly discharge many of the above:
-     • gaussianFreeField_generating_functional_explicit
-     • schwinger_two_point_explicit (S₂ = freeCovarianceℂ)
-     • freeCovarianceℂ_bilinear
-     • freeCovarianceℂ_reflection_invariant
-     • freeCovarianceℂ_reflection_positive (matrix positivity statement)
-     • isGaussianGJ_from_explicit_form, covarianceBilinear_from_explicit_form,
-       reflectionInvariance_from_explicit_form, covarianceReflectionPositive_from_explicit_form
-   - Action: Decide whether to (A) complete these explicit lemmas and then refactor GFF_OS3 and GaussianFreeField to import them, or (B) avoid this file and prove the properties directly in the existing files (more ad hoc). Option (A) is cleaner.
-
-6) Aqft2/HadamardExp.lean
-   - Needs a finished lemma that entrywise exp preserves PSD for real symmetric PSD matrices (finite index), exactly the ingredient used by GFF_OS3:
-     • Concrete lemma present (currently sorry):
-       `posSemidef_entrywiseExp_hadamardSeries_of_posSemidef (R : Matrix ι ι ℝ) (hR : R.PosSemidef) :
-          (entrywiseExp_hadamardSeries R).PosSemidef`.
-     • With `entrywiseExp_eq_hadamardSeries`, this yields PSD for the entrywise exponential.
-   - Action: finish the continuity/limit argument in this lemma. Once done, GFF_OS3’s use-site via the wrapper `entrywiseExp_posSemidef_of_posSemidef` is fully justified.
-
-7) Aqft2/Covariance.lean (and possibly Aqft2/Euclidean.lean)
-   - Reflection positivity infrastructure: reflection_matrix_posSemidef dμ hRP f
-   - Euclidean invariance structures (actions on test functions)
-   - Action: verify the general lemmas are complete and expose GFF-specializations:
-     • CovarianceEuclideanInvariantℂ (μ_GFF m)
-     • Reflection invariance/positivity once freeCovarianceℂ properties are known.
-
-8) Aqft2/OS4.lean
-   - OS4 framework exists with sorries in generic reasoning.
-   - Action: either finish a general Gaussian OS4 lemma (accepting a decay hypothesis) or provide a dedicated GFF OS4 proof.
-
-Concrete task list to finish the master theorem without assumptions
-------------------------------------------------------------------
-Below are the minimal items to eliminate all assumptions in gaussianFreeField_satisfies_all_OS_axioms and remove sorries on the path to it. The order is a feasible sequence that minimizes circular dependencies.
-
-[OS0 path]
-- [T1] Prove gff_two_point_equals_covarianceℂ_free (μ_GFF two-point = freeCovarianceℂ) in GFFMconstruct or GFFexplicit.
-- [T2] Prove freeCovarianceℂ_bilinear (GFFexplicit) and then
-       CovarianceBilinear (μ_GFF m) by transfer via [T1].
-- [T3] gaussianFreeField_satisfies_OS0 then follows immediately from gaussian_satisfies_OS0.
-
-[OS1 path]
-- [T4] Complete gaussian_satisfies_OS1 (no sorries):
-      - Prove the product→sum bound in the exponent (e.g., 2ab ≤ a² + b² or an explicit constant C · (‖f‖₁ + ‖f‖₂)).
-      - Provide TwoPointIntegrable for p = 2 (can be a separate lemma for Gaussian measures with bounded covariance or specifically for μ_GFF using kernel bounds).
-- [T5] Prove CovarianceBoundedComplex (μ_GFF m) from explicit bounds on freeCovarianceℂ (Fourier/propagator estimate).
-
-[OS2 path]
-- [T6] Prove CovarianceEuclideanInvariantℂ (μ_GFF m): invariance of the free covariance under the Euclidean action.
-- [T7] OS2 then follows from gaussian_satisfies_OS2.
-
-[OS3 path]
-- [T8] Finish OS3 infrastructure in OS3.lean if any sorries remain in the factorization lemma gaussian_quadratic_real_rewrite.
-- [T9] In GFF_OS3:
-      - Provide covarianceBilinear_gaussianFreeField_free via [T2].
-      - Provide reflectionInvariance_gaussianFreeField_free via freeCovarianceℂ_reflection_invariant + [T1].
-      - Provide covarianceReflectionPositive_gaussianFreeField_free via freeCovarianceℂ_reflection_positive + reflection_matrix_posSemidef + [T1].
-      - Replace entrywiseExp_posSemidef_of_posSemidef with the finished lemma from HadamardExp ([T10]).
-- [T10] Finalize HadamardExp lemma "entrywise exp preserves PSD" and export it.
-- [T11] (Optional) Provide a stand-alone hermitian lemma for S₂(μ_GFF) from freeCovarianceℂ real-symmetry; not strictly required if not used elsewhere.
-
-[OS4 path]
-- [T12] Implement translate_test_function and related translation machinery on TestFunction/Schwartz.
-- [T13] Prove CovarianceClustering (μ_GFF m): use decay of the massive free propagator to show |S₂(f, g_Δ)| → 0 as Δ → ∞. Sketch approaches:
-      - Fourier side: the kernel has exponential decay ~ e^{-m |x|};
-      - Potential theory: standard massive Green’s function bounds.
-- [T14] Finish gaussian_satisfies_OS4_clustering using [T12]-[T13], or provide a GFF-specific OS4 lemma that directly yields OS4_Clustering (μ_GFF m).
-
-Other cleanup / verification
-----------------------------
-- Check circularity: Ensure isGaussianGJ_gaussianFreeField_free and gff_two_point_equals_covarianceℂ_free do not depend on each other in a circular way (earlier work on mixed derivatives suggested a potential circle). If necessary, decouple: prove S₂ = C directly from the definition of the free covariance and the generating functional (no reliance on mixed_deriv_schwinger).
-- Decide whether to pursue the explicit route (GFFexplicit.lean) or keep all proofs in GFFMconstruct/GFF_OS3/GaussianFreeField. The explicit route is recommended for clarity and modularity.
-
-Quick checklist (by file / lemma)
-----------------------------------
 Aqft2/GFFMconstruct.lean
-- [ ] gff_two_point_equals_covarianceℂ_free (finish)
+- schwinger_eq_integral_product: present.
+- mixed_deriv_minlos_Qc, mixed_deriv_schwinger: present with helper sorries for dominated-convergence and integrability.
+- freeCovarianceForm_struct: structure present; add_left/smul_left remain TODO.
+- gff_two_point_equals_covarianceℂ_free: goal lemma; now planned to follow from
+  schwinger_eq_Qc_free + free_Qc_eq_freeCovarianceℂ (bridge placeholder added).
 
 Aqft2/GaussianFreeField.lean
-- [ ] covarianceBilinear_gaussianFreeField (finish)
-- [ ] gaussian_satisfies_OS1: remove sorries (bound + TwoPointIntegrable)
-- [ ] translate_test_function (define)
-- [ ] gaussian_satisfies_OS4_clustering (finish)
-- [ ] CovarianceBoundedComplex (μ_GFF m): provide GFF-specific lemma
-- [ ] CovarianceEuclideanInvariantℂ (μ_GFF m): provide GFF-specific lemma (or import from Euclidean/Covariance if already available)
+- gaussian_satisfies_OS0: generic theorem (complete).
+- covarianceBilinear_gaussianFreeField: now reduced to integrability (one placeholder lemma).
+- gaussianFreeField_satisfies_OS0: uses gaussian_satisfies_OS0 and new bilinearity proof.
+- gaussian_satisfies_OS1: two placeholders remain (product→sum bound and TwoPointIntegrable).
+- OS2 path is complete given CovarianceEuclideanInvariantℂ assumption.
+- OS4 skeleton remains with placeholders (translate_test_function and clustering proof).
 
-Aqft2/GFF_OS3.lean
-- [ ] covarianceBilinear_gaussianFreeField_free (finish via transfer)
-- [ ] reflectionInvariance_gaussianFreeField_free (finish via transfer)
-- [ ] covarianceReflectionPositive_gaussianFreeField_free (finish via matrix positivity)
-- [ ] entrywiseExp_posSemidef_of_posSemidef (replace with HadamardExp lemma)
-- [ ] (optional) freeCovarianceHermitian (supply or remove if unused)
-
-Aqft2/OS3.lean
-- [ ] gaussian_quadratic_real_rewrite: ensure no sorries remain
+Aqft2/GFF_OS3.lean and Aqft2/OS3.lean
+- OS3 framework in place; still requires reflection invariance/positivity via free covariance
+  and matrix PSD-of-exp lemma from HadamardExp.
 
 Aqft2/HadamardExp.lean
-- [ ] Provide/finish: PSD(R) ⇒ PSD(exp ∘ R) (finite index, real symmetric)
+- Needs the “entrywise exp preserves PSD” lemma finalized to close an OS3 step.
 
-Aqft2/GFFexplicit.lean (if using explicit route)
-- [ ] gaussianFreeField_generating_functional_explicit
-- [ ] schwinger_two_point_explicit
-- [ ] freeCovarianceℂ_bilinear
-- [ ] freeCovarianceℂ_reflection_invariant
-- [ ] freeCovarianceℂ_reflection_positive
-- [ ] isGaussianGJ_from_explicit_form, covarianceBilinear_from_explicit_form, etc.
+What’s proven vs pending (high level)
+-------------------------------------
+- OS0 (generic): gaussian_satisfies_OS0 is complete.
+- OS0 (GFF): reduces to integrability of ⟨ω,φ⟩⟨ω,ψ⟩ under μ_GFF (single placeholder lemma).
+- OS1 (GFF): proof skeleton present; two small analytic sorries remain.
+- OS2 (GFF): holds under CovarianceEuclideanInvariantℂ; needs a GFF-specific lemma to discharge the hypothesis.
+- OS3 (GFF): framework in place; pending reflection invariance/positivity from free covariance and exp-PSD lemma.
+- OS4 (GFF): skeleton with placeholders; needs translation operator + propagator decay.
 
-Minimal path to close the master theorem
-----------------------------------------
-If we aim for the least work to make gaussianFreeField_satisfies_all_OS_axioms unconditional (no assumptions), the tightest path is:
-
-1) Close OS0:
-   - Finish gff_two_point_equals_covarianceℂ_free.
-   - Finish CovarianceBilinear (μ_GFF m) (from freeCovarianceℂ bilinear or direct).
-
-2) Close OS1:
-   - Finish gaussian_satisfies_OS1 (no sorries).
-   - Prove CovarianceBoundedComplex (μ_GFF m).
-
-3) Close OS2:
-   - Prove CovarianceEuclideanInvariantℂ (μ_GFF m).
-
-4) Close OS3:
-   - Ensure gaussian_quadratic_real_rewrite is complete in OS3.lean.
-   - Provide the four GFF-specific support lemmas in GFF_OS3 (bilinear, reflection invariance, RP, exp-PSD), possibly by importing a single HadamardExp lemma.
-
-5) Close OS4:
-   - Implement translate_test_function and finish gaussian_satisfies_OS4_clustering, together with a GFF-specific proof of CovarianceClustering.
-
-With these in place, the top-level theorem in GFFfinish.lean no longer needs external assumptions and will certify that the free GFF satisfies OS0–OS4.
-
-Notes and recommendations
+Action items (next steps)
 -------------------------
-- Prefer the explicit (kernel-based) approach to the free covariance where possible; it makes bilinearity, hermiticity, reflection invariance, and positivity straightforward linear-algebraic facts.
-- The HadamardExp step (entrywise exp preserves PSD) is a standard tool; once that lemma is in place, the matrix factorization proof of OS3 becomes short and robust.
-- Keep OS3’s factorization lemma independent from GFF specifics; it should only require Gaussianity, bilinearity, and reflection invariance—thus reusable for other models.
-- For OS4, relying on the massive propagator’s exponential decay in the time direction is standard; plan to either cite/encode a known bound or prove it in a simplified setting sufficient for the TestFunction class.
+1) Close OS0 for GFF
+   - Prove gaussian_pairing_product_integrable_free (finite moments for GFF pairings).
+   - Optional: Finish free_Qc_eq_freeCovarianceℂ and then gff_two_point_equals_covarianceℂ_free.
 
-End of status.
+2) Finish OS1 details
+   - Provide a clean inequality to convert M·‖f‖₁·‖f‖₂ into a sum bound inside exp.
+   - Supply TwoPointIntegrable for p = 2 using kernel or nuclearity bounds.
+
+3) Provide GFF-specific invariances
+   - CovarianceEuclideanInvariantℂ (μ_GFF m) from free covariance invariance.
+   - Reflection invariance/positivity via explicit covariance (for OS3).
+
+4) HadamardExp lemma
+   - Finalize entrywise exp preserves PSD for real symmetric PSD matrices, then
+     plug into OS3.
+
+5) OS4
+   - Implement translate_test_function on Schwartz/TestFunction.
+   - Prove CovarianceClustering using massive propagator decay; finish OS4 skeleton.
+
+Build status
+------------
+- All edited files build with only the intended placeholder warnings (sorries) remaining.
+- No outstanding linter errors after removing the unused section variable in Schwinger.
+
+Notes
+-----
+- The integrability-based approach to bilinearity has simplified OS0 for GFF to a single,
+  well-scoped analytic step (finite moments), separated from algebraic linearity.
+- The Minlos/Schwinger bridge remains a viable alternate route for S₂ = freeCovarianceℂ.
