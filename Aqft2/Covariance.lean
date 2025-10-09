@@ -1655,6 +1655,10 @@ theorem freeCovariance_euclidean_invariant (m : ℝ) (R : SpaceTime ≃ₗᵢ[�
 
 /-! ## Complex Extension -/
 
+/-- Bilinear extension of the covariance for complex test functions -/
+def freeCovarianceℂ_bilinear (m : ℝ) (f g : TestFunctionℂ) : ℂ :=
+  ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (g y) ∂volume ∂volume
+
 /-- Complex extension of the covariance for complex test functions -/
 def freeCovarianceℂ (m : ℝ) (f g : TestFunctionℂ) : ℂ :=
   ∫ x, ∫ y, (f x) * (freeCovariance m x y) * (starRingEnd ℂ (g y)) ∂volume ∂volume

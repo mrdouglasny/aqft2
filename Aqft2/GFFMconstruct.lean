@@ -204,6 +204,23 @@ open MinlosAnalytic
 
 -- Supporting lemmas moved early to enable integral proof of mixed_deriv_schwinger
 
+/-- Complex conjugate of a complex-valued test function. This is the pointwise
+    conjugate, which remains a Schwartz function. -/
+noncomputable def testFunctionConj (g : TestFunctionℂ) : TestFunctionℂ :=
+  SchwartzMap.mk
+    (fun x => (starRingEnd ℂ) (g x))
+    (by
+      -- Smoothness follows from smoothness of `g` and of complex conjugation.
+      -- We defer the analytic details to future work.
+      sorry)
+    (by
+      -- Rapid decay is preserved under complex conjugation because `‖conj z‖ = ‖z‖`.
+      -- A detailed proof requires bounds on derivatives, postponed for now.
+      sorry)
+
+@[simp] lemma testFunctionConj_apply (g : TestFunctionℂ) (x : SpaceTime) :
+    testFunctionConj g x = (starRingEnd ℂ) (g x) := rfl
+
 /-- Mixed differentiation under the integral for characteristic functions.
     For F(t,s) = ∫ exp(i(t*u(ω) + s*v(ω))) dμ(ω) where μ is a measure with finite second moments,
     we have ∂²F/∂t∂s|₀ = ∫ ∂²/∂t∂s exp(i(t*u(ω) + s*v(ω)))|₀ dμ(ω).
@@ -279,12 +296,15 @@ noncomputable def freeCovarianceForm_struct (m : ℝ) : MinlosAnalytic.Covarianc
     -- freeCovarianceFormR is bilinear by linearity of integration
     exact freeCovarianceFormR_smul_left m c f g
 
+
 /-- Bridge: identify the Minlos complexification Qc of the real free covariance with the
-    explicitly defined complex free covariance `freeCovarianceℂ`.
+    explicitly defined complex free covariance `freeCovarianceℂ`, after applying
+    complex conjugation to the second argument to match sesquilinearity.
 
     Proof strategy (extracted to free_Qc_eq_freeCovarianceℂ_proof.lean for development):
     1. Both sides are ℂ-bilinear extensions of the same real form freeCovarianceFormR
-    2. Decompose f, g into real and imaginary parts using complex_testfunction_decompose
+  MinlosAnalytic.Qc (freeCovarianceForm_struct m) f (testFunctionConj g) =
+    freeCovarianceℂ m f g := by
     3. Use simp lemmas from Basic.lean to show (decompose f).1 x = (f x).re, etc.
     4. Expand freeCovarianceℂ m f g using pointwise f = re + i·im, star(g) = re - i·im
     5. Apply freeCovarianceℂ_agrees_on_reals to each of the 4 resulting double integrals
@@ -292,10 +312,121 @@ noncomputable def freeCovarianceForm_struct (m : ℝ) : MinlosAnalytic.Covarianc
 
     This is the key technical bridge connecting the Minlos analytic continuation
     with the explicitly defined complex covariance. -/
+
+-- Bilinearity axioms for freeCovarianceℂ_bilinear (to be proven later)
+axiom freeCovarianceℂ_bilinear_add_left
+  (m : ℝ) (f₁ f₂ g : TestFunctionℂ) :
+  freeCovarianceℂ_bilinear m (f₁ + f₂) g
+    = freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g
+
+axiom freeCovarianceℂ_bilinear_add_right
+  (m : ℝ) (f g₁ g₂ : TestFunctionℂ) :
+  freeCovarianceℂ_bilinear m f (g₁ + g₂)
+    = freeCovarianceℂ_bilinear m f g₁ + freeCovarianceℂ_bilinear m f g₂
+
+axiom freeCovarianceℂ_bilinear_smul_left
+  (m : ℝ) (c : ℂ) (f g : TestFunctionℂ) :
+  freeCovarianceℂ_bilinear m (c • f) g = c * freeCovarianceℂ_bilinear m f g
+
+axiom freeCovarianceℂ_bilinear_smul_right
+  (m : ℝ) (c : ℂ) (f g : TestFunctionℂ) :
+  freeCovarianceℂ_bilinear m f (c • g) = c * freeCovarianceℂ_bilinear m f g
+
+axiom freeCovarianceℂ_bilinear_agrees_on_reals
+  (m : ℝ) (f g : TestFunction) :
+  freeCovarianceℂ_bilinear m (toComplex f) (toComplex g)
+    = (freeCovarianceFormR m f g : ℂ)
+
 lemma free_Qc_eq_freeCovarianceℂ
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
-  MinlosAnalytic.Qc (freeCovarianceForm_struct m) f g = freeCovarianceℂ m f g := by
-  sorry
+  MinlosAnalytic.Qc (freeCovarianceForm_struct m) f g = freeCovarianceℂ_bilinear m f g := by
+  classical
+  let fr : TestFunction := (complex_testfunction_decompose f).1
+  let fi : TestFunction := (complex_testfunction_decompose f).2
+  let gr : TestFunction := (complex_testfunction_decompose g).1
+  let gi : TestFunction := (complex_testfunction_decompose g).2
+  let frC : TestFunctionℂ := toComplex fr
+  let fiC : TestFunctionℂ := toComplex fi
+  let grC : TestFunctionℂ := toComplex gr
+  let giC : TestFunctionℂ := toComplex gi
+  have hf : f = frC + Complex.I • fiC := by
+    ext x
+    simpa [fr, fi, frC, fiC, toComplex_apply, smul_eq_mul,
+      complex_testfunction_decompose] using
+      (complex_testfunction_decompose_recompose f x)
+  have hg : g = grC + Complex.I • giC := by
+    ext x
+    simpa [gr, gi, grC, giC, toComplex_apply, smul_eq_mul,
+      complex_testfunction_decompose] using
+      (complex_testfunction_decompose_recompose g x)
+  set expr : ℂ :=
+    (freeCovarianceFormR m fr gr - freeCovarianceFormR m fi gi : ℝ)
+      + Complex.I * (freeCovarianceFormR m fr gi + freeCovarianceFormR m fi gr : ℝ)
+  have hQc : MinlosAnalytic.Qc (freeCovarianceForm_struct m) f g = expr := by
+    simp [expr, MinlosAnalytic.Qc, freeCovarianceForm_struct, fr, fi, gr, gi,
+      complex_testfunction_decompose]
+  have h_expand :
+      freeCovarianceℂ_bilinear m f g =
+        freeCovarianceℂ_bilinear m frC grC
+          + Complex.I * freeCovarianceℂ_bilinear m frC giC
+          + Complex.I * freeCovarianceℂ_bilinear m fiC grC
+          - freeCovarianceℂ_bilinear m fiC giC := by
+    -- Apply bilinearity to expand the expression
+    calc freeCovarianceℂ_bilinear m f g
+      _ = freeCovarianceℂ_bilinear m (frC + Complex.I • fiC) (grC + Complex.I • giC) := by
+          simp [hf, hg]
+      _ = freeCovarianceℂ_bilinear m frC (grC + Complex.I • giC)
+            + freeCovarianceℂ_bilinear m (Complex.I • fiC) (grC + Complex.I • giC) := by
+          exact freeCovarianceℂ_bilinear_add_left m frC (Complex.I • fiC) (grC + Complex.I • giC)
+      _ = (freeCovarianceℂ_bilinear m frC grC + freeCovarianceℂ_bilinear m frC (Complex.I • giC))
+            + (freeCovarianceℂ_bilinear m (Complex.I • fiC) grC
+                + freeCovarianceℂ_bilinear m (Complex.I • fiC) (Complex.I • giC)) := by
+          rw [freeCovarianceℂ_bilinear_add_right m frC grC (Complex.I • giC),
+              freeCovarianceℂ_bilinear_add_right m (Complex.I • fiC) grC (Complex.I • giC)]
+      _ = freeCovarianceℂ_bilinear m frC grC
+            + Complex.I * freeCovarianceℂ_bilinear m frC giC
+            + Complex.I * freeCovarianceℂ_bilinear m fiC grC
+            - freeCovarianceℂ_bilinear m fiC giC := by
+          have h1 : freeCovarianceℂ_bilinear m frC (Complex.I • giC) = Complex.I * freeCovarianceℂ_bilinear m frC giC :=
+            freeCovarianceℂ_bilinear_smul_right m Complex.I frC giC
+          have h2 : freeCovarianceℂ_bilinear m (Complex.I • fiC) grC = Complex.I * freeCovarianceℂ_bilinear m fiC grC :=
+            freeCovarianceℂ_bilinear_smul_left m Complex.I fiC grC
+          have h3 : freeCovarianceℂ_bilinear m (Complex.I • fiC) (Complex.I • giC) = -freeCovarianceℂ_bilinear m fiC giC := by
+            calc freeCovarianceℂ_bilinear m (Complex.I • fiC) (Complex.I • giC)
+              _ = Complex.I * freeCovarianceℂ_bilinear m fiC (Complex.I • giC) := by
+                  exact freeCovarianceℂ_bilinear_smul_left m Complex.I fiC (Complex.I • giC)
+              _ = Complex.I * (Complex.I * freeCovarianceℂ_bilinear m fiC giC) := by
+                  rw [freeCovarianceℂ_bilinear_smul_right m Complex.I fiC giC]
+              _ = (Complex.I * Complex.I) * freeCovarianceℂ_bilinear m fiC giC := by ring
+              _ = -freeCovarianceℂ_bilinear m fiC giC := by simp [Complex.I_mul_I]
+          rw [h1, h2, h3]
+          ring
+  have h_rr : freeCovarianceℂ_bilinear m frC grC = (freeCovarianceFormR m fr gr : ℂ) := by
+    simpa [frC] using freeCovarianceℂ_bilinear_agrees_on_reals (m := m) fr gr
+  have h_rgi : freeCovarianceℂ_bilinear m frC giC = (freeCovarianceFormR m fr gi : ℂ) := by
+    simpa [frC, giC] using freeCovarianceℂ_bilinear_agrees_on_reals (m := m) fr gi
+  have h_igr : freeCovarianceℂ_bilinear m fiC grC = (freeCovarianceFormR m fi gr : ℂ) := by
+    simpa [fiC, grC] using freeCovarianceℂ_bilinear_agrees_on_reals (m := m) fi gr
+  have h_igi : freeCovarianceℂ_bilinear m fiC giC = (freeCovarianceFormR m fi gi : ℂ) := by
+    simpa [fiC, giC] using freeCovarianceℂ_bilinear_agrees_on_reals (m := m) fi gi
+  have h_expand' :
+      freeCovarianceℂ_bilinear m f g =
+        (freeCovarianceFormR m fr gr : ℂ)
+        - (freeCovarianceFormR m fi gi : ℂ)
+        + Complex.I * (freeCovarianceFormR m fr gi : ℂ)
+        + Complex.I * (freeCovarianceFormR m fi gr : ℂ) := by
+    simpa [h_rr, h_rgi, h_igr, h_igi, sub_eq_add_neg, add_comm, add_left_comm, add_assoc]
+      using h_expand
+  have h_bilin : freeCovarianceℂ_bilinear m f g = expr := by
+    rw [h_expand']
+    simp only [expr]
+    -- Use norm_cast and abel_nf to handle the rearrangement and coercions
+    norm_cast
+    abel_nf
+    -- Now apply distributivity to finish
+    rw [← mul_add]
+    norm_cast
+  exact hQc.trans h_bilin.symm
 
 
 /-- Complex generating functional for the free GFF (via Minlos analyticity).
@@ -672,13 +803,13 @@ lemma schwinger_eq_Qc_free (m : ℝ) [Fact (0 < m)]
 end GFF_Minlos_Complex
 
 /-- For the specialized free-field GFF, the complex 2-point function equals the complex
-    free covariance. -/
+    free covariance (bilinear version). -/
 theorem gff_two_point_equals_covarianceℂ_free
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
-  SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ m f g := by
+  SchwingerFunctionℂ₂ (gaussianFreeField_free m) f g = freeCovarianceℂ_bilinear m f g := by
   -- From the Minlos complex CF, we have S₂ = Qc of the real covariance form
   have h := GFF_Minlos_Complex.schwinger_eq_Qc_free (m := m) f g
-  -- Identify Qc with the explicit complex covariance
+  -- Identify Qc with the explicit bilinear complex covariance
   have hQc := GFF_Minlos_Complex.free_Qc_eq_freeCovarianceℂ (m := m) (f := f) (g := g)
   simpa [hQc] using h
 

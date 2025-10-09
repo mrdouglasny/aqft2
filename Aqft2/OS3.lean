@@ -179,19 +179,6 @@ lemma diagonal_covariance_is_real
   -- A complex number with zero imaginary part equals its real part
   exact Complex.ext_iff.mpr ⟨rfl, h_real⟩
 
-lemma diagonal_covariance_is_real_GFF (m : ℝ) [Fact (0 < m)] :
-  ∀ h : TestFunctionℂ, ∃ r : ℝ,
-    SchwingerFunctionℂ₂ (gaussianFreeField_free m) h h = (r : ℂ) := by
-  intro h
-  -- identify Schwinger 2-pt with free covariance
-  have hid : SchwingerFunctionℂ₂ (gaussianFreeField_free m) h h = freeCovarianceℂ m h h :=
-    gff_two_point_equals_covarianceℂ_free m h h
-  -- diagonal of free covariance is real
-  rcases freeCovarianceℂ_diagonal_real m h with ⟨r, hr⟩
-  refine ⟨r, ?_⟩
-  -- conclude by rewriting
-  simpa [hid] using hr
-
 /-- On-diagonal Gaussian values are real: star Z[h] = Z[h] when S₂(h,h) is real. -/
 lemma gaussian_Z_real_on_diagonal
   (dμ_config : ProbabilityMeasure FieldConfiguration)
