@@ -25,9 +25,9 @@ Major refactors and progress across Schwinger, GFFMconstruct, and GaussianFreeFi
 
 - Minlos/Schwinger bridge
   • Kept schwinger_eq_Qc_free (GFF_Minlos_Complex) equating S₂ with MinlosAnalytic.Qc.
-  • Began plan to prove gff_two_point_equals_covarianceℂ_free via a bridge lemma
-    free_Qc_eq_freeCovarianceℂ (currently a placeholder) identifying Qc with the explicit
-    Fourier-defined free covariance.
+  • Proved the bridge lemma free_Qc_eq_freeCovarianceℂ, identifying Qc with
+    freeCovarianceℂ_bilinear; a follow-up step is still needed to relate this
+    bilinear form to the sesquilinear freeCovarianceℂ used elsewhere.
 
 - Lint and hygiene
   • Removed global [SigmaFinite μ] section var in Schwinger.lean to satisfy linter.
@@ -48,8 +48,9 @@ Aqft2/GFFMconstruct.lean
 - schwinger_eq_integral_product: present.
 - mixed_deriv_minlos_Qc, mixed_deriv_schwinger: present with helper sorries for dominated-convergence and integrability.
 - freeCovarianceForm_struct: structure present; add_left/smul_left remain TODO.
-- gff_two_point_equals_covarianceℂ_free: goal lemma; now planned to follow from
-  schwinger_eq_Qc_free + free_Qc_eq_freeCovarianceℂ (bridge placeholder added).
+- gff_two_point_equals_covarianceℂ_free: proved via schwinger_eq_Qc_free +
+  free_Qc_eq_freeCovarianceℂ, yielding the bilinear covariance; remaining gap is
+  upgrading to the sesquilinear freeCovarianceℂ when needed.
 
 Aqft2/GaussianFreeField.lean
 - gaussian_satisfies_OS0: generic theorem (complete).
@@ -62,6 +63,9 @@ Aqft2/GaussianFreeField.lean
 Aqft2/GFF_OS3.lean and Aqft2/OS3.lean
 - OS3 framework in place; still requires reflection invariance/positivity via free covariance
   and matrix PSD-of-exp lemma from HadamardExp.
+  Removed the incorrect diagonal_covariance_is_real_GFF in favor of the general
+  diagonal_covariance_is_real lemma; future work must invoke the sesquilinear
+  covariance once the bridge is extended beyond the bilinear form.
 
 Aqft2/HadamardExp.lean
 - Needs the “entrywise exp preserves PSD” lemma finalized to close an OS3 step.
@@ -79,7 +83,8 @@ Action items (next steps)
 -------------------------
 1) Close OS0 for GFF
    - Prove gaussian_pairing_product_integrable_free (finite moments for GFF pairings).
-   - Optional: Finish free_Qc_eq_freeCovarianceℂ and then gff_two_point_equals_covarianceℂ_free.
+  - Upgrade the new bilinear bridge to a sesquilinear statement
+    (freeCovarianceℂ_bilinear ↔ freeCovarianceℂ) so OS3 can consume the result.
 
 2) Finish OS1 details
    - Provide a clean inequality to convert M·‖f‖₁·‖f‖₂ into a sum bound inside exp.
@@ -106,4 +111,6 @@ Notes
 -----
 - The integrability-based approach to bilinearity has simplified OS0 for GFF to a single,
   well-scoped analytic step (finite moments), separated from algebraic linearity.
-- The Minlos/Schwinger bridge remains a viable alternate route for S₂ = freeCovarianceℂ.
+- The Minlos/Schwinger bridge now yields S₂ = freeCovarianceℂ_bilinear; a
+  targeted comparison lemma is still needed to recover the sesquilinear
+  freeCovarianceℂ appearing in other modules.
