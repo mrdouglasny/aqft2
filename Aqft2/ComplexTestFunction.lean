@@ -31,7 +31,7 @@ import Mathlib.Analysis.Distribution.SchwartzSpace
 
 import Aqft2.Basic
 
-open Complex
+open Complex MeasureTheory
 
 noncomputable section
 
@@ -234,3 +234,26 @@ def toComplex (f : TestFunction) : TestFunctionℂ :=
   toComplex f x = (f x : ℂ) := by
   -- Follows from definition of toComplex
   rfl
+
+@[simp] lemma complex_testfunction_decompose_toComplex_fst (f : TestFunction) :
+  (complex_testfunction_decompose (toComplex f)).1 = f := by
+  ext x
+  simp [complex_testfunction_decompose, toComplex_apply]
+
+@[simp] lemma complex_testfunction_decompose_toComplex_snd (f : TestFunction) :
+  (complex_testfunction_decompose (toComplex f)).2 = 0 := by
+  ext x
+  simp [complex_testfunction_decompose, toComplex_apply]
+
+@[simp] lemma distributionPairingℂ_real_toComplex
+  (ω : FieldConfiguration) (f : TestFunction) :
+  distributionPairingℂ_real ω (toComplex f) = distributionPairing ω f := by
+  simp [distributionPairingℂ_real, distributionPairing]
+
+variable (dμ_config : ProbabilityMeasure FieldConfiguration)
+
+@[simp] lemma GJGeneratingFunctionalℂ_toComplex
+  (f : TestFunction) :
+  GJGeneratingFunctionalℂ dμ_config (toComplex f) = GJGeneratingFunctional dμ_config f := by
+  unfold GJGeneratingFunctionalℂ GJGeneratingFunctional
+  simp [distributionPairingℂ_real_toComplex]

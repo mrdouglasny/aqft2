@@ -47,7 +47,7 @@ import Aqft2.FunctionalAnalysis
 
 open MeasureTheory Complex Real Filter
 open TopologicalSpace
-open scoped BigOperators
+open scoped Real InnerProductSpace BigOperators
 
 noncomputable section
 /-! ### Small helper lemmas for integration and complex algebra -/
@@ -142,13 +142,18 @@ def freePropagatorMomentum (m : ℝ) (k : SpaceTime) : ℝ :=
 
 /-- The free covariance kernel in position space.
     This is the Fourier transform of the momentum space propagator:
-    C(x,y) = ∫ dk/(2π)^d * 1/(k²+m²) * exp(-ik·(x-y)) -/
+
+    C(x,y) = ∫ \frac{d^d k}{(2π)^d}\; \frac{e^{-i k·(x-y)}}{‖k‖² + m²}.
+
+    We realise this as the real part of a complex Fourier integral with the
+    standard 2π-normalisation. -/
 noncomputable def freeCovariance (m : ℝ) (x y : SpaceTime) : ℝ :=
-  -- Placeholder implementation using the classical choice
-  -- In the full implementation, this would be the proper Fourier integral
-  -- For now, we incorporate m, x, y to avoid unused variable warnings
-  Classical.choose (exists_real_function m x y)
-  where exists_real_function : ℝ → SpaceTime → SpaceTime → ∃ _r : ℝ, True := fun _ _ _ => ⟨0, trivial⟩
+  let normalisation : ℝ := (2 * Real.pi) ^ STDimension
+  let phase : SpaceTime → ℂ := fun k =>
+    Complex.exp (-Complex.I * Complex.ofReal (⟪k, x - y⟫_ℝ))
+  let amplitude : SpaceTime → ℂ := fun k =>
+    Complex.ofReal (freePropagatorMomentum m k / normalisation)
+  (∫ k : SpaceTime, amplitude k * phase k).re
 
 /-- The free covariance kernel (alternative name for compatibility) -/
 noncomputable def freeCovarianceKernel (m : ℝ) (z : SpaceTime) : ℝ :=
@@ -1639,19 +1644,12 @@ theorem covarianceBilinearForm_continuous (m : ℝ) :
 
 /-! ## Euclidean Invariance -/
 
-/-- The free covariance is invariant under Euclidean transformations (placeholder) -/
-theorem freeCovariance_euclidean_invariant (m : ℝ) (R : SpaceTime ≃ₗᵢ[ℝ] SpaceTime) (x y : SpaceTime) :
-  freeCovariance m (R x) (R y) = freeCovariance m x y := by
-  -- The key insight: freeCovariance is defined as Classical.choose applied to a trivial existential
-  -- that always provides the witness 0, regardless of the input arguments m, x, y
-  -- Therefore: freeCovariance m (R x) (R y) = 0 = freeCovariance m x y
-  -- This makes Euclidean invariance trivial in the current implementation
-
-  unfold freeCovariance
-  -- Both sides reduce to Classical.choose applied to the same trivial existential
-  -- Classical.choose (⟨0, trivial⟩) = Classical.choose (⟨0, trivial⟩)
-  -- Since Classical.choose is deterministic, this is reflexive equality
-  rfl
+/-- The free covariance is invariant under Euclidean transformations (placeholder). -/
+theorem freeCovariance_euclidean_invariant (m : ℝ)
+    (R : SpaceTime ≃ₗᵢ[ℝ] SpaceTime) (x y : SpaceTime) :
+    freeCovariance m (R x) (R y) = freeCovariance m x y := by
+  -- TODO: prove Euclidean invariance using change-of-variables in the Fourier integral.
+  sorry
 
 /-! ## Complex Extension -/
 
@@ -1908,24 +1906,11 @@ lemma momentumCovarianceForm_hermitian (m : ℝ) (f g : SpaceTime → ℂ)
   ext k
   exact momentum_integrand_hermitian m f g k
 
-/-- Position-space free covariance is symmetric: C(x,y) = C(y,x). -/
+/-- Position-space free covariance is symmetric: `C(x,y) = C(y,x)` (placeholder). -/
 lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime) :
-  freeCovariance m x y = freeCovariance m y x := by
-  -- The free covariance represents the Fourier transform:
-  -- C(x,y) = ∫ dk/(2π)^d * 1/(k²+m²) * exp(-ik·(x-y))
-  -- This depends only on x-y, making it symmetric: C(x,y) = C(y,x)
-
-  -- The current placeholder implementation uses Classical.choose with
-  -- exists_real_function defined as: fun _ _ _ => ⟨0, trivial⟩
-  -- This function is independent of its arguments, so it gives the same result
-  -- regardless of whether we call it with (m, x, y) or (m, y, x)
-
-  unfold freeCovariance
-
-  -- Both sides use Classical.choose with the same witness ⟨0, trivial⟩
-  -- Classical.choose (⟨0, trivial⟩) = Classical.choose (⟨0, trivial⟩)
-  -- Since Classical.choose is deterministic, this is reflexive equality
-  rfl
+    freeCovariance m x y = freeCovariance m y x := by
+  -- TODO: prove symmetry using the parity of the Fourier kernel.
+  sorry
 
 /-- The position-space free covariance is real-valued after ℂ coercion. -/
 @[simp] lemma freeCovariance_star (m : ℝ) (x y : SpaceTime) :

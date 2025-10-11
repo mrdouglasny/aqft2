@@ -9,12 +9,11 @@ import «Aqft2».Euclidean
 import «Aqft2».Operators
 import «Aqft2».DiscreteSymmetry
 import «Aqft2».Covariance
-import «Aqft2».PositiveTimeTestFunction
+import «Aqft2».PositiveTimeTestFunction_real
 import «Aqft2».Schwinger
 import «Aqft2».SCV
 import «Aqft2».OS_Axioms
 import «Aqft2».OS4
 import «Aqft2».GaussianFreeField
 import «Aqft2».HadamardExp
-import «Aqft2».GFF_OS3
 import «Aqft2».GFFfinish

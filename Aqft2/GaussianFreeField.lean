@@ -68,7 +68,6 @@ import Aqft2.FunctionalAnalysis
 import Aqft2.OS4
 import Aqft2.Minlos
 import Aqft2.Covariance
-import Aqft2.OS3
 import Aqft2.MinlosAnalytic
 import Aqft2.Schwinger
 

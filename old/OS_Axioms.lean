@@ -109,7 +109,38 @@ def OS2_EuclideanInvariance (dμ_config : ProbabilityMeasure FieldConfiguration)
     GJGeneratingFunctionalℂ dμ_config f =
     GJGeneratingFunctionalℂ dμ_config (QFT.euclidean_action g f)
 
+/-- OS3 (Simplified Reflection Positivity): Standard formulation (needs clarification).
 
+    WARNING: This formulation is not obviously correct and needs more careful analysis.
+    The proper Glimm-Jaffe formulation involves L2 expectations of exponentials of
+    the form exp(-½⟨F - CF', C(F - CF')⟩) where C is the covariance operator.
+
+    The matrix formulation below is more reliable and follows Glimm-Jaffe directly.
+    TODO: Reformulate this properly using the L2 framework. -/
+def OS3_SimplifiedReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (F : PositiveTimeTestFunction),
+    let F_complex := toComplex F.val  -- Convert to complex
+    let F_time_reflected := QFT.compTimeReflection F_complex  -- ΘF (time reflection)
+    let test_function := schwartzMul (star F_complex) F_time_reflected  -- F̄(ΘF)
+    0 ≤ (GJGeneratingFunctionalℂ dμ_config test_function).re ∧
+        (GJGeneratingFunctionalℂ dμ_config test_function).im = 0
+
+/-- OS3 (Reflection Positivity, Matrix Formulation): The reflection positivity matrix is positive semidefinite.
+
+    This is the alternative formulation from Glimm-Jaffe where reflection positivity
+    is expressed as: for any finite collection of positive-time test functions f₁,...,fₙ,
+    the matrix M_{i,j} = Z[fᵢ - Θfⱼ] is positive semidefinite.
+
+    This means: ∑ᵢⱼ c̄ᵢcⱼ Z[fᵢ - Θfⱼ] ≥ 0 for all complex coefficients cᵢ. -/
+def OS3_ReflectionPositivity (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
+  ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℂ),
+    let reflection_matrix := fun i j =>
+      let fj_complex := toComplex (f j).val  -- Convert to complex
+      let fj_time_reflected := QFT.compTimeReflection fj_complex  -- Θfⱼ
+      let fi_complex := toComplex (f i).val  -- Convert to complex
+      let test_function := fi_complex - fj_time_reflected  -- fᵢ - Θfⱼ
+      GJGeneratingFunctionalℂ dμ_config test_function
+    0 ≤ (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j * reflection_matrix i j).re
 
 /-- Real formulation of OS3 reflection positivity using the real-valued positive time
     subspace and the real generating functional. This version avoids explicit complex

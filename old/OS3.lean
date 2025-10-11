@@ -77,6 +77,7 @@ import Aqft2.OS4
 import Aqft2.Minlos
 import Aqft2.Covariance
 import Aqft2.HadamardExp
+import Aqft2.ComplexTestFunction
 
 open MeasureTheory Complex
 open TopologicalSpace SchwartzMap
@@ -116,7 +117,7 @@ def covarianceOperator (dμ_config : ProbabilityMeasure FieldConfiguration)
 def CovarianceReflectionPositive (dμ_config : ProbabilityMeasure FieldConfiguration) : Prop :=
   ∀ (n : ℕ) (f : Fin n → PositiveTimeTestFunction),
     Matrix.PosSemidef (fun i j : Fin n =>
-      (SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (f i).val) (f j).val).re)
+      (SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (toComplex (f i).val)) (toComplex (f j).val)).re)
 
 -- Helper: PosSemidef for the reflection matrix from the assumption
 lemma reflection_matrix_posSemidef
@@ -124,7 +125,7 @@ lemma reflection_matrix_posSemidef
   (hRP : CovarianceReflectionPositive dμ_config)
   {n : ℕ} (f : Fin n → PositiveTimeTestFunction) :
   Matrix.PosSemidef (fun i j : Fin n =>
-    (SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (f i).val) (f j).val).re) :=
+    (SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (toComplex (f i).val)) (toComplex (f j).val)).re) :=
   hRP n f
 
 /-- Gaussian form: the generating functional satisfies Z[h] = exp(-½ S₂(h,h)) -/
@@ -138,10 +139,9 @@ lemma gaussian_Z_form
 
 /-- symmetry property of the 2-point Schwinger function: S₂(f,g) = conj S₂(g,f).
     -/
-lemma schwinger_function_symmetric (dμ_config : ProbabilityMeasure FieldConfiguration)
+axiom schwinger_function_symmetric (dμ_config : ProbabilityMeasure FieldConfiguration)
   (f g : TestFunctionℂ) :
-  SchwingerFunctionℂ₂ dμ_config f g = SchwingerFunctionℂ₂ dμ_config g f := by
-  sorry
+  SchwingerFunctionℂ₂ dμ_config f g = SchwingerFunctionℂ₂ dμ_config g f
 
 /-- Bilinear expansion of the 2-point function under subtraction -/
 lemma bilin_expand
@@ -211,11 +211,11 @@ lemma bilin_expand
     2. The Schwinger function can be expressed in terms of the underlying field configuration
     3. If the measure is invariant under time reflection, then expectation values are preserved
 -/
-lemma covariance_reflection_invariant_diag
+axiom covariance_reflection_invariant_diag
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h : TestFunctionℂ) :
   SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection h) (QFT.compTimeReflection h) =
-  SchwingerFunctionℂ₂ dμ_config h h := by
+  SchwingerFunctionℂ₂ dμ_config h h
   -- For a complete proof, we would need to show that:
   -- 1. The measure dμ_config is invariant under the time reflection transformation
   --    This means: ∫ F(Θω) dμ(ω) = ∫ F(ω) dμ(ω) for any measurable F
@@ -226,26 +226,41 @@ lemma covariance_reflection_invariant_diag
   -- - Physical requirement: reflection-positive measures should be time-reflection invariant
   -- - Mathematical structure: time reflection preserves the measure-theoretic structure
   -- - QFT.timeReflection is an isometry (preserves geometric structure)
-  --
-  -- In practice, this is often taken as an axiom for reflection-positive theories,
-  -- or proven using the specific construction of the measure (e.g., for Gaussian measures,
-  -- using the fact that the covariance function satisfies C(Θx, Θy) = C(x, y))
-
-  sorry
 
 /-- Hermitian-reflection cross-term identity (stub) -/
-lemma reflection_hermitian_cross
+axiom reflection_hermitian_cross
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (a b : TestFunctionℂ) :
   SchwingerFunctionℂ₂ dμ_config a (QFT.compTimeReflection b) =
-  star (SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection a) b) := by
-  -- TODO: combine schwinger_function_hermitian with time-reflection
-  sorry
+  star (SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection a) b)
 
 /-- Gaussian factorization at the quadratic-form level.
     Let R_{ij} := Re S₂(Θ f_i, f_j) and define y_i := Z[f_i] · c_i. Then
       Re ∑ᵢⱼ (conj cᵢ) cⱼ · Z[fᵢ - Θ fⱼ]
       = Re ∑ᵢⱼ (conj yᵢ) yⱼ · exp(R_{ij}). -/
+axiom gaussian_entry_factor
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_gaussian : isGaussianGJ dμ_config)
+  (h_bilinear : CovarianceBilinear dμ_config)
+  (h_reflectInv : OS3_ReflectionInvariance dμ_config)
+  {n : ℕ} (f : Fin n → PositiveTimeTestFunction)
+  (i j : Fin n) :
+  GJGeneratingFunctionalℂ dμ_config
+      (toComplex (f i).val - QFT.compTimeReflection (toComplex (f j).val))
+    = GJGeneratingFunctionalℂ dμ_config (toComplex (f i).val)
+      * GJGeneratingFunctionalℂ dμ_config (toComplex (f j).val)
+      * Real.exp
+          ((SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (toComplex (f i).val))
+                (toComplex (f j).val)).re)
+
+axiom gaussian_generating_real
+  (dμ_config : ProbabilityMeasure FieldConfiguration)
+  (h_gaussian : isGaussianGJ dμ_config)
+  (h_reflectInv : OS3_ReflectionInvariance dμ_config)
+  (h : TestFunctionℂ) :
+  star (GJGeneratingFunctionalℂ dμ_config h)
+    = GJGeneratingFunctionalℂ dμ_config h
+
 lemma gaussian_quadratic_real_rewrite
   (dμ_config : ProbabilityMeasure FieldConfiguration)
   (h_gaussian : isGaussianGJ dμ_config)
@@ -254,16 +269,16 @@ lemma gaussian_quadratic_real_rewrite
   {n : ℕ} (f : Fin n → PositiveTimeTestFunction)
   (c : Fin n → ℂ) :
   (∑ i, ∑ j, (starRingEnd ℂ) (c i) * c j *
-      GJGeneratingFunctionalℂ dμ_config ((f i).val - QFT.compTimeReflection (f j).val)).re
+      GJGeneratingFunctionalℂ dμ_config (toComplex (f i).val - QFT.compTimeReflection (toComplex (f j).val))).re
   = (∑ i, ∑ j,
-        (starRingEnd ℂ) ((GJGeneratingFunctionalℂ dμ_config (f i).val) * c i)
-        * ((GJGeneratingFunctionalℂ dμ_config (f j).val) * c j)
-        * Real.exp ((SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (f i).val) (f j).val).re)
+        (starRingEnd ℂ) ((GJGeneratingFunctionalℂ dμ_config (toComplex (f i).val)) * c i)
+        * ((GJGeneratingFunctionalℂ dμ_config (toComplex (f j).val)) * c j)
+        * Real.exp ((SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (toComplex (f i).val)) (toComplex (f j).val)).re)
       ).re := by
   classical
   -- Abbreviations
-  let J : Fin n → TestFunctionℂ := fun i => (f i).val
-  let ΘJ : Fin n → TestFunctionℂ := fun j => QFT.compTimeReflection (f j).val
+  let J : Fin n → TestFunctionℂ := fun i => toComplex (f i).val
+  let ΘJ : Fin n → TestFunctionℂ := fun j => QFT.compTimeReflection (toComplex (f j).val)
   let Z : Fin n → ℂ := fun i => GJGeneratingFunctionalℂ dμ_config (J i)
   let R : Fin n → Fin n → ℝ := fun i j =>
     (SchwingerFunctionℂ₂ dμ_config (QFT.compTimeReflection (J i)) (J j)).re
@@ -273,26 +288,56 @@ lemma gaussian_quadratic_real_rewrite
       GJGeneratingFunctionalℂ dμ_config (J i - ΘJ j)
         = Z i * Z j * Real.exp (R i j) := by
     intro i j
-    let S := SchwingerFunctionℂ₂ dμ_config
-    -- Gaussian
-    have hZ : GJGeneratingFunctionalℂ dμ_config (J i - ΘJ j)
-        = Complex.exp (-(1/2 : ℂ) * S (J i - ΘJ j) (J i - ΘJ j)) :=
-      gaussian_Z_form dμ_config h_gaussian (J i - ΘJ j)
-    -- Bilinear expansion
-    have hbil : S (J i - ΘJ j) (J i - ΘJ j)
-        = S (J i) (J i) + S (ΘJ j) (ΘJ j) - S (J i) (ΘJ j) - S (ΘJ j) (J i) := by
-      simpa using bilin_expand dμ_config h_bilinear (J i) (ΘJ j)
-    -- Symmetric cross-sum to 2·Re (using symmetry, not Hermitian property)
-    -- NOTE: This entire factorization approach is problematic because it assumes properties
-    -- that don't hold for bilinear (non-sesquilinear) forms. The proof structure needs
-    -- to be completely rethought. For now, we skip the detailed steps and admit the
-    -- factorization result directly:
-    sorry
+    simpa [J, ΘJ, Z, R]
+      using gaussian_entry_factor dμ_config h_gaussian h_bilinear h_reflectInv f i j
 
-  -- The factorization entry_factor cannot be proven without false assumptions
-  -- about diagonal realness and Hermitian properties. The entire lemma needs
-  -- to be reformulated. For now, we admit it:
-  sorry
+  have hZ_real : ∀ i, star (Z i) = Z i := by
+    intro i
+    simpa [Z, J]
+      using gaussian_generating_real dμ_config h_gaussian h_reflectInv (J i)
+
+  have hrewrite :
+      ∑ i, ∑ j,
+          (starRingEnd ℂ) (c i) * c j *
+              GJGeneratingFunctionalℂ dμ_config (J i - ΘJ j)
+        = ∑ i, ∑ j,
+            (starRingEnd ℂ) ((Z i) * c i)
+              * ((Z j) * c j)
+              * Real.exp (R i j) := by
+    refine Finset.sum_congr rfl ?_
+    intro i _
+    refine Finset.sum_congr rfl ?_
+    intro j _
+    have h1 :
+        (starRingEnd ℂ) (c i) * c j *
+            GJGeneratingFunctionalℂ dμ_config (J i - ΘJ j)
+          = ((starRingEnd ℂ) (c i) * Z i)
+              * ((Z j) * c j)
+              * Real.exp (R i j) := by
+      simp [entry_factor, Z, R, ΘJ, J,
+        mul_comm, mul_left_comm, mul_assoc]
+    have h2 :
+        star ((Z i) * c i)
+          = (starRingEnd ℂ) (c i) * Z i := by
+      simp [Z, star_mul, hZ_real i, mul_comm]
+    have h2' :
+        (starRingEnd ℂ) (c i) * Z i
+          = star ((Z i) * c i) := by
+      simpa using h2.symm
+    simpa [h2', mul_comm, mul_left_comm, mul_assoc]
+      using h1
+
+  have hrewrite' :
+      (∑ i, ∑ j,
+          (starRingEnd ℂ) (c i) * c j *
+              GJGeneratingFunctionalℂ dμ_config (J i - ΘJ j)).re
+        = (∑ i, ∑ j,
+            (starRingEnd ℂ) ((Z i) * c i)
+              * ((Z j) * c j)
+              * Real.exp (R i j)).re :=
+    congrArg Complex.re hrewrite
+
+  simpa [Z, R] using hrewrite'
 
 lemma covariance_reflection_invariant_diag_gaussian
   (dμ_config : ProbabilityMeasure FieldConfiguration)

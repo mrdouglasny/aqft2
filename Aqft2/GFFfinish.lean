@@ -17,7 +17,7 @@ those lemmas and removing the hypotheses.
 -/
 
 import Aqft2.GaussianFreeField
-import Aqft2.GFF_OS3
+import Aqft2.GFF_OS3_real
 
 open scoped BigOperators
 
@@ -44,7 +44,7 @@ theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)]
   OS0_Analyticity (μ_GFF m) ∧
   OS1_Regularity (μ_GFF m) ∧
   OS2_EuclideanInvariance (μ_GFF m) ∧
-  OS3_ReflectionPositivity (μ_GFF m) ∧
+  OS3_ReflectionPositivity_real (μ_GFF m) ∧
   OS4_Clustering (μ_GFF m) := by
   -- Gaussianity of the free GFF generating functional
   have h_gauss : isGaussianGJ (μ_GFF m) := by
@@ -59,8 +59,8 @@ theorem gaussianFreeField_satisfies_all_OS_axioms (m : ℝ) [Fact (0 < m)]
   have h_OS2 : OS2_EuclideanInvariance (μ_GFF m) :=
     gaussian_satisfies_OS2 (μ_GFF m) h_gauss h_euc
   -- OS3 from the dedicated OS3 file
-  have h_OS3 : OS3_ReflectionPositivity (μ_GFF m) :=
-    gaussianFreeField_satisfies_OS3 m
+  have h_OS3 : OS3_ReflectionPositivity_real (μ_GFF m) :=
+    QFT.gaussianFreeField_OS3_real m
   -- Bundle
   exact ⟨h_OS0, h_OS1, h_OS2, h_OS3, h_OS4⟩
 
