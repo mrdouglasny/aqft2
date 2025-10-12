@@ -196,4 +196,14 @@ theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] :
 axiom gaussianFreeField_free_centered (m : ℝ) [Fact (0 < m)] :
   isCenteredGJ (gaussianFreeField_free m)
 
+/-- For real test functions, the square of the Gaussian pairing is integrable under the
+    free Gaussian Free Field measure. This is the diagonal (f = g) case needed for
+    establishing two-point integrability. -/
+lemma gaussian_pairing_square_integrable_real
+    (m : ℝ) [Fact (0 < m)] (φ : TestFunction) :
+  Integrable (fun ω => (distributionPairing ω φ) ^ 2)
+    (gaussianFreeField_free m).toMeasure := by
+  -- To be established via Gaussian moment estimates arising from the Minlos construction.
+  sorry
+
 end

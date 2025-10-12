@@ -33,6 +33,7 @@ import Aqft2.Basic
 import Aqft2.Minlos
 --import Aqft2.ComplexGaussian
 import Mathlib.MeasureTheory.Measure.Map
+import Mathlib.MeasureTheory.Measure.Typeclasses.Probability
 
 open Classical
 open TopologicalSpace MeasureTheory Complex Filter
@@ -113,7 +114,7 @@ lemma integral_neg_invariance
   -- Step 1: Define the pushforward measure
   let μneg := μ.toMeasure.map negMap
   have hμneg_prob : IsProbabilityMeasure μneg := by
-    exact isProbabilityMeasure_map (Measurable.aemeasurable negMap_measurable)
+    exact Measure.isProbabilityMeasure_map (Measurable.aemeasurable negMap_measurable)
 
   -- Step 2: Show characteristic functionals are equal
   have hCF_equal : ∀ g : TestFunction,

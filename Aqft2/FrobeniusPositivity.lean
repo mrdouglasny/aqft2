@@ -15,6 +15,7 @@ import Mathlib.LinearAlgebra.UnitaryGroup
 import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Data.Matrix.Mul
 import Mathlib.Analysis.InnerProductSpace.PiL2
+import Mathlib.Analysis.Matrix.Order
 
 open Matrix
 
