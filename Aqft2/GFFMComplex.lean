@@ -36,20 +36,13 @@ open TopologicalSpace SchwartzMap
 noncomputable section
 
 /-- For the Gaussian Free Field measure, the product of two complex pairings with test functions
-    is integrable. This is now implemented using the generalized n-point theory. -/
+    is integrable. This is now implemented using the direct 2-point theorem. -/
 lemma gaussian_pairing_product_integrable_free_core
   (m : ℝ) [Fact (0 < m)] (φ ψ : TestFunctionℂ) :
   Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
     (gaussianFreeField_free m).toMeasure := by
-  -- Use the generalized n=2 case from GaussianMoments
-  -- Convert the function vector to use exactly φ and ψ
-  let f : Fin 2 → TestFunctionℂ := ![φ, ψ]
-  have h_eq : (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ) =
-              (fun ω => ∏ i : Fin 2, distributionPairingℂ_real ω (f i)) := by
-    ext ω
-    simp [f, Fin.prod_univ_two]
-  rw [h_eq]
-  exact gaussian_n_point_integrable_free m 2 f
+  -- Use the direct 2-point case from GaussianMoments
+  exact gaussian_pairing_product_integrable_free_2point m φ ψ
 
 namespace GFF_Minlos_Complex
 

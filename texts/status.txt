@@ -1,8 +1,8 @@
-Status report (Oct 8, 2025)
+Status report (Oct 12, 2025)
 
 Overview
 --------
-Major refactors and progress across Schwinger, GFFMconstruct, and GaussianFreeField modules:
+Major refactors and progress across Schwinger, GFFMconstruct, GaussianMoments, and GaussianFreeField modules:
 
 - Organization
   • Moved SchwingerFunctionℂ₂ and CovarianceBilinear definitions to Aqft2/Schwinger.lean.
@@ -18,8 +18,9 @@ Major refactors and progress across Schwinger, GFFMconstruct, and GaussianFreeFi
 
 - Gaussian Free Field (GFF)
   • Reproved covarianceBilinear_gaussianFreeField via CovarianceBilinear_of_integrable.
-    Introduced gaussian_pairing_product_integrable_free (placeholder) for the required integrability.
-  • gaussianFreeField_satisfies_OS0 now uses gaussian_satisfies_OS0 with the new bilinearity proof.
+    gaussianFreeField_satisfies_OS0 now reduces entirely to the 2-point integrability lemma.
+  • Drafted gaussian_pairing_product_integrable_free_2point in GaussianMoments; the proof
+    still contains two sorries (complex product expansion + L¹ control of the imaginary part).
   • Moved alternate OS0 proofs (gaussian_satisfies_OS0_alt, gaussianFreeField_satisfies_OS0_alt)
     to old/GaussianFreeField_OS0_alt.lean.
 
@@ -52,13 +53,21 @@ Aqft2/GFFMconstruct.lean
   free_Qc_eq_freeCovarianceℂ, yielding the bilinear covariance; remaining gap is
   upgrading to the sesquilinear freeCovarianceℂ when needed.
 
+Aqft2/GaussianMoments.lean
+- NEW: Implements gaussian_complex_pairing_abs_sq_integrable via Option B L² control.
+- gaussian_pairing_product_integrable_free_2point drafted; two sorries remain
+  (complex product expansion and integrability of the imaginary part).
+- Higher-n moment theorems outlined but still depend on finishing the 2-point case.
+
 Aqft2/GaussianFreeField.lean
 - gaussian_satisfies_OS0: generic theorem (complete).
-- covarianceBilinear_gaussianFreeField: now reduced to integrability (one placeholder lemma).
-- gaussianFreeField_satisfies_OS0: uses gaussian_satisfies_OS0 and new bilinearity proof.
-- gaussian_satisfies_OS1: two placeholders remain (product→sum bound and TwoPointIntegrable).
+- covarianceBilinear_gaussianFreeField now pulls integrability from GaussianMoments.
+- gaussianFreeField_satisfies_OS0: relies on the unfinished 2-point integrability lemma.
+- gaussian_satisfies_OS1: two placeholders remain (product→sum inequality and
+  TwoPointIntegrable witness for p = 2).
 - OS2 path is complete given CovarianceEuclideanInvariantℂ assumption.
-- OS4 skeleton remains with placeholders (translate_test_function and clustering proof).
+- OS4 skeleton remains with placeholders (translate_test_function definition and
+  gaussian_satisfies_OS4_clustering).
 
 Aqft2/GFF_OS3.lean and Aqft2/OS3.lean
 - OS3 framework in place; still requires reflection invariance/positivity via free covariance
@@ -67,40 +76,58 @@ Aqft2/GFF_OS3.lean and Aqft2/OS3.lean
   diagonal_covariance_is_real lemma; future work must invoke the sesquilinear
   covariance once the bridge is extended beyond the bilinear form.
 
+Aqft2/GFF_OS3_real.lean
+- Real reflection positivity proof skeleton complete up to two sorries:
+  freeCovarianceFormR_reflection_invariant and
+  freeCovarianceFormR_reflection_matrix_posSemidef.
+- Completing these will finish QFT.gaussianFreeField_OS3_real required by the master theorem.
+
 Aqft2/HadamardExp.lean
 - Needs the “entrywise exp preserves PSD” lemma finalized to close an OS3 step.
 
 What’s proven vs pending (high level)
 -------------------------------------
 - OS0 (generic): gaussian_satisfies_OS0 is complete.
-- OS0 (GFF): reduces to integrability of ⟨ω,φ⟩⟨ω,ψ⟩ under μ_GFF (single placeholder lemma).
-- OS1 (GFF): proof skeleton present; two small analytic sorries remain.
-- OS2 (GFF): holds under CovarianceEuclideanInvariantℂ; needs a GFF-specific lemma to discharge the hypothesis.
-- OS3 (GFF): framework in place; pending reflection invariance/positivity from free covariance and exp-PSD lemma.
-- OS4 (GFF): skeleton with placeholders; needs translation operator + propagator decay.
+- OS0 (GFF): blocked by gaussian_pairing_product_integrable_free_2point (two sorries).
+- OS1 (GFF): proof skeleton present; two analytic sorries remain inside gaussian_satisfies_OS1.
+- OS2 (GFF): holds under CovarianceEuclideanInvariantℂ; awaiting explicit invariance lemma for μ_GFF.
+- OS3 (GFF): complex argument established; real version depends on two sorries in GFF_OS3_real.
+- OS4 (GFF): skeleton with placeholders; needs translate_test_function and clustering decay.
+
+Blocking items for gaussianFreeField_satisfies_all_OS_axioms
+------------------------------------------------------------
+1. **OS0 input**: Finish gaussian_pairing_product_integrable_free_2point
+  (Aqft2/GaussianMoments.lean lines ~160–225) to remove the remaining sorries.
+2. **OS1 input**: Complete gaussian_satisfies_OS1 in Aqft2/GaussianFreeField.lean by providing
+  (a) the product→sum inequality using the covariance bound, and
+  (b) a TwoPointIntegrable witness for p = 2.
+3. **OS3 input**: Resolve freeCovarianceFormR_reflection_invariant and
+  freeCovarianceFormR_reflection_matrix_posSemidef in Aqft2/GFF_OS3_real.lean.
+4. **Optional future**: Implement OS4 proofs to remove the h_OS4 hypothesis once
+  translate_test_function and clustering decay are in place.
 
 Action items (next steps)
 -------------------------
 1) Close OS0 for GFF
-   - Prove gaussian_pairing_product_integrable_free (finite moments for GFF pairings).
-  - Upgrade the new bilinear bridge to a sesquilinear statement
-    (freeCovarianceℂ_bilinear ↔ freeCovarianceℂ) so OS3 can consume the result.
+  - Finish gaussian_pairing_product_integrable_free_2point and propagate the result
+    to GaussianMoments/GFFMconstruct.
+  - Upgrade the bilinear bridge to a sesquilinear statement when OS3 needs it.
 
 2) Finish OS1 details
-   - Provide a clean inequality to convert M·‖f‖₁·‖f‖₂ into a sum bound inside exp.
-   - Supply TwoPointIntegrable for p = 2 using kernel or nuclearity bounds.
+  - Provide a clean inequality to convert M·‖f‖₁·‖f‖₂ into a sum bound inside the
+    exponential.
+  - Supply TwoPointIntegrable for p = 2 using kernel or nuclearity bounds.
 
-3) Provide GFF-specific invariances
-   - CovarianceEuclideanInvariantℂ (μ_GFF m) from free covariance invariance.
-   - Reflection invariance/positivity via explicit covariance (for OS3).
+3) Complete OS3 real reflection positivity
+  - Prove freeCovarianceFormR_reflection_invariant.
+  - Finish freeCovarianceFormR_reflection_matrix_posSemidef (uses HadamardExp PSD lemma).
 
-4) HadamardExp lemma
-   - Finalize entrywise exp preserves PSD for real symmetric PSD matrices, then
-     plug into OS3.
+4) Provide GFF-specific invariances
+  - Derive CovarianceEuclideanInvariantℂ (μ_GFF m) directly from the free covariance.
 
 5) OS4
-   - Implement translate_test_function on Schwartz/TestFunction.
-   - Prove CovarianceClustering using massive propagator decay; finish OS4 skeleton.
+  - Implement translate_test_function on Schwartz/TestFunction.
+  - Prove CovarianceClustering using massive propagator decay; finish the OS4 skeleton.
 
 Build status
 ------------

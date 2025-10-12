@@ -9,6 +9,21 @@ This file constructs Gaussian probability measures on field configurations using
 the Minlos theorem. The key insight: a Gaussian measure is uniquely determined
 by its covariance function, and nuclear covariances give measures on tempered distributions.
 
+### Integrability strategy
+
+To prove that Gaussian pairings belong to \(L^2\) under the free field measure, we considered two
+approaches:
+
+1. **Option A (analytic infrastructure):** Equip `FieldConfiguration` with the strong dual topology
+  so that evaluation maps become continuous linear functionals in Mathlib's sense, then appeal to
+  Fernique's theorem (`ProbabilityTheory.IsGaussian.memLp_dual`).
+2. **Option B (axiomatic shortcut):** Introduce an axiom asserting that every distribution pairing
+  has finite moments of all orders with respect to `gaussianFreeField_free`. This avoids the
+  topological work at the cost of a temporary assumption.
+
+For now we adopt **Option B** via the axiom `gaussianFreeField_pairing_memLp`. Future work should
+replace this axiom by implementing the analytic infrastructure described in Option A.
+
 ### Core Framework:
 
 **Covariance Structure:**
@@ -82,6 +97,7 @@ import Mathlib.Topology.Algebra.Module.WeakDual
 import Mathlib.LinearAlgebra.BilinearMap
 import Mathlib.LinearAlgebra.BilinearForm.Basic
 import Mathlib.Analysis.Calculus.Deriv.Basic
+import Mathlib.Probability.Distributions.Gaussian.Fernique
 
 import Aqft2.Basic
 import Aqft2.Schwinger
@@ -196,6 +212,18 @@ theorem gff_real_characteristic (m : ℝ) [Fact (0 < m)] :
 axiom gaussianFreeField_free_centered (m : ℝ) [Fact (0 < m)] :
   isCenteredGJ (gaussianFreeField_free m)
 
+/-- The Gaussian Free Field measure constructed via Minlos is a Gaussian measure.
+    This follows from the construction but requires connecting our explicit Minlos construction
+    to mathlib's IsGaussian typeclass. Asserted as axiom for now. -/
+axiom gaussianFreeField_free_isGaussian (m : ℝ) [Fact (0 < m)] :
+  ProbabilityTheory.IsGaussian (gaussianFreeField_free m).toMeasure
+
+/-- Fernique-type axiom: every distribution pairing has finite moments of all orders under the
+free Gaussian Free Field measure. -/
+axiom gaussianFreeField_pairing_memLp
+  (m : ℝ) [Fact (0 < m)] (φ : TestFunction) (p : ENNReal) (hp : p ≠ ⊤) :
+  MemLp (distributionPairingCLM φ) p (gaussianFreeField_free m).toMeasure
+
 /-- For real test functions, the square of the Gaussian pairing is integrable under the
     free Gaussian Free Field measure. This is the diagonal (f = g) case needed for
     establishing two-point integrability. -/
@@ -203,7 +231,12 @@ lemma gaussian_pairing_square_integrable_real
     (m : ℝ) [Fact (0 < m)] (φ : TestFunction) :
   Integrable (fun ω => (distributionPairing ω φ) ^ 2)
     (gaussianFreeField_free m).toMeasure := by
-  -- To be established via Gaussian moment estimates arising from the Minlos construction.
-  sorry
+  -- Option B: invoke the Fernique-type axiom giving Lᵖ moments for the pairing
+  have h_memLp :=
+    gaussianFreeField_pairing_memLp m φ ((2 : ℕ) : ENNReal) (by simp)
+  -- L² membership directly implies integrability of the square
+  have h_integrable_CLM := h_memLp.integrable_sq
+  -- Translate the statement from the continuous linear map to the scalar pairing
+  simpa [distributionPairingCLM_apply] using h_integrable_CLM
 
 end

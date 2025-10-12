@@ -125,7 +125,6 @@ noncomputable section
 variable {𝕜 : Type} [RCLike 𝕜]
 
 abbrev μ : Measure SpaceTime := volume    -- Lebesgue, just named “μ”
-variable [SigmaFinite μ]
 
 /- Distributions and test functions -/
 
@@ -175,11 +174,35 @@ instance : MeasurableSpace FieldConfiguration := borel _
     weak-* topology, making evaluation maps x ↦ ω(x) continuous for each test function x. -/
 def distributionPairing (ω : FieldConfiguration) (f : TestFunction) : ℝ := ω f
 
+@[simp] lemma distributionPairing_add (ω₁ ω₂ : FieldConfiguration) (a : TestFunction) :
+    distributionPairing (ω₁ + ω₂) a = distributionPairing ω₁ a + distributionPairing ω₂ a := rfl
+
+@[simp] lemma distributionPairing_smul (s : ℝ) (ω : FieldConfiguration) (a : TestFunction) :
+    distributionPairing (s • ω) a = s * distributionPairing ω a :=
+  -- This follows from the definition of scalar multiplication in WeakDual
+  rfl
+
 @[simp] lemma pairing_smul_real (ω : FieldConfiguration) (s : ℝ) (a : TestFunction) :
-  ω (s • a) = s * (ω a) := by
-  -- Follows from ℝ-linearity of ω as a continuous linear functional.
-  -- TODO: fill in using map_smul for ContinuousLinearMap.
-  sorry
+  ω (s • a) = s * (ω a) :=
+  -- This follows from the linearity of the dual pairing
+  map_smul ω s a
+
+@[simp] def distributionPairingCLM (a : TestFunction) : FieldConfiguration →L[ℝ] ℝ where
+  toFun ω := distributionPairing ω a
+  map_add' ω₁ ω₂ := by
+    -- WeakDual addition is pointwise: (ω₁ + ω₂) a = ω₁ a + ω₂ a
+    rfl
+  map_smul' s ω := by
+    -- WeakDual scalar multiplication is pointwise: (s • ω) a = s * (ω a)
+    rfl
+  cont := by
+    -- The evaluation map is continuous by definition of WeakDual topology
+    exact WeakDual.eval_continuous a
+
+@[simp] lemma distributionPairingCLM_apply (a : TestFunction) (ω : FieldConfiguration) :
+    distributionPairingCLM a ω = distributionPairing ω a := rfl
+
+variable [SigmaFinite μ]
 
 /-! ## Glimm-Jaffe Generating Functional
 
