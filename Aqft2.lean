@@ -14,5 +14,6 @@ import «Aqft2».SCV
 import «Aqft2».OS_Axioms
 import «Aqft2».OS4
 import «Aqft2».GaussianFreeField
+import «Aqft2».IntegralDifferentiation_axioms
 import «Aqft2».HadamardExp
 import «Aqft2».GFFfinish

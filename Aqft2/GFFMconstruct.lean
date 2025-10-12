@@ -224,6 +224,17 @@ axiom gaussianFreeField_pairing_memLp
   (m : ℝ) [Fact (0 < m)] (φ : TestFunction) (p : ENNReal) (hp : p ≠ ⊤) :
   MemLp (distributionPairingCLM φ) p (gaussianFreeField_free m).toMeasure
 
+/-- Fernique-type exponential integrability for the smeared field.
+For every real test function `φ`, there exists `α > 0` such that
+`exp (α ⋅ (⟨X, φ⟩)^2)` is integrable under the free Gaussian GFF measure. -/
+axiom gaussianFreeField_pairing_expSq_integrable
+  (m : ℝ) [Fact (0 < m)] (φ : TestFunction) :
+  ∃ α : ℝ, 0 < α ∧
+    Integrable
+      (fun ω =>
+        Real.exp (α * (distributionPairingCLM φ ω)^2))
+      (gaussianFreeField_free m).toMeasure
+
 /-- For real test functions, the square of the Gaussian pairing is integrable under the
     free Gaussian Free Field measure. This is the diagonal (f = g) case needed for
     establishing two-point integrability. -/

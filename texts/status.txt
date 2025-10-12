@@ -23,6 +23,9 @@ Major refactors and progress across Schwinger, GFFMconstruct, GaussianMoments, a
     still contains two sorries (complex product expansion + L¹ control of the imaginary part).
   • Moved alternate OS0 proofs (gaussian_satisfies_OS0_alt, gaussianFreeField_satisfies_OS0_alt)
     to old/GaussianFreeField_OS0_alt.lean.
+  • Introduced `IntegralDifferentiation_axioms.lean`, now imported in `GFFMComplex`, to supply
+    the differentiation-under-the-integral lemmas as temporary axioms; goal is to derive them
+    from the Fernique-type hypotheses stated in `GFFMconstruct`.
 
 - Minlos/Schwinger bridge
   • Kept schwinger_eq_Qc_free (GFF_Minlos_Complex) equating S₂ with MinlosAnalytic.Qc.
@@ -113,6 +116,10 @@ Action items (next steps)
     to GaussianMoments/GFFMconstruct.
   - Upgrade the bilinear bridge to a sesquilinear statement when OS3 needs it.
 
+  - Formalize the analytic proofs in `IntegralDifferentiation.lean` so that
+    `IntegralDifferentiation_axioms` can be discharged using the Fernique-type
+    assumptions already recorded in `GFFMconstruct`.
+
 2) Finish OS1 details
   - Provide a clean inequality to convert M·‖f‖₁·‖f‖₂ into a sum bound inside the
     exponential.
@@ -141,3 +148,30 @@ Notes
 - The Minlos/Schwinger bridge now yields S₂ = freeCovarianceℂ_bilinear; a
   targeted comparison lemma is still needed to recover the sesquilinear
   freeCovarianceℂ appearing in other modules.
+
+Outstanding sorry inventory (Aqft2/*.lean)
+-----------------------------------------
+- Total sorry count: 126
+- Per-file breakdown:
+  * `MixedDerivLemma.lean`: 2
+  * `GaussianMoments.lean`: 3
+  * `GFFMComplex.lean`: 3
+  * `Euclidean.lean`: 1
+  * `GFF_OS3_real.lean`: 2
+  * `QFTHilbertSpace.lean`: 5
+  * `GaussianFreeField.lean`: 4
+  * `Basic.lean`: 1
+  * `SCV.lean`: 1
+  * `Schwinger.lean`: 21
+  * `SchurProduct.lean`: 1
+  * `FunctionalAnalysis.lean`: 9
+  * `HadamardExp.lean`: 1
+  * `OS4.lean`: 18
+  * `GFFMconstruct.lean`: 1
+  * `Covariance.lean`: 13
+  * `TopologyLemmas.lean`: 1
+  * `IntegralDifferentiation.lean`: 11
+  * `Operators.lean`: 13
+  * `MinlosAnalytic.lean`: 5
+  * `HilbertSpace.lean`: 9
+  * `ComplexTestFunction.lean`: 1
