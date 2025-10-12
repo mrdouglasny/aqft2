@@ -61,6 +61,7 @@ import Mathlib.Tactic.NormNum
 import Aqft2.Basic
 import Aqft2.OS_Axioms
 import Aqft2.GFFMconstruct
+import Aqft2.GFFMComplex
 import Aqft2.Euclidean
 import Aqft2.DiscreteSymmetry
 import Aqft2.SCV
@@ -433,13 +434,12 @@ assumptions for the Gaussian Free Field constructed in `GFFexplicit.lean`.
 
 /-- For the Gaussian Free Field measure, the product of two complex pairings with test functions
     is integrable. Standard: Gaussian measures have finite moments of all orders. -/
-private lemma gaussian_pairing_product_integrable_free
+lemma gaussian_pairing_product_integrable_free
   (m : ℝ) [Fact (0 < m)] (φ ψ : TestFunctionℂ) :
   Integrable (fun ω => distributionPairingℂ_real ω φ * distributionPairingℂ_real ω ψ)
     (gaussianFreeField_free m).toMeasure := by
-  -- This follows from finite-moment properties of Gaussian measures on nuclear spaces.
-  -- Placeholder: to be proved via Minlos construction and pushforward to ℝ^2.
-  sorry
+  -- Reuse the core lemma from the Minlos construction file.
+  simpa using gaussian_pairing_product_integrable_free_core m φ ψ
 
 /-- The complex covariance of the Gaussian Free Field is bilinear.
     Proven via integrability and linearity of the pairing under the integral. -/
