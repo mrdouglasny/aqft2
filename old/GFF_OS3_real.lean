@@ -5,12 +5,22 @@ Authors:
 
 ## Real Reflection Positivity for the Gaussian Free Field
 
-This file proves the real-valued version of the OS3 reflection positivity
-for the Gaussian free field by establishing the key matrix inequality
-`gaussianFreeField_OS3_matrix_real`.
+This file sets up the real-valued version of the OS3 reflection positivity proof
+for the Gaussian free field.  We work with the real positive-time test-function
+subspace and relate it to the existing complex formulation in `OS3` and `GFF_OS3`.
 
-The main result is `gaussianFreeField_OS3_real` which shows
-`OS3_ReflectionPositivity_real (gaussianFreeField_free m)` for every positive mass `m`.
+The eventual goal is to show
+`OS3_ReflectionPositivity_real (gaussianFreeField_free m)` for every positive mass
+`m`, by transporting the complex matrix inequality proved previously to the real
+setting.
+
+### TODO
+* Prove the reflection identities for `freeCovarianceFormR` and the associated
+  matrix reflection positivity statement.
+* Evaluate the real generating functional explicitly and establish the entry
+  factorisation in the purely real setting.
+* Combine these ingredients to finish the proof of
+  `gaussianFreeField_OS3_matrix_real`.
 -/
 
 import Aqft2.Basic
@@ -19,6 +29,7 @@ import Aqft2.DiscreteSymmetry
 import Aqft2.OS_Axioms
 import Aqft2.GFFMconstruct
 import Aqft2.HadamardExp
+import Aqft2.SchurProduct
 
 open MeasureTheory Complex Matrix
 open scoped Real InnerProductSpace BigOperators
@@ -26,14 +37,6 @@ open scoped Real InnerProductSpace BigOperators
 noncomputable section
 
 namespace QFT
-
-/-- Reflection positivity for a single positive-time test function in the real setting. -/
-lemma freeCovarianceFormR_reflection_nonneg
-    (m : ℝ) [Fact (0 < m)] (f : PositiveTimeTestFunction) :
-    0 ≤ freeCovarianceFormR m (QFT.compTimeReflectionReal f.val) f.val := by
-  -- TODO: establish single-function reflection positivity using the Minlos construction.
-  sorry
-
 
 /-- Entrywise exponential preserves PSD on real symmetric PSD matrices (finite index).
     Bridge lemma to be discharged using HadamardExp (Hadamard series) machinery. -/
@@ -50,35 +53,14 @@ private lemma entrywiseExp_posSemidef_of_posSemidef
   -- Unfold the definition of entrywiseExp
   simpa [Aqft2.entrywiseExp] using hExp
 
-/-- Connect freeCovarianceFormR to measure-theoretic covariance of random variables. -/
-lemma freeCovarianceFormR_eq_covariance
-    (m : ℝ) [Fact (0 < m)] (f g : TestFunction) :
-    freeCovarianceFormR m f g =
-    ∫ ω, (distributionPairing ω f - ∫ ω', distributionPairing ω' f ∂(gaussianFreeField_free m).toMeasure) *
-         (distributionPairing ω g - ∫ ω', distributionPairing ω' g ∂(gaussianFreeField_free m).toMeasure)
-         ∂(gaussianFreeField_free m).toMeasure := by
-  -- TODO: Use the definition of freeCovarianceFormR and the fact that GFF has mean zero
-  -- This should follow from the explicit covariance formula for the GFF
-  sorry
 
--- We recall the standard Gram-matrix positivity result from Mathlib. -/
-attribute [local simp] inner_sub_right inner_sub_left
-
-/-- Zero in the first argument gives zero. -/
-lemma freeCovarianceFormR_zero_left (m : ℝ) (g : TestFunction) :
-    freeCovarianceFormR m 0 g = 0 := by
-  -- Use freeCovarianceFormR_smul_left with c = 0
-  have h := freeCovarianceFormR_smul_left m (0 : ℝ) 0 g
-  simp only [zero_smul] at h
-  rw [h]
-  simp only [zero_mul]
-
-/-- Zero in the second argument gives zero. -/
-lemma freeCovarianceFormR_zero_right (m : ℝ) (f : TestFunction) :
-    freeCovarianceFormR m f 0 = 0 := by
-  -- Use symmetry and zero_left
-  rw [freeCovarianceFormR_symm]
-  exact freeCovarianceFormR_zero_left m f
+/-- Helper identity: complexifying after real time reflection agrees with
+  first complexifying and then applying the complex time reflection. -/
+lemma toComplex_compTimeReflectionReal (h : TestFunction) :
+  toComplex (QFT.compTimeReflectionReal h) =
+    QFT.compTimeReflection (toComplex h) := by
+  ext x
+  simp [toComplex_apply, QFT.compTimeReflectionReal, QFT.compTimeReflection]
 
 /-- Time reflection leaves the real free covariance invariant. -/
 lemma freeCovarianceFormR_reflection_invariant
@@ -129,26 +111,6 @@ lemma freeCovarianceFormR_reflection_cross
     _ = freeCovarianceFormR m (QFT.compTimeReflectionReal g) f := by
         simpa using (freeCovarianceFormR_symm m f (QFT.compTimeReflectionReal g))
 
-/-- Left linearity of freeCovarianceFormR for any fixed right argument.
-    This lemma captures the pattern that linear combinations distribute through
-    the first argument regardless of the specific form of the second argument. -/
-lemma freeCovarianceFormR_left_linear_any_right
-    (m : ℝ) {n : ℕ} (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ)
-    (s : Finset (Fin n)) (g : TestFunction) :
-    ∑ i ∈ s, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) g =
-    freeCovarianceFormR m (∑ i ∈ s, c i • QFT.compTimeReflectionReal (f i).val) g := by
-  -- Prove by induction on s using left linearity axioms
-  induction' s using Finset.induction with k t hk ih
-  · simp only [Finset.sum_empty]
-    rw [← freeCovarianceFormR_zero_left]
-  · rw [Finset.sum_insert hk, Finset.sum_insert hk]
-    -- Apply freeCovarianceFormR_smul_left and freeCovarianceFormR_add_left
-    have h_smul : c k * freeCovarianceFormR m (QFT.compTimeReflectionReal (f k).val) g =
-      freeCovarianceFormR m (c k • QFT.compTimeReflectionReal (f k).val) g :=
-      (freeCovarianceFormR_smul_left m (c k) (QFT.compTimeReflectionReal (f k).val) g).symm
-    rw [h_smul, ih]
-    rw [← freeCovarianceFormR_add_left]
-
 /-- Reflection matrix built from the real covariance is positive semidefinite.
     This is the real analogue of covariance reflection positivity. -/
 lemma freeCovarianceFormR_reflection_matrix_posSemidef
@@ -156,140 +118,30 @@ lemma freeCovarianceFormR_reflection_matrix_posSemidef
     {n : ℕ} (f : Fin n → PositiveTimeTestFunction) :
     Matrix.PosSemidef (fun i j : Fin n =>
       freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val) := by
-  -- The matrix R_{ij} = C(θf_i, f_j) is symmetric by freeCovarianceFormR_reflection_cross
-  -- We'll prove positive semidefiniteness directly by showing the quadratic form is nonnegative
+  classical
+  -- Step 1: identify the reflection covariance matrix with a Gram matrix in L².
+  have h_step₁ : True := by
+    -- TODO: expand `freeCovarianceFormR` via pairing random variables.
+    sorry
 
-  constructor
-  -- First prove the matrix is Hermitian (symmetric since entries are real)
-  · ext i j
-    simp only [conjTranspose_apply]
-    -- For real entries, star is the identity, so we need to show symmetry
-    simp only [star_id_of_comm]
-    -- Use the symmetry from freeCovarianceFormR_reflection_cross
-    exact (freeCovarianceFormR_reflection_cross (m := m) (f := (f i).val) (g := (f j).val)).symm
+  -- Step 2: construct the time-reflection isometry on the underlying Hilbert space.
+  have h_step₂ : True := by
+    -- TODO: build the operator τ and show τ² = id.
+    sorry
 
-  -- Second prove the quadratic form is nonnegative
-  · intro c
-    -- The goal is: 0 ≤ star c ⬝ᵥ M *ᵥ c
-    classical
+  -- Step 3: show the reflected test functions land in the positive-time subspace.
+  have h_step₃ : True := by
+    -- TODO: use support properties of `PositiveTimeTestFunction`.
+    sorry
 
-    -- Convert the matrix-vector form to double sum
-    have h_expand : star c ⬝ᵥ (fun i j => freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val) *ᵥ c =
-        ∑ i, ∑ j, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j := by
-      simp only [dotProduct, Matrix.mulVec]
-      -- For real coefficients, star c = c
-      have h_star : ∀ k, (star c) k = c k := fun k => by simp
-      congr 1
-      ext k
-      simp only [h_star]
-      rw [Finset.mul_sum]
-      ring_nf
+  -- Step 4: deduce the quadratic form is a norm square, hence nonnegative.
+  have h_step₄ : True := by
+    -- TODO: identify the quadratic form with ‖Σ cᵢ Γ(fᵢ)‖².
+    sorry
 
-    -- Step 1: Use bilinearity to collect the sums
-    have h_step1 : ∑ i, ∑ j, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j =
-      freeCovarianceFormR m (∑ i, c i • QFT.compTimeReflectionReal (f i).val) (∑ j, c j • (f j).val) := by
-      -- Use induction on finite sums combined with the bilinearity axioms
-      -- We'll work with the multiplication form and convert to smul at the end
-
-      -- Apply linearity in first argument: ∑ᵢ cᵢ • θfᵢ
-      have h_left : ∑ i, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (∑ j, c j • (f j).val) =
-        freeCovarianceFormR m (∑ i, c i • QFT.compTimeReflectionReal (f i).val) (∑ j, c j • (f j).val) := by
-        -- This uses freeCovarianceFormR_add_left and freeCovarianceFormR_smul_left repeatedly
-        induction' (Finset.univ : Finset (Fin n)) using Finset.induction with k s hk ih
-        · simp only [Finset.sum_empty]
-          -- freeCovarianceFormR m 0 0 = 0 (follows from linearity)
-          rw [← freeCovarianceFormR_zero_left]
-        · rw [Finset.sum_insert hk, Finset.sum_insert hk]
-          -- Apply bilinearity systematically
-          -- Goal: show left side equals right side
-          -- Use freeCovarianceFormR_smul_left and inductive hypothesis
-
-          -- First apply smul_left to the k-th term
-          have h_smul_k :
-            c k * freeCovarianceFormR m (QFT.compTimeReflectionReal (f k).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) =
-            freeCovarianceFormR m (c k • QFT.compTimeReflectionReal (f k).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) := by
-            exact (freeCovarianceFormR_smul_left m _ _ _).symm
-
-          -- For the sum part, we need to extend each term's right argument and use linearity
-          have h_sum_extend :
-            ∑ x ∈ s, c x * freeCovarianceFormR m (QFT.compTimeReflectionReal (f x).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) =
-            freeCovarianceFormR m (∑ i ∈ s, c i • QFT.compTimeReflectionReal (f i).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) := by
-            exact freeCovarianceFormR_left_linear_any_right m f c s (c k • (f k).val + ∑ x ∈ s, c x • (f x).val)
-
-          -- Now combine using freeCovarianceFormR_add_left
-          calc
-          c k * freeCovarianceFormR m (QFT.compTimeReflectionReal (f k).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) +
-          ∑ x ∈ s, c x * freeCovarianceFormR m (QFT.compTimeReflectionReal (f x).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val)
-          = freeCovarianceFormR m (c k • QFT.compTimeReflectionReal (f k).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) +
-            freeCovarianceFormR m (∑ i ∈ s, c i • QFT.compTimeReflectionReal (f i).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) := by
-            rw [h_smul_k, h_sum_extend]
-          _ = freeCovarianceFormR m (c k • QFT.compTimeReflectionReal (f k).val + ∑ i ∈ s, c i • QFT.compTimeReflectionReal (f i).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) := by
-            exact (freeCovarianceFormR_add_left m _ _ _).symm
-          _ = freeCovarianceFormR m (∑ i ∈ insert k s, c i • QFT.compTimeReflectionReal (f i).val) (c k • (f k).val + ∑ x ∈ s, c x • (f x).val) := by
-            simp only [Finset.sum_insert hk]      -- Then expand the right sum using linearity in second argument
-      have h_right : ∀ i, ∑ j, freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j =
-        freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (∑ j, c j • (f j).val) := by
-        intro i
-        -- Use induction on the right argument with our right linearity lemmas
-        induction' (Finset.univ : Finset (Fin n)) using Finset.induction with j t hj ih_right
-        · simp only [Finset.sum_empty]
-          -- freeCovarianceFormR m u 0 = 0 (follows from linearity)
-          rw [← freeCovarianceFormR_zero_right]
-        · rw [Finset.sum_insert hj, Finset.sum_insert hj]
-          -- Apply right linearity: freeCovarianceFormR_add_right and freeCovarianceFormR_smul_right
-          -- First convert multiplications to scalar multiplications
-          -- freeCovarianceFormR m u (f j) * c j = freeCovarianceFormR m u (c j • f j)
-          have h_smul_first : freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j =
-            freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (c j • (f j).val) := by
-            rw [mul_comm]
-            rw [freeCovarianceFormR_smul_right]
-          rw [h_smul_first, ih_right]
-          -- Now apply freeCovarianceFormR_add_right
-          rw [← freeCovarianceFormR_add_right]
-
-      -- Combine the results by showing both sides equal the bilinear form
-      -- Left side: ∑ i, ∑ j, c i * freeCovarianceFormR m (θf_i) (f_j) * c j
-      -- We need: ∑ i, c i * freeCovarianceFormR m (θf_i) (∑ j, c j • f_j)
-      have h_rewrite : ∑ i, ∑ j, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j =
-        ∑ i, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (∑ j, c j • (f j).val) := by
-        congr 1
-        ext i
-        -- The goal after ext is to show:
-        -- ∑ j, c i * freeCovarianceFormR m (θf_i) (f_j) * c j = c i * freeCovarianceFormR m (θf_i) (∑ j, c j • f_j)
-        -- This follows by factoring out c i and applying h_right i
-        -- Goal: ∑ j, c i * freeCovarianceFormR m (θf_i) (f_j) * c j = c i * freeCovarianceFormR m (θf_i) (∑ j, c j • f_j)
-
-        -- We need to rewrite: ∑ j, c i * freeCovarianceFormR m (θf_i) (f_j) * c j
-        -- as: c i * ∑ j, freeCovarianceFormR m (θf_i) (f_j) * c j
-        -- Then apply h_right i
-
-        -- The key insight: we can rewrite each term using mul_assoc and then factor out c i
-        conv_lhs =>
-          rw [show ∑ j, c i * freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j =
-                  ∑ j, c i * (freeCovarianceFormR m (QFT.compTimeReflectionReal (f i).val) (f j).val * c j) by
-                simp only [mul_assoc]]
-
-        -- Now factor out c i
-        rw [← Finset.mul_sum]
-
-        -- Apply h_right i to both sides (after factoring out c i, we need the congr_arg version)
-        rw [h_right i]
-      rw [h_rewrite, h_left]
-
-    -- Step 2: Use linearity of time reflection
-    have h_step2 : ∑ i, c i • QFT.compTimeReflectionReal (f i).val =
-      QFT.compTimeReflectionReal (∑ i, c i • (f i).val) := by
-      exact (compTimeReflectionReal_linear_combination (fun i => (f i).val) c).symm
-
-    -- Step 3: The sum of positive-time functions is positive-time
-    obtain ⟨g, hg⟩ := PositiveTimeTestFunction.sum_smul_mem f c
-
-    -- Step 4: Combine and apply reflection positivity
-    rw [h_expand, h_step1, h_step2]
-    -- Now we have: freeCovarianceFormR m (compTimeReflectionReal (∑ i, c i • (f i).val)) (∑ j, c j • (f j).val)
-    -- Since g.val = ∑ i, c i • (f i).val, we get: freeCovarianceFormR m (compTimeReflectionReal g.val) g.val
-    rw [← hg]
-    exact freeCovarianceFormR_reflection_nonneg m g
+  -- Final assembly: the Gram description yields positive semidefiniteness.
+  -- TODO: combine Steps 1–4 to provide the actual matrix PSD witness.
+  sorry
 
 /-- Quadratic expansion identity for reflected arguments. -/
 lemma freeCovarianceFormR_reflection_expansion
@@ -511,10 +363,55 @@ lemma gaussianFreeField_real_entry_factor
         * (GJGeneratingFunctional (gaussianFreeField_free m) (g.val)).re
         * Real.exp Cfg := by
         simp [hf', hg', Cfg, a, b, one_div, mul_comm, mul_assoc]
-
 section GaussianRealReflectionPositivity
 
 variable (m : ℝ) [Fact (0 < m)]
+
+/-- Real-vs-complex comparison lemma for single matrix entries.
+    This will identify the real OS3 matrix element with the real part of the
+    complex element obtained after complexifying both arguments. -/
+lemma gaussian_real_entry_agrees
+    (dμ := gaussianFreeField_free m)
+    {f g : PositiveTimeTestFunction} :
+    (GJGeneratingFunctional dμ (f.val - QFT.compTimeReflectionReal g.val)).re
+      = (GJGeneratingFunctionalℂ dμ
+          (toComplex f.val - QFT.compTimeReflection (toComplex g.val))).re := by
+  classical
+  have h_toComplex_sub :
+      toComplex (f.val - QFT.compTimeReflectionReal g.val)
+        = toComplex f.val - toComplex (QFT.compTimeReflectionReal g.val) := by
+    ext x
+    simp [toComplex_apply]
+  have h_time := toComplex_compTimeReflectionReal (h := g.val)
+  have h_gen := GJGeneratingFunctionalℂ_toComplex (dμ_config := dμ)
+    (f := f.val - QFT.compTimeReflectionReal g.val)
+  -- identify the complex generating functional on the left with the real one
+  have h_eq := (congrArg Complex.re h_gen).symm
+  -- rewrite the complex argument using the helper lemmas
+  simpa [h_toComplex_sub, h_time] using h_eq
+
+/-- Real quadratic form equals the real part of the complex quadratic form.
+    This will allow us to transfer the positive semidefiniteness result from the
+    complex setting to the real one. -/
+lemma gaussian_real_quadratic_agrees
+    (dμ := gaussianFreeField_free m)
+    {n : ℕ} (f : Fin n → PositiveTimeTestFunction) (c : Fin n → ℝ) :
+    (∑ i, ∑ j, c i * c j *
+        (GJGeneratingFunctional dμ
+          ((f i).val - QFT.compTimeReflectionReal (f j).val)).re)
+      = (∑ i, ∑ j, (starRingEnd ℂ) (Complex.ofReal (c i)) * (Complex.ofReal (c j)) *
+          GJGeneratingFunctionalℂ dμ
+            (toComplex (f i).val - QFT.compTimeReflection (toComplex (f j).val))).re := by
+  classical
+  have h_entry : ∀ i j,
+      (GJGeneratingFunctional dμ
+            ((f i).val - QFT.compTimeReflectionReal (f j).val)).re
+        = (GJGeneratingFunctionalℂ dμ
+            (toComplex (f i).val - QFT.compTimeReflection (toComplex (f j).val))).re := by
+    intro i j
+    simpa using
+      gaussian_real_entry_agrees (m := m) (f := f i) (g := f j) (dμ := dμ)
+  simp [h_entry]
 
 /-- Matrix formulation of the real OS3 inequality for the Gaussian free field. -/
 lemma gaussianFreeField_OS3_matrix_real
@@ -585,7 +482,8 @@ lemma gaussianFreeField_OS3_matrix_real
   exact h_goal
 
 /-- Main theorem: the Gaussian free field satisfies the real reflection
-  positivity axiom. -/
+  positivity axiom.  The proof will rely on the existing complex OS3 matrix
+  inequality together with the comparison lemmas above. -/
 theorem gaussianFreeField_OS3_real :
     OS3_ReflectionPositivity_real (gaussianFreeField_free m) := by
   intro n f c

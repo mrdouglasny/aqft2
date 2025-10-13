@@ -246,4 +246,11 @@ noncomputable def compTimeReflectionReal : TestFunction →L[ℝ] TestFunction :
     rw [h_iso]
     linarith [norm_nonneg x]
   exact SchwartzMap.compCLM (𝕜 := ℝ) (hg := timeReflectionCLM.hasTemperateGrowth) (hg_upper := hg_upper)
+
+/-- Time reflection is linear on real test functions. -/
+lemma compTimeReflectionReal_linear_combination {n : ℕ} (f : Fin n → TestFunction) (c : Fin n → ℝ) :
+    compTimeReflectionReal (∑ i, c i • f i) = ∑ i, c i • compTimeReflectionReal (f i) := by
+  -- This follows directly from the linearity of the continuous linear map compTimeReflectionReal
+  simp only [map_sum, map_smul]
+
 end QFT

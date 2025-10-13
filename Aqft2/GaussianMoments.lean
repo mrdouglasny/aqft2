@@ -161,7 +161,11 @@ theorem gaussian_pairing_product_integrable_free_2point
     unfold distributionPairingℂ_real
     simp only [φRe, φIm, ψRe, ψIm, complex_testfunction_decompose]
     -- Use (a + bi)(c + di) = (ac - bd) + i(ad + bc) where a,b,c,d are real
-    sorry
+    simp only [distributionPairing]
+    -- Expand and use I^2 = -1
+    ring_nf
+    rw [Complex.I_sq]
+    ring
 
   -- Use the fact that each product of real pairings is integrable (they're in L² so products are in L¹)
   -- For L² × L² → L¹, we use Hölder's inequality: p⁻¹ + q⁻¹ = 1⁻¹ gives 2⁻¹ + 2⁻¹ = 1⁻¹
@@ -222,7 +226,12 @@ theorem gaussian_pairing_product_integrable_free_2point
     -- Multiplication by a constant (Complex.I) preserves integrability
     apply Integrable.const_mul
     -- The base function is integrable when viewed as complex-valued
-    sorry
+    have h_cast : (fun ω => (distributionPairing ω φRe * distributionPairing ω ψIm + distributionPairing ω φIm * distributionPairing ω ψRe : ℂ)) =
+                  (fun ω => ↑(distributionPairing ω φRe * distributionPairing ω ψIm + distributionPairing ω φIm * distributionPairing ω ψRe)) := by
+      funext ω
+      simp only [Complex.ofReal_add, Complex.ofReal_mul]
+    rw [h_cast]
+    exact Integrable.ofReal h_ad_bc
 
   exact Integrable.add h_real_part h_imag_part
 

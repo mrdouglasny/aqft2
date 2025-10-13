@@ -112,10 +112,6 @@ Blocking items for gaussianFreeField_satisfies_all_OS_axioms
 Action items (next steps)
 -------------------------
 1) Close OS0 for GFF
-  - Finish gaussian_pairing_product_integrable_free_2point and propagate the result
-    to GaussianMoments/GFFMconstruct.
-  - Upgrade the bilinear bridge to a sesquilinear statement when OS3 needs it.
-
   - Formalize the analytic proofs in `IntegralDifferentiation.lean` so that
     `IntegralDifferentiation_axioms` can be discharged using the Fernique-type
     assumptions already recorded in `GFFMconstruct`.
