@@ -244,7 +244,7 @@ lemma quadratic_form_entrywiseExp_hadamardSeries
       ∑ i, ∑ j, x i * ((entrywiseExp_hadamardSeries (ι:=ι) R) i j) * x j
       = x ⬝ᵥ (entrywiseExp_hadamardSeries (ι:=ι) R).mulVec x := by
     simp only [Matrix.mulVec, dotProduct, Finset.mul_sum]
-    congr 1; ext i; ring
+    congr 1; ext i; ring_nf
 
   -- Identify the LHS coefficient structure
   have hlhs_identify (n : ℕ) :
