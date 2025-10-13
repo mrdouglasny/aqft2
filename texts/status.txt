@@ -80,15 +80,16 @@ Aqft2/GFF_OS3.lean and Aqft2/OS3.lean
   covariance once the bridge is extended beyond the bilinear form.
 
 Aqft2/GFF_OS3_real.lean
-- Real reflection positivity proof skeleton complete up to two sorries:
-  freeCovarianceFormR_reflection_invariant and
-  freeCovarianceFormR_reflection_matrix_posSemidef.
-- Completing these will finish QFT.gaussianFreeField_OS3_real required by the master theorem.
+- Real reflection positivity proof skeleton complete; remaining sorries are
+  freeCovarianceFormR_reflection_nonneg,
+  freeCovarianceFormR_eq_covariance, and
+  freeCovarianceFormR_reflection_invariant.
+- Once these three lemmas are supplied, the reduction shows
+  QFT.gaussianFreeField_OS3_real (and hence OS3) is finished.
 
 Aqft2/HadamardExp.lean
-- Needs the “entrywise exp preserves PSD” lemma finalized to close an OS3 step.
-- New plan: factor the reused continuity-of-quadratic-form argument into a helper lemma
-  (`continuous_quadEval`) so the PSD proof references it instead of re-deriving sums.
+- DONE: entrywise-exp-preserves-PSD argument completed using
+  `summable_hadamardQuadSeries` and the reorganised quadratic-form summability proof.
 
 What’s proven vs pending (high level)
 -------------------------------------
@@ -96,7 +97,9 @@ What’s proven vs pending (high level)
 - OS0 (GFF): blocked by gaussian_pairing_product_integrable_free_2point (two sorries).
 - OS1 (GFF): proof skeleton present; two analytic sorries remain inside gaussian_satisfies_OS1.
 - OS2 (GFF): holds under CovarianceEuclideanInvariantℂ; awaiting explicit invariance lemma for μ_GFF.
-- OS3 (GFF): complex argument established; real version depends on two sorries in GFF_OS3_real.
+- OS3 (GFF): proof reduces entirely to the real case; outstanding work is to show
+  freeCovarianceFormR_reflection_nonneg, freeCovarianceFormR_eq_covariance, and
+  freeCovarianceFormR_reflection_invariant.
 - OS4 (GFF): skeleton with placeholders; needs translate_test_function and clustering decay.
 
 Blocking items for gaussianFreeField_satisfies_all_OS_axioms
@@ -124,10 +127,11 @@ Action items (next steps)
   - Supply TwoPointIntegrable for p = 2 using kernel or nuclearity bounds.
 
 3) Complete OS3 real reflection positivity
-  - Prove freeCovarianceFormR_reflection_invariant.
-  - Finish freeCovarianceFormR_reflection_matrix_posSemidef (uses HadamardExp PSD lemma).
-    - Implement the helper lemma for quadratic-form continuity and remove the remaining
-      `sorry` in HadamardExp via the comparison-test argument recorded today.
+  - Establish freeCovarianceFormR_reflection_nonneg via the Minlos reflection argument.
+  - Identify freeCovarianceFormR with the covariance integral
+    (freeCovarianceFormR_eq_covariance).
+  - Prove freeCovarianceFormR_reflection_invariant; the matrix positivity then
+    follows from existing HadamardExp machinery.
 
 4) Provide GFF-specific invariances
   - Derive CovarianceEuclideanInvariantℂ (μ_GFF m) directly from the free covariance.
