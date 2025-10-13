@@ -1,4 +1,4 @@
-Status report (Oct 12, 2025)
+Status report (Oct 13, 2025)
 
 Overview
 --------
@@ -87,6 +87,8 @@ Aqft2/GFF_OS3_real.lean
 
 Aqft2/HadamardExp.lean
 - Needs the “entrywise exp preserves PSD” lemma finalized to close an OS3 step.
+- New plan: factor the reused continuity-of-quadratic-form argument into a helper lemma
+  (`continuous_quadEval`) so the PSD proof references it instead of re-deriving sums.
 
 What’s proven vs pending (high level)
 -------------------------------------
@@ -124,6 +126,8 @@ Action items (next steps)
 3) Complete OS3 real reflection positivity
   - Prove freeCovarianceFormR_reflection_invariant.
   - Finish freeCovarianceFormR_reflection_matrix_posSemidef (uses HadamardExp PSD lemma).
+    - Implement the helper lemma for quadratic-form continuity and remove the remaining
+      `sorry` in HadamardExp via the comparison-test argument recorded today.
 
 4) Provide GFF-specific invariances
   - Derive CovarianceEuclideanInvariantℂ (μ_GFF m) directly from the free covariance.
