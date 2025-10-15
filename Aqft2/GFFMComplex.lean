@@ -115,30 +115,6 @@ noncomputable def freeCovarianceForm_struct (m : ℝ) : MinlosAnalytic.Covarianc
     This is the key technical bridge connecting the Minlos analytic continuation
     with the explicitly defined complex covariance. -/
 
--- Bilinearity axioms for freeCovarianceℂ_bilinear (to be proven later)
-axiom freeCovarianceℂ_bilinear_add_left
-  (m : ℝ) (f₁ f₂ g : TestFunctionℂ) :
-  freeCovarianceℂ_bilinear m (f₁ + f₂) g
-    = freeCovarianceℂ_bilinear m f₁ g + freeCovarianceℂ_bilinear m f₂ g
-
-axiom freeCovarianceℂ_bilinear_add_right
-  (m : ℝ) (f g₁ g₂ : TestFunctionℂ) :
-  freeCovarianceℂ_bilinear m f (g₁ + g₂)
-    = freeCovarianceℂ_bilinear m f g₁ + freeCovarianceℂ_bilinear m f g₂
-
-axiom freeCovarianceℂ_bilinear_smul_left
-  (m : ℝ) (c : ℂ) (f g : TestFunctionℂ) :
-  freeCovarianceℂ_bilinear m (c • f) g = c * freeCovarianceℂ_bilinear m f g
-
-axiom freeCovarianceℂ_bilinear_smul_right
-  (m : ℝ) (c : ℂ) (f g : TestFunctionℂ) :
-  freeCovarianceℂ_bilinear m f (c • g) = c * freeCovarianceℂ_bilinear m f g
-
-axiom freeCovarianceℂ_bilinear_agrees_on_reals
-  (m : ℝ) (f g : TestFunction) :
-  freeCovarianceℂ_bilinear m (toComplex f) (toComplex g)
-    = (freeCovarianceFormR m f g : ℂ)
-
 lemma free_Qc_eq_freeCovarianceℂ
   (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
   MinlosAnalytic.Qc (freeCovarianceForm_struct m) f g = freeCovarianceℂ_bilinear m f g := by
@@ -531,21 +507,6 @@ lemma mixed_deriv_schwinger
   rw [← integral_neg]
   -- This equals -∫ ω, distributionPairingℂ_real ω f * distributionPairingℂ_real ω g ∂μ.toMeasure
   -- Goal is already achieved by the definitions of u and v
-
-/-- Polarization identity for complex bilinear forms.
-    For any ℂ-bilinear form B, we have B(f,g) = (1/4)[B(f+g,f+g) - B(f-g,f-g) - i*B(f+ig,f+ig) + i*B(f-ig,f-ig)]
-    This is a standard result in functional analysis. -/
-axiom polarization_identity {E : Type*} [AddCommGroup E] [Module ℂ E]
-  (B : E → E → ℂ) (h_bilin : ∀ (c : ℂ) (x y z : E),
-    B (c • x) y = c * B x y ∧
-    B (x + z) y = B x y + B z y ∧
-    B x (c • y) = c * B x y ∧
-    B x (y + z) = B x y + B x z)
-  (f g : E) :
-  B f g = (1/4 : ℂ) * (
-    B (f + g) (f + g) - B (f - g) (f - g) -
-    Complex.I * B (f + Complex.I • g) (f + Complex.I • g) +
-    Complex.I * B (f - Complex.I • g) (f - Complex.I • g))
 
 /-- Bridge lemma: MinlosAnalytic.Qc equals SchwingerFunctionℂ₂ for the free GFF.
     This connects the two representations of complex bilinear covariance extension. -/
