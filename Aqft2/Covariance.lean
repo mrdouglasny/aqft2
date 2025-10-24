@@ -468,58 +468,6 @@ def freeCovarianceReflectionPositiveMomentum (m : ℝ) : Prop :=
     0 ≤ (∫ k, (starRingEnd ℂ ((fourierTransform (QFT.compTimeReflection f)) k)) *
         (freePropagatorMomentum m k : ℂ) * ((fourierTransform f) k) ∂volume).re
 
-/-- Key structural lemma: The momentum space representation makes positivity manifest.
-    This encapsulates the essence of why reflection positivity works for the free field.
--/
-theorem momentum_space_positivity_structure (m : ℝ) [Fact (0 < m)] :
-  -- The key insight: In momentum space, integrals become
-  -- ∫ |f̂(k)|² * (1/(k² + m²)) dk which is positive since:
-  -- 1. |f̂(k)|² ≥ 0 (complex norm squared)
-  -- 2. 1/(k² + m²) > 0 (freePropagator_pos)
-  -- This theorem establishes the general principle for arbitrary functions
-  ∀ (f : SpaceTime → ℂ) (_hf_integrable : Integrable (fun k => ‖f k‖^2 * freePropagatorMomentum m k) volume),
-    0 ≤ ∫ k, ‖f k‖^2 * freePropagatorMomentum m k ∂volume := by
-  -- This establishes the fundamental structural insight of momentum space reflection positivity:
-  -- The complex, non-obvious positivity condition in position space becomes manifestly
-  -- positive in momentum space due to the factorization into non-negative components.
-  --
-  -- Mathematical principle: The Fourier transform converts reflection positivity into
-  -- an integral of the form ∫ |f̂(k)|² * (positive weight) dk, which is transparently ≥ 0.
-  -- This is the essence of why momentum space methods are so powerful in constructive QFT.
-  intro f _hf_integrable
-
-  -- The integrand ‖f k‖^2 * freePropagatorMomentum m k is pointwise non-negative:
-  -- 1. ‖f k‖^2 ≥ 0 for all k (norm squared is always non-negative)
-  -- 2. freePropagatorMomentum m k > 0 for all k (from freePropagator_pos)
-  -- Therefore their product is non-negative everywhere
-  have h_nonneg : ∀ᵐ k, 0 ≤ ‖f k‖^2 * freePropagatorMomentum m k := by
-    apply Filter.Eventually.of_forall
-    intro k
-    have h1 : 0 ≤ ‖f k‖^2 := sq_nonneg ‖f k‖
-    have h2 : 0 ≤ freePropagatorMomentum m k := le_of_lt (freePropagator_pos k)
-    exact mul_nonneg h1 h2
-
-  -- Since the integrand is non-negative almost everywhere,
-  -- the integral is non-negative by the fundamental theorem of integration
-  exact integral_nonneg_of_ae h_nonneg
-
-/-- Helper lemma: For any L² function f, the integral ∫ |f(k)|² * (1/(k²+m²)) dk ≥ 0.
-    This is the key positivity result that makes reflection positivity manifest in momentum space.
--/
-theorem momentum_space_integral_positive {m : ℝ} [Fact (0 < m)] (f : SpaceTime → ℂ)
-  (hf_integrable : Integrable (fun k => ‖f k‖^2 * freePropagatorMomentum m k) volume) :
-  0 ≤ ∫ k, ‖f k‖^2 * freePropagatorMomentum m k ∂volume := by
-  -- This is a direct application of the momentum space positivity structure theorem
-  -- which establishes that integrals of the form ∫ |f(k)|² * (1/(k²+m²)) dk are non-negative
-  -- due to the factorization into manifestly non-negative components
-  exact momentum_space_positivity_structure m f hf_integrable
-
-/--  (Integrability for Schwartz Functions):**
-    The product of the squared norm of a Schwartz function
-    and the free propagator in momentum space is integrable. -/
-axiom integrable_schwartz_weighted_by_propagator (m : ℝ) (f : TestFunctionℂ) :
-  Integrable (fun k => ‖f k‖^2 * freePropagatorMomentum m k) volume
-
 /-- **(Integrability for Fourier Transform of Schwartz Functions):**
     The product of the squared norm of the Fourier transform of a Schwartz function
     and the free propagator in momentum space is integrable. -/
@@ -538,12 +486,6 @@ axiom parseval_schwartz_basic (f g : TestFunctionℂ) :
     This is a fundamental property in quantum field theory for massive fields. -/
 axiom freeCovariance_exponential_decay_basic (m : ℝ) :
   ∃ C > 0, ∀ z : SpaceTime, |freeCovarianceKernel m z| ≤ C * rexp (-m * ‖z‖)
-
-/-- Corollary: the momentum-space quadratic form is non-negative on Schwartz functions. -/
-theorem momentum_space_integral_positive_schwartz {m : ℝ} [Fact (0 < m)] (f : TestFunctionℂ) :
-  0 ≤ ∫ k, ‖f k‖^2 * freePropagatorMomentum m k ∂volume := by
-  have hf_int := integrable_schwartz_weighted_by_propagator (m := m) (f := f)
-  exact momentum_space_integral_positive (m := m) f hf_int
 
 /-- * (Basic Parseval for Schwartz Functions):**
     The fundamental theorem that Fourier transform preserves L² inner products on Schwartz functions.
@@ -634,11 +576,17 @@ theorem covarianceBilinearForm_continuous (m : ℝ) :
 
 /-! ## Euclidean Invariance -/
 
-/-- The free covariance is invariant under Euclidean transformations (placeholder). -/
+/-- Euclidean invariance of the free covariance (skeleton). -/
 theorem freeCovariance_euclidean_invariant (m : ℝ)
-    (R : SpaceTime ≃ₗᵢ[ℝ] SpaceTime) (x y : SpaceTime) :
-    freeCovariance m (R x) (R y) = freeCovariance m x y := by
-  -- TODO: prove Euclidean invariance using change-of-variables in the Fourier integral.
+  (g : QFT.E) (x y : SpaceTime) :
+  freeCovariance m (QFT.act g x) (QFT.act g y) = freeCovariance m x y := by
+  classical
+  -- Step 1: unfold `freeCovariance` and identify the momentum integral.
+  -- Step 2: make the change-of-variables `k ↦ act g⁻¹ k` in the integral.
+  -- Step 3: use that Euclidean motions preserve the Lebesgue measure on `SpaceTime`.
+  -- Step 4: note `freePropagatorMomentum m` depends only on `‖k‖`, so it remains unchanged.
+  -- Step 5: rewrite the phase using preservation of the inner product under `g`.
+  -- Step 6: conclude the integrals agree, proving invariance.
   sorry
 
 /-! ## Complex Extension -/
@@ -1134,4 +1082,3 @@ lemma freeCovarianceℂ_agrees_on_reals (m : ℝ)
   rw [step1]
   -- Then apply integral_ofReal to the outer integral
   exact integral_ofReal
-
