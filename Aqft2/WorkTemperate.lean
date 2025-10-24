@@ -88,6 +88,74 @@ lemma freePropagator_complex_smooth (m : ℝ) [Fact (0 < m)] :
   · exact ofRealCLM.contDiff
   · exact freePropagator_smooth m
 
+/-- Bounding the iterated Fréchet derivatives of the complex-valued propagator.
+
+    This lemma states that for each derivative order n, there exists a uniform bound.
+    The bounds can (and do) depend on n, but each individual derivative is uniformly bounded.
+
+    Mathematical insight: The function f(k) = 1/(‖k‖² + m²) and all its derivatives
+    are actually bounded by constants (not just polynomially bounded). Each derivative
+    has the form P(k)/(‖k‖² + m²)^(j+1) where P is a polynomial of degree ≤ 2j,
+    so the denominator dominates and the function remains bounded.
+
+    This is stronger than needed for temperate growth (which only requires polynomial bounds),
+    but it's the natural property of this function. -/
+lemma freePropagator_iteratedFDeriv_bound (m : ℝ) [Fact (0 < m)] (n : ℕ) :
+  ∃ C : ℝ, 0 ≤ C ∧ ∀ k : SpaceTime,
+    ‖iteratedFDeriv ℝ n (fun k => (freePropagatorMomentum m k : ℂ)) k‖ ≤ C := by
+  classical
+  refine Nat.recOn n ?base ?step
+  · -- Base case: n = 0, the function itself
+    refine ⟨1 / m^2, by positivity, ?_⟩
+    intro k
+    have hpos : 0 < m := Fact.out
+    have hbound : ‖(freePropagatorMomentum m k : ℂ)‖ ≤ 1 / m^2 := by
+      simp only [Complex.norm_real, Real.norm_eq_abs]
+      unfold freePropagatorMomentum
+      have hden_pos : 0 < ‖k‖ ^ 2 + m ^ 2 :=
+        add_pos_of_nonneg_of_pos (sq_nonneg ‖k‖) (pow_pos hpos 2)
+      have hden_ge : m ^ 2 ≤ ‖k‖ ^ 2 + m ^ 2 :=
+        le_add_of_nonneg_left (sq_nonneg ‖k‖)
+      have hineq : 1 / (‖k‖ ^ 2 + m ^ 2) ≤ 1 / m ^ 2 := by
+        exact one_div_le_one_div_of_le (pow_pos hpos 2) hden_ge
+      have : |1 / (‖k‖ ^ 2 + m ^ 2)| = 1 / (‖k‖ ^ 2 + m ^ 2) :=
+        abs_of_nonneg (le_of_lt (div_pos one_pos hden_pos))
+      rw [this]
+      exact hineq
+    simpa [norm_iteratedFDeriv_zero] using hbound
+  · intro n hn
+    obtain ⟨C, hC₀, hC⟩ := hn
+    -- Inductive step: the (n+1)-th derivative
+    --
+    -- MATHEMATICAL FACT: All derivatives of f(k) = 1/(‖k‖² + m²) are uniformly bounded.
+    -- This follows from the general principle that derivatives of rational functions
+    -- with polynomial numerators and denominators of higher degree are bounded.
+    --
+    -- RIGOROUS PROOF STRATEGY (not implemented here):
+    -- 1. Show that D^n[1/(‖k‖² + m²)] = P_n(k)/(‖k‖² + m²)^(n+1)
+    --    where P_n is a polynomial of degree ≤ 2n
+    -- 2. Show that ‖P_n(k)‖ ≤ C_n * (‖k‖² + m²)^n for some constant C_n
+    -- 3. Therefore ‖D^n f(k)‖ ≤ C_n/(‖k‖² + m²) ≤ C_n/m²
+    --
+    -- The bound C_n can be computed explicitly using Faà di Bruno's formula,
+    -- or by induction on the derivative structure.
+    --
+    -- For this proof, we use a generous bound that grows with n
+    have hpos : 0 < m := Fact.out
+    refine ⟨(n + 2) ^ 4 / m ^ 2, by positivity, ?_⟩
+    intro k
+    -- TODO: Complete this using either:
+    -- (a) Explicit formulas for derivatives of 1/(‖k‖² + m²)
+    -- (b) Mathlib lemmas about derivatives of rational functions
+    -- (c) The fact that this function is in the Schwartz space
+    sorry
+
+/-- Helper lemma: all iterated Fréchet derivatives of `k ↦ (1 + ‖k‖²)⁻¹` are uniformly bounded. -/
+lemma iteratedFDeriv_inv_one_add_norm_sq_bounded (n : ℕ) :
+  ∃ C : ℝ, 0 ≤ C ∧ ∀ k : SpaceTime,
+    ‖iteratedFDeriv ℝ n (fun k => (1 + ‖k‖^2)⁻¹ : SpaceTime → ℝ) k‖ ≤ C := by
+  sorry
+
 /-- The propagator multiplier has temperate growth as a scalar function.
     This follows from the fact that it's bounded and smooth. -/
 theorem freePropagator_temperate_growth (m : ℝ) [Fact (0 < m)] :
@@ -121,5 +189,23 @@ theorem freePropagator_temperate_growth (m : ℝ) [Fact (0 < m)] :
       rw [norm_iteratedFDeriv_zero]
       exact hbound
     | succ n' =>
-      -- For higher derivatives, we use that the function and all its derivatives are bounded
-      sorry -- This requires more detailed analysis of the derivatives of 1/(‖k‖² + m²)
+      -- For higher derivatives, we use that all derivatives of 1/(‖k‖² + m²) are bounded
+      -- This follows from the fact that each derivative introduces polynomial numerators
+      -- but the denominator (‖k‖² + m²) grows quadratically, making derivatives decay faster
+      -- For now, we use a generous polynomial bound that works for all derivatives
+      simp only [pow_zero, mul_one]
+      -- We claim all derivatives are bounded by a constant depending on n and m
+      -- The detailed proof requires explicit computation of derivative bounds
+      sorry
+
+/-- Alternate proof skeleton for `freePropagator_temperate_growth`. -/
+theorem freePropagator_temperate_growth' (m : ℝ) [Fact (0 < m)] :
+  Function.HasTemperateGrowth (fun k : SpaceTime => (freePropagatorMomentum m k : ℂ)) := by
+  classical
+  constructor
+  · exact freePropagator_complex_smooth m
+  · intro n
+    obtain ⟨C, hC₀, hC⟩ := freePropagator_iteratedFDeriv_bound (m := m) n
+    refine ⟨0, C, ?_⟩
+    intro k
+    simpa using hC k
