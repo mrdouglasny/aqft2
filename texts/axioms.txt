@@ -38,7 +38,7 @@ added or assumptions are relaxed.
    nuclearity proof is imported or replicated from existing references.
    Counts: 1 axiom / 0 sorrys in this section.
 
-6. Schwartz/propagator analytic prerequisites (Aqft2/Covariance.lean)
+6. Schwartz/propagator analytic prerequisites (Aqft2/Covariance.lean and CovarianceMomentum.lean)
    Statements: freePropagator_temperate_growth, schwartz_mul_by_temperate,
    integrable_schwartz_weighted_by_propagator, integrable_weighted_schwartz,
    freeCovariance_exponential_decay_basic, covarianceBilinearForm_continuous_basic,
@@ -46,7 +46,7 @@ added or assumptions are relaxed.
    Status/Justification: Standard results about Schwartz functions and the massive propagator
    (tempered growth, rapid decay, and basic integral manipulations). They are assumed while we
    wait for the corresponding Mathlib lemmas or custom analytic proofs.
-   Counts: 8 axioms / 2 nearby sorrys (`freeCovariance_symmetric`, `freeCovariance_euclidean_invariant`).
+   Counts: 8 axioms / 0 nearby sorrys.
 
 7. Fourier and time-reflection identities (Aqft2/Covariance.lean)
    Statements: fubini_theorem_for_propagator, parseval_convolution_theorem, ft_kernel_identity,

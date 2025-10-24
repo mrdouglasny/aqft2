@@ -576,18 +576,81 @@ theorem covarianceBilinearForm_continuous (m : ℝ) :
 
 /-! ## Euclidean Invariance -/
 
-/-- Euclidean invariance of the free covariance (skeleton). -/
+/-- Adjoint property of linear isometries: ⟪x, R y⟫ = ⟪R⁻¹ x, y⟫
+    For orthogonal transformations, the adjoint equals the inverse. -/
+lemma LinearIsometry.inner_adjoint_eq_inv {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [FiniteDimensional ℝ E]
+    (R : E →ₗᵢ[ℝ] E) (x y : E) :
+    ⟪x, R y⟫_ℝ = ⟪(R.toLinearIsometryEquiv rfl).symm x, y⟫_ℝ := by
+  -- Use that R preserves inner products: ⟪R u, R v⟫ = ⟪u, v⟫
+  -- Substitute u = R⁻¹ x and v = y
+  calc ⟪x, R y⟫_ℝ
+      = ⟪R ((R.toLinearIsometryEquiv rfl).symm x), R y⟫_ℝ := by
+          congr
+          exact (LinearIsometryEquiv.apply_symm_apply (R.toLinearIsometryEquiv rfl) x).symm
+    _ = ⟪(R.toLinearIsometryEquiv rfl).symm x, y⟫_ℝ := by
+          exact R.inner_map_map _ _
+
+/-- Euclidean invariance of the free covariance. -/
 theorem freeCovariance_euclidean_invariant (m : ℝ)
   (g : QFT.E) (x y : SpaceTime) :
   freeCovariance m (QFT.act g x) (QFT.act g y) = freeCovariance m x y := by
   classical
-  -- Step 1: unfold `freeCovariance` and identify the momentum integral.
-  -- Step 2: make the change-of-variables `k ↦ act g⁻¹ k` in the integral.
-  -- Step 3: use that Euclidean motions preserve the Lebesgue measure on `SpaceTime`.
-  -- Step 4: note `freePropagatorMomentum m` depends only on `‖k‖`, so it remains unchanged.
-  -- Step 5: rewrite the phase using preservation of the inner product under `g`.
-  -- Step 6: conclude the integrals agree, proving invariance.
-  sorry
+  -- Key insight: The covariance only depends on x - y, and Euclidean transformations preserve
+  -- the structure (norm, inner product) that defines the covariance
+  unfold freeCovariance
+
+  -- Note: QFT.act g x = g.R x + g.t, so (act g x) - (act g y) = g.R (x - y)
+  have h_diff : QFT.act g x - QFT.act g y = g.R (x - y) := by
+    simp [QFT.act]
+
+  simp_rw [h_diff]
+
+  -- Strategy: Use change of variables k ↦ g.R⁻¹ k
+  -- The inverse g.R⁻¹ also preserves measure
+  let R_inv : SpaceTime →ₗᵢ[ℝ] SpaceTime := (g.R.toLinearIsometryEquiv rfl).symm.toLinearIsometry
+
+  have h_measure_inv : MeasurePreserving (fun k : SpaceTime => R_inv k) volume volume := by
+    simpa using (LinearIsometryEquiv.measurePreserving (g.R.toLinearIsometryEquiv rfl).symm)
+
+  let normalisation : ℝ := (2 * Real.pi) ^ STDimension
+  let integrand : SpaceTime → ℂ := fun k =>
+    Complex.ofReal (freePropagatorMomentum m k / normalisation) *
+      Complex.exp (-Complex.I * Complex.ofReal (⟪k, x - y⟫_ℝ))
+
+  -- Apply change of variables k ↦ R⁻¹ k
+  have h_change :
+      ∫ k, integrand (R_inv k) ∂volume = ∫ k, integrand k ∂volume := by
+    have := h_measure_inv.integral_comp (R_inv.toLinearIsometryEquiv rfl).toHomeomorph.measurableEmbedding integrand
+    simpa using this
+
+  -- Show that the LHS integrand equals integrand (R⁻¹ k)
+  have h_integrand_eq : ∀ k,
+      (↑(freePropagatorMomentum m k / normalisation) * cexp (-I * ↑⟪k, g.R (x - y)⟫_ℝ)) =
+      integrand (R_inv k) := by
+    intro k
+    unfold integrand
+    congr 2
+    -- The propagator is unchanged because R_inv preserves norms
+    · unfold freePropagatorMomentum
+      congr 1
+      rw [R_inv.norm_map k]
+    -- The inner product: use the adjoint property
+    -- We have ⟪k, g.R (x-y)⟫ = ⟪R_inv k, x-y⟫ by inner_adjoint_eq_inv
+    · congr 1
+      have h_adj : ⟪k, g.R (x - y)⟫_ℝ = ⟪R_inv k, x - y⟫_ℝ := by
+        unfold R_inv
+        exact g.R.inner_adjoint_eq_inv k (x - y)
+      exact congrArg (fun r : ℝ => (r : ℂ)) h_adj
+
+  -- Combine: rewrite LHS using h_integrand_eq, then apply h_change
+  have h_lhs : (∫ k, ↑(freePropagatorMomentum m k / normalisation) * cexp (-I * ↑⟪k, g.R (x - y)⟫_ℝ)).re =
+               (∫ k, integrand (R_inv k)).re := by
+    congr 1
+    apply integral_congr_ae
+    apply Filter.Eventually.of_forall
+    exact h_integrand_eq
+  rw [h_lhs, h_change]
 
 /-! ## Complex Extension -/
 
