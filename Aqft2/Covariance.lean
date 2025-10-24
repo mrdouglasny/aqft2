@@ -88,10 +88,15 @@ theorem real_integral_nonneg_of_nonneg
   have := hf  -- Acknowledge we need integrability for the integral to exist
   exact MeasureTheory.integral_nonneg hpos
 
-/-- Helper axiom: Schwartz functions are L²-integrable.
-    This follows from rapid decay but requires more Schwartz space theory. -/
-axiom schwartz_L2_integrable (f : TestFunctionℂ) :
-  Integrable (fun k => ‖f k‖^2) volume
+/-- Helper lemma: Schwartz functions are L²-integrable. -/
+lemma schwartz_L2_integrable (f : TestFunctionℂ) :
+  Integrable (fun k => ‖f k‖^2) volume := by
+  -- Using Mathlib's `SchwartzMap.memLp` we know any Schwartz function lies in every `L^p` space.
+  have hf_memLp : MemLp f 2 volume :=
+    f.memLp 2 volume
+  have hf_meas : AEStronglyMeasurable f volume := hf_memLp.1
+  -- Translate the `L^2` membership into integrability of the squared norm.
+  simpa using (memLp_two_iff_integrable_sq_norm hf_meas).1 hf_memLp
 
 /-- Helper theorem: Integrability is preserved by multiplying a real integrand with a real constant. -/
 theorem integral_const_mul {α} [MeasurableSpace α] (μ : Measure α) (c : ℝ)
@@ -139,6 +144,12 @@ variable {m : ℝ} [Fact (0 < m)]
 def freePropagatorMomentum (m : ℝ) (k : SpaceTime) : ℝ :=
   1 / (‖k‖^2 + m^2)
 
+/-- The free propagator is an even function: it depends only on ‖k‖. -/
+lemma freePropagator_even (m : ℝ) (k : SpaceTime) :
+    freePropagatorMomentum m (-k) = freePropagatorMomentum m k := by
+  unfold freePropagatorMomentum
+  simp only [norm_neg]
+
 /-- The free covariance kernel in position space.
     This is the Fourier transform of the momentum space propagator:
 
@@ -158,10 +169,21 @@ noncomputable def freeCovariance (m : ℝ) (x y : SpaceTime) : ℝ :=
 noncomputable def freeCovarianceKernel (m : ℝ) (z : SpaceTime) : ℝ :=
   freeCovariance m 0 z
 
-/-- Position-space free covariance is symmetric: `C(x,y) = C(y,x)` (placeholder). -/
+/-- Position-space free covariance is symmetric: `C(x,y) = C(y,x)`. -/
 lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime) :
     freeCovariance m x y = freeCovariance m y x := by
-  -- TODO: prove symmetry using the parity of the Fourier kernel.
+  -- Symmetry follows from:
+  -- 1. The propagator is even: freePropagator_even shows freePropagatorMomentum m (-k) = freePropagatorMomentum m k
+  -- 2. Change of variables k ↦ -k in the integral (using measure-preserving properties)
+  -- 3. Using exp(-i k·(x-y)) with k ↦ -k gives exp(-i (-k)·(x-y)) = exp(i k·(x-y)) = exp(-i k·(y-x))
+  unfold freeCovariance
+  simp only [inner_sub_right]
+  congr 1
+  -- Need to show the integrals are equal using change of variables k ↦ -k
+  -- This requires:
+  -- ∫ k, f(k) * exp(-i⟪k, x-y⟫) = ∫ k, f(k) * exp(-i⟪k, y-x⟫)
+  -- where f(k) = freePropagatorMomentum m k / normalisation
+  -- The proof uses freePropagator_even and that negation is measure-preserving
   sorry
 
 /-- The position-space free covariance is real-valued after ℂ coercion. -/
@@ -175,15 +197,83 @@ lemma freeCovariance_symmetric (m : ℝ) (x y : SpaceTime) :
   -- symmetry plus real-valuedness
   simp [freeCovariance_symmetric m x y]
 
-/-- Helper axiom: the propagator multiplier has temperate growth as a scalar function. -/
-axiom freePropagator_temperate_growth (m : ℝ) [Fact (0 < m)] :
-  Function.HasTemperateGrowth (fun k : SpaceTime => (freePropagatorMomentum m k : ℂ))
+/-- The free propagator function is smooth (infinitely differentiable). -/
+lemma freePropagator_smooth (m : ℝ) [Fact (0 < m)] :
+  ContDiff ℝ (⊤ : ℕ∞) (fun k => freePropagatorMomentum m k) := by
+  -- The function k ↦ 1/(‖k‖² + m²) is smooth as a composition of smooth functions
+  unfold freePropagatorMomentum
+  apply ContDiff.div
+  · -- The numerator 1 is smooth (constant)
+    exact contDiff_const
+  · -- The denominator ‖k‖² + m² is smooth
+    apply ContDiff.add
+    · exact contDiff_norm_sq ℝ
+    · exact contDiff_const
+  · -- The denominator is never zero
+    intro k
+    apply ne_of_gt
+    apply add_pos_of_nonneg_of_pos
+    · exact sq_nonneg ‖k‖
+    · exact pow_pos (Fact.out : 0 < m) 2
 
-/-- Helper axiom: multiplication by a temperate scalar function preserves Schwartz space.
-    This is a standard result: if a has temperate growth, then f ↦ a·f maps Schwartz functions to Schwartz functions continuously. -/
-axiom schwartz_mul_by_temperate
+/-- The complex-valued free propagator function is smooth. -/
+lemma freePropagator_complex_smooth (m : ℝ) [Fact (0 < m)] :
+  ContDiff ℝ (⊤ : ℕ∞) (fun k : SpaceTime => (freePropagatorMomentum m k : ℂ)) := by
+  have : (fun k : SpaceTime => (freePropagatorMomentum m k : ℂ)) =
+         (fun x : ℝ => (x : ℂ)) ∘ (fun k => freePropagatorMomentum m k) := rfl
+  rw [this]
+  apply ContDiff.comp
+  · exact ofRealCLM.contDiff
+  · exact freePropagator_smooth m
+
+/-- The propagator multiplier has temperate growth as a scalar function.
+    This follows from the fact that it's bounded and smooth. -/
+theorem freePropagator_temperate_growth (m : ℝ) [Fact (0 < m)] :
+  Function.HasTemperateGrowth (fun k : SpaceTime => (freePropagatorMomentum m k : ℂ)) := by
+  constructor
+  · -- Smoothness follows from our helper lemma
+    exact freePropagator_complex_smooth m
+  · -- Polynomial bounds on derivatives
+    intro n
+    use 0, 1 / m^2  -- Use polynomial degree 0 (constant bound)
+    intro k
+    -- All derivatives are bounded by the same constant since the function is bounded
+    have hbound : ‖(freePropagatorMomentum m k : ℂ)‖ ≤ 1 / m^2 := by
+      simp only [Complex.norm_real, Real.norm_eq_abs]
+      unfold freePropagatorMomentum
+      rw [abs_div, abs_of_pos]
+      · rw [abs_of_pos]
+        · apply div_le_div_of_nonneg_left
+          · norm_num
+          · exact pow_pos (Fact.out : 0 < m) 2
+          · apply le_add_of_nonneg_left
+            exact sq_nonneg ‖k‖
+        · apply add_pos_of_nonneg_of_pos
+          · exact sq_nonneg ‖k‖
+          · exact pow_pos (Fact.out : 0 < m) 2
+      · norm_num
+    -- For n = 0 (the function itself)
+    cases n with
+    | zero =>
+      simp only [pow_zero, mul_one]
+      rw [norm_iteratedFDeriv_zero]
+      exact hbound
+    | succ n' =>
+      -- For higher derivatives, we use that the function and all its derivatives are bounded
+      sorry -- This requires more detailed analysis of the derivatives of 1/(‖k‖² + m²)
+
+/-- Multiplication by a temperate scalar function preserves Schwartz space.
+    This follows from SchwartzMap.bilinLeftCLM in Mathlib. -/
+theorem schwartz_mul_by_temperate
   (a : SpaceTime → ℂ) (ha : Function.HasTemperateGrowth a) :
-  ∃ (T : TestFunctionℂ →L[ℂ] TestFunctionℂ), ∀ f k, T f k = a k * f k
+  ∃ (T : TestFunctionℂ →L[ℂ] TestFunctionℂ), ∀ f k, T f k = a k * f k := by
+  -- Use the swap of multiplication to get a k * f k instead of f k * a k
+  let B : ℂ →L[ℂ] ℂ →L[ℂ] ℂ := (ContinuousLinearMap.mul ℂ ℂ).flip
+  let T := SchwartzMap.bilinLeftCLM B ha
+  use T
+  intro f k
+  -- T f k = B (f k) (a k) = (flip mul) (f k) (a k) = a k * f k
+  rfl
 
 /-- The free propagator is positive -/
 lemma freePropagator_pos {m : ℝ} [Fact (0 < m)] (k : SpaceTime) : 0 < freePropagatorMomentum m k := by
