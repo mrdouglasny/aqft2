@@ -55,7 +55,7 @@ added or assumptions are relaxed.
    Statements: fubini_theorem_for_propagator, parseval_convolution_theorem, ft_kernel_identity,
    complex_integral_to_real_inner_product, parseval_schwartz_basic,
    parseval_covariance_schwartz, parseval_time_reflection_covariance,
-   parseval_time_reflection_covariance_explicit, time_reflection_fourier_identity.
+   parseval_time_reflection_covariance_explicit.
    Status/Justification: Package the Fourier-analytic equalities underpinning reflection
    positivity. Replacing them with proofs will require a dedicated Parseval/Plancherel toolkit for
    SchwartzMap maps and the propagator kernel. The explicit time-reflection Parseval identity is
@@ -81,21 +81,25 @@ added or assumptions are relaxed.
    Counts: 3 axioms / same 2 outstanding sorrys in `Aqft2/Covariance.lean`.
 
 10. Gaussian measure scaffolding (Aqft2/Covariance.lean)
-    Statements: freeCovarianceℂ_diagonal_real_basic, gaussianMeasureGFF_exists,
+    Statements: gaussianMeasureGFF_exists,
     gaussianMeasureGFF_correlationℂ_basic, gaussianMeasureGFF_correlationℂ,
-    freeCovariance_OS1_bound_basic, freeCovariance_OS3_basic.
+    freeCovariance_OS1_bound_basic.
     Status/Justification: Axiomatize the Minlos Gaussian measure with its OS-axiom behaviour until
     the construction is mechanized end-to-end.
-   Counts: 6 axioms / same 2 outstanding sorrys in `Aqft2/Covariance.lean`.
+   Counts: 5 axioms / same 2 outstanding sorrys in `Aqft2/Covariance.lean`.
 
 11. Real covariance form infrastructure (Aqft2/Covariance.lean)
     Statements: sqrtPropagatorEmbedding, freeCovarianceFormR_continuous,
-    freeCovarianceFormR_pos, freeCovarianceFormR_symm, freeCovarianceFormR_add_left,
-    freeCovarianceFormR_smul_left, freeCovarianceFormR_add_right, freeCovarianceFormR_smul_right.
+    freeCovarianceFormR_pos.
     Status/Justification: Capture the real-valued bilinear form properties required for Minlos and
     reflection-positivity arguments. Proofs will follow from the same analytic input as the complex
     theory.
-   Counts: 8 axioms / same 2 outstanding sorrys in `Aqft2/Covariance.lean`.
+      Note: The following are proven in Lean via reduction to the complex bilinear lemmas and
+      `freeCovarianceℂ_bilinear_agrees_on_reals` (updated 2025-10-25):
+         - freeCovarianceFormR_symm ← freeCovarianceℂ_bilinear_symm
+         - freeCovarianceFormR_add_left, freeCovarianceFormR_smul_left ← complex left-linearity lemmas
+         - freeCovarianceFormR_add_right, freeCovarianceFormR_smul_right ← complex right-linearity lemmas
+   Counts: 3 axioms / same 2 outstanding sorrys in `Aqft2/Covariance.lean`.
 
 12. translate_test_function (Aqft2/GaussianFreeField.lean)
    Statement: Definition is currently a placeholder (`sorry`).

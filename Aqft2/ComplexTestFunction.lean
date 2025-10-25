@@ -245,6 +245,16 @@ def toComplex (f : TestFunction) : TestFunctionℂ :=
   ext x
   simp [complex_testfunction_decompose, toComplex_apply]
 
+@[simp] lemma toComplex_add (f g : TestFunction) :
+  toComplex (f + g) = toComplex f + toComplex g := by
+  ext x
+  simp [toComplex_apply]
+
+@[simp] lemma toComplex_smul (c : ℝ) (f : TestFunction) :
+  toComplex (c • f) = (c : ℂ) • toComplex f := by
+  ext x
+  simp [toComplex_apply]
+
 @[simp] lemma distributionPairingℂ_real_toComplex
   (ω : FieldConfiguration) (f : TestFunction) :
   distributionPairingℂ_real ω (toComplex f) = distributionPairing ω f := by

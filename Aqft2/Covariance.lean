@@ -371,17 +371,6 @@ theorem spatial_reduction_to_heat_kernel {m : ℝ} [Fact (0 < m)] :
 def fourierTransform (f : TestFunctionℂ) : TestFunctionℂ :=
   SchwartzMap.fourierTransformCLM ℂ f
 
-/-- ** (Time Reflection Identity in Fourier Space):**
-    The fundamental identity that makes momentum space reflection positivity manifest.
-    For functions with negative time support, time reflection produces the equivalence
-    between complex sesquilinear forms and positive quadratic forms in momentum space. -/
-axiom time_reflection_fourier_identity (m : ℝ) (f : TestFunctionℂ)
-    (hf_support : ∀ x : SpaceTime, getTimeComponent x ≤ 0 → f x = 0) :
-  (∫ k, (starRingEnd ℂ ((fourierTransform (QFT.compTimeReflection f)) k)) *
-         ↑(freePropagatorMomentum m k) *
-         ((fourierTransform f) k) ∂volume).re =
-  ∫ k, ‖(fourierTransform f) k‖^2 * freePropagatorMomentum m k ∂volume
-
 /-- Definition of reflection positivity for the free covariance. -/
 def freeCovarianceReflectionPositive (m : ℝ) : Prop :=
   ∀ (f : TestFunctionℂ),
@@ -856,12 +845,6 @@ theorem freeCovarianceℂ_positive (m : ℝ) [Fact (0 < m)] (f : TestFunctionℂ
   -- Therefore their product is non-negative, making the integral non-negative
   apply momentum_space_integral_positive_schwartz
 
-/-- **(Diagonal Elements are Real):**
-    The diagonal elements of the complex covariance are real-valued.
-    This follows from the conjugate symmetry of the integrand with a real kernel. -/
-axiom freeCovarianceℂ_diagonal_real_basic (m : ℝ) (h : TestFunctionℂ) :
-  ∃ r : ℝ, freeCovarianceℂ m h h = (r : ℂ)
-
 /-- **(Existence of Gaussian Free Field Measure):**
     There exists a Gaussian probability measure on field configurations with the given covariance structure.
     This is the fundamental construction of the Gaussian Free Field in constructive quantum field theory. -/
@@ -875,13 +858,6 @@ axiom gaussianMeasureGFF_exists (m : ℝ) [Fact (0 < m)] :
 axiom gaussianMeasureGFF_correlationℂ_basic (m : ℝ) [Fact (0 < m)] (f g : TestFunctionℂ) :
   ∃ μ : ProbabilityMeasure FieldConfiguration,
     ∫ ω, (distributionPairingℂ_real ω f) * (starRingEnd ℂ (distributionPairingℂ_real ω g)) ∂μ = freeCovarianceℂ m f g
-
-/-- The diagonal of the complex free covariance is real-valued. -/
-theorem freeCovarianceℂ_diagonal_real (m : ℝ) (h : TestFunctionℂ) :
-  ∃ r : ℝ, freeCovarianceℂ m h h = (r : ℂ) := by
-  -- This follows from the fundamental property that diagonal elements
-  -- of Hermitian forms with real kernels are real-valued
-  exact freeCovarianceℂ_diagonal_real_basic m h
 
 /-! ## Connection to Schwinger Functions -/
 
@@ -911,14 +887,6 @@ axiom gaussianMeasureGFF_correlationℂ (m : ℝ) [Fact (0 < m)] (f g : TestFunc
 axiom freeCovariance_OS1_bound_basic (m : ℝ) :
   ∃ M > 0, ∀ f : TestFunctionℂ,
     ‖freeCovarianceℂ m f f‖ ≤ M * (∫ x, ‖f x‖ ∂volume) * (∫ x, ‖f x‖^2 ∂volume)^(1/2)
-
-/-- ** (OS3 Reflection Positivity):**
-    The covariance matrix with time reflection is positive semidefinite.
-    This is the fundamental OS3  ensuring reflection positivity. -/
-axiom freeCovariance_OS3_basic (m : ℝ) :
-  ∀ n : ℕ, ∀ f : Fin n → TestFunctionℂ,
-    let M : Matrix (Fin n) (Fin n) ℂ := fun i j => freeCovarianceℂ m (f i) (QFT.compTimeReflection (f j))
-    ∀ v : Fin n → ℂ, 0 ≤ (Finset.univ.sum fun i => Finset.univ.sum fun j => (starRingEnd ℂ (v i)) * M i j * (v j)).re
 
 /-- The 2-point Schwinger function for the Gaussian Free Field
     equals the free covariance -/
@@ -951,45 +919,6 @@ theorem freeCovariance_OS1_bound (m : ℝ) :
   -- with respect to appropriate test function norms, which is essential
   -- for the mathematical consistency of quantum field theory
   exact freeCovariance_OS1_bound_basic m
-
-/-- The free covariance satisfies OS3 (reflection positivity) -/
-theorem freeCovariance_OS3 (m : ℝ) :
-  ∀ n : ℕ, ∀ f : Fin n → TestFunctionℂ,
-    let M : Matrix (Fin n) (Fin n) ℂ :=
-      fun i j => freeCovarianceℂ m (f i) (QFT.compTimeReflection (f j))
-    -- The matrix M is positive semidefinite (OS3 reflection positivity)
-    ∀ v : Fin n → ℂ, 0 ≤ (Finset.univ.sum fun i => Finset.univ.sum fun j => (starRingEnd ℂ (v i)) * M i j * (v j)).re := by
-  -- This follows directly from the fundamental OS3 (reflection positivity)
-  -- The OS3 condition is one of the core Osterwalder-Schrader axioms that ensures
-  -- the mathematical consistency of Euclidean quantum field theory
-  intro n f
-  exact freeCovariance_OS3_basic m n f
-
-/-! ## Summary
-
-The free covariance C(x,y) provides the foundation for:
-
-1. **Gaussian Free Field**: The two-point function
-2. **OS Ax**: Positivity, invariance, reflection positivity
-3. **Fourier Analysis**: Connection to momentum space via ⟨k,k⟩ = ‖k‖²
-4. **Green's Functions**: Solution to Klein-Gordon equation
-
-Key mathematical structures:
-- **Fourier Transform**: `C(x,y) = ∫ k/(k²+m²) * cos(k·(x-y)) dk` (massive)
-- **Massless Limit**: `C₀(x,y) = C_d * ‖x-y‖^{-(d-2)}` (m=0, also short-distance limit)
-- **Inner product**: `∑ᵢ kᵢ(xᵢ-yᵢ)` for spacetime vectors
-- **Norm**: `‖k‖² = ∑ᵢ kᵢ²` for Euclidean distance
-- **Translation invariance**: Proven via `(x+a)-(y+a) = x-y`
-
-**Successfully implemented**:
-✅ **Momentum space propagator**: `1/(‖k‖² + m²)` (massive)
-✅ **Position space covariance**: Fourier transform `∫ k * cos(k·(x-y))` (massive)
-✅ **Massless position space**: `C_d * ‖x-y‖^{-(d-2)}` (m=0 limit)
-✅ **Translation invariance**: Proven using Fourier representation
-✅ **Mathematical framework**: Ready for physics applications
-
-This establishes the mathematical foundation for constructive QFT.
--/
 
 /-! ## Real test functions and covariance form for Minlos -/
 
@@ -1042,80 +971,125 @@ axiom freeCovarianceFormR_continuous (m : ℝ) :
 /-- Positivity of the real covariance quadratic form. -/
 axiom freeCovarianceFormR_pos (m : ℝ) : ∀ f : TestFunctionR, 0 ≤ freeCovarianceFormR m f f
 /-- Symmetry of the real covariance bilinear form. -/
-axiom freeCovarianceFormR_symm (m : ℝ) : ∀ f g : TestFunctionR, freeCovarianceFormR m f g = freeCovarianceFormR m g f
+theorem freeCovarianceFormR_symm (m : ℝ) (f g : TestFunctionR) :
+    freeCovarianceFormR m f g = freeCovarianceFormR m g f := by
+  -- Lift to complex, use complex symmetry, descend back to reals
+  -- freeCovarianceFormR is real-valued, so we can use ofReal injectivity
+  apply Complex.ofReal_injective
+  calc (freeCovarianceFormR m f g : ℂ)
+      = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := by
+          rw [← freeCovarianceℂ_bilinear_agrees_on_reals m f g]
+    _ = freeCovarianceℂ_bilinear m (toComplex g) (toComplex f) := by
+          rw [freeCovarianceℂ_bilinear_symm m (toComplex f) (toComplex g)]
+    _ = (freeCovarianceFormR m g f : ℂ) := by
+          rw [freeCovarianceℂ_bilinear_agrees_on_reals m g f]
 
 /-- Linearity in the first argument of the real covariance bilinear form. -/
-axiom freeCovarianceFormR_add_left (m : ℝ) : ∀ f₁ f₂ g : TestFunctionR,
-  freeCovarianceFormR m (f₁ + f₂) g = freeCovarianceFormR m f₁ g + freeCovarianceFormR m f₂ g
+lemma freeCovarianceFormR_add_left (m : ℝ) (f₁ f₂ g : TestFunctionR) :
+    freeCovarianceFormR m (f₁ + f₂) g = freeCovarianceFormR m f₁ g + freeCovarianceFormR m f₂ g := by
+  apply Complex.ofReal_injective
+  -- translate the desired real statement to the complex bilinear form and use left linearity there
+  have h :=
+    freeCovarianceℂ_bilinear_add_left m (toComplex f₁) (toComplex f₂) (toComplex g)
+  -- rewrite the first argument sum back into a single real test function
+  have hL :
+      (freeCovarianceFormR m (f₁ + f₂) g : ℂ)
+        = freeCovarianceℂ_bilinear m (toComplex f₁ + toComplex f₂) (toComplex g) := by
+    simpa [toComplex_add]
+      using (freeCovarianceℂ_bilinear_agrees_on_reals m (f₁ + f₂) g).symm
+  -- convert both sides to real-valued covariance forms
+  have h' :
+      (freeCovarianceFormR m (f₁ + f₂) g : ℂ)
+        = (freeCovarianceFormR m f₁ g : ℂ) + (freeCovarianceFormR m f₂ g : ℂ) := by
+    calc
+      (freeCovarianceFormR m (f₁ + f₂) g : ℂ)
+          = freeCovarianceℂ_bilinear m (toComplex f₁ + toComplex f₂) (toComplex g) := hL
+      _ = freeCovarianceℂ_bilinear m (toComplex f₁) (toComplex g)
+            + freeCovarianceℂ_bilinear m (toComplex f₂) (toComplex g) := h
+      _ = (freeCovarianceFormR m f₁ g : ℂ) + (freeCovarianceFormR m f₂ g : ℂ) := by
+            rw [freeCovarianceℂ_bilinear_agrees_on_reals m f₁ g,
+                freeCovarianceℂ_bilinear_agrees_on_reals m f₂ g]
+  simpa [Complex.ofReal_add] using h'
 
 /-- Scalar multiplication in the first argument of the real covariance bilinear form. -/
-axiom freeCovarianceFormR_smul_left (m : ℝ) : ∀ (c : ℝ) (f g : TestFunctionR),
-  freeCovarianceFormR m (c • f) g = c * freeCovarianceFormR m f g
+lemma freeCovarianceFormR_smul_left (m : ℝ) (c : ℝ) (f g : TestFunctionR) :
+    freeCovarianceFormR m (c • f) g = c * freeCovarianceFormR m f g := by
+  apply Complex.ofReal_injective
+  have h :=
+    freeCovarianceℂ_bilinear_smul_left m (c : ℂ) (toComplex f) (toComplex g)
+  have hL :
+      (freeCovarianceFormR m (c • f) g : ℂ)
+        = freeCovarianceℂ_bilinear m ((c : ℂ) • toComplex f) (toComplex g) := by
+    simpa [toComplex_apply]
+      using (freeCovarianceℂ_bilinear_agrees_on_reals m (c • f) g).symm
+  have hR :
+      (freeCovarianceFormR m f g : ℂ)
+        = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) :=
+    (freeCovarianceℂ_bilinear_agrees_on_reals m f g).symm
+  have h' :
+      (freeCovarianceFormR m (c • f) g : ℂ)
+        = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
+    calc
+      (freeCovarianceFormR m (c • f) g : ℂ)
+          = freeCovarianceℂ_bilinear m ((c : ℂ) • toComplex f) (toComplex g) := hL
+      _ = (c : ℂ) * freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := h
+      _ = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
+            rw [hR]
+  simpa [Complex.ofReal_mul] using h'
 
 /-- Addition in the second argument of the real covariance bilinear form. -/
-axiom freeCovarianceFormR_add_right (m : ℝ) : ∀ f g₁ g₂ : TestFunctionR,
-  freeCovarianceFormR m f (g₁ + g₂) = freeCovarianceFormR m f g₁ + freeCovarianceFormR m f g₂
+lemma freeCovarianceFormR_add_right (m : ℝ) (f g₁ g₂ : TestFunctionR) :
+    freeCovarianceFormR m f (g₁ + g₂) = freeCovarianceFormR m f g₁ + freeCovarianceFormR m f g₂ := by
+  apply Complex.ofReal_injective
+  have h :=
+    freeCovarianceℂ_bilinear_add_right m (toComplex f) (toComplex g₁) (toComplex g₂)
+  have hL :
+      (freeCovarianceFormR m f (g₁ + g₂) : ℂ)
+        = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₁ + toComplex g₂) := by
+    simpa [toComplex_add]
+      using (freeCovarianceℂ_bilinear_agrees_on_reals m f (g₁ + g₂)).symm
+  have h' :
+      (freeCovarianceFormR m f (g₁ + g₂) : ℂ)
+        = (freeCovarianceFormR m f g₁ : ℂ) + (freeCovarianceFormR m f g₂ : ℂ) := by
+    calc
+      (freeCovarianceFormR m f (g₁ + g₂) : ℂ)
+          = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₁ + toComplex g₂) := hL
+      _ = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₁)
+            + freeCovarianceℂ_bilinear m (toComplex f) (toComplex g₂) := h
+      _ = (freeCovarianceFormR m f g₁ : ℂ) + (freeCovarianceFormR m f g₂ : ℂ) := by
+            rw [freeCovarianceℂ_bilinear_agrees_on_reals m f g₁,
+                freeCovarianceℂ_bilinear_agrees_on_reals m f g₂]
+  simpa [Complex.ofReal_add] using h'
 
 /-- Scalar multiplication in the second argument of the real covariance bilinear form. -/
-axiom freeCovarianceFormR_smul_right (m : ℝ) : ∀ (c : ℝ) (f g : TestFunctionR),
-  freeCovarianceFormR m f (c • g) = c * freeCovarianceFormR m f g
+lemma freeCovarianceFormR_smul_right (m : ℝ) (c : ℝ) (f g : TestFunctionR) :
+    freeCovarianceFormR m f (c • g) = c * freeCovarianceFormR m f g := by
+  apply Complex.ofReal_injective
+  have h :=
+    freeCovarianceℂ_bilinear_smul_right m (c : ℂ) (toComplex f) (toComplex g)
+  have hL :
+    (freeCovarianceFormR m f (c • g) : ℂ)
+        = freeCovarianceℂ_bilinear m (toComplex f) ((c : ℂ) • toComplex g) := by
+    simpa [toComplex_apply]
+      using (freeCovarianceℂ_bilinear_agrees_on_reals m f (c • g)).symm
+  have hR :
+      (freeCovarianceFormR m f g : ℂ)
+        = freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) :=
+    (freeCovarianceℂ_bilinear_agrees_on_reals m f g).symm
+  have h' :
+      (freeCovarianceFormR m f (c • g) : ℂ)
+        = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
+    calc
+      (freeCovarianceFormR m f (c • g) : ℂ)
+          = freeCovarianceℂ_bilinear m (toComplex f) ((c : ℂ) • toComplex g) := hL
+      _ = (c : ℂ) * freeCovarianceℂ_bilinear m (toComplex f) (toComplex g) := h
+      _ = (c : ℂ) * (freeCovarianceFormR m f g : ℂ) := by
+            rw [hR]
+  simpa [Complex.ofReal_mul] using h'
 
-/-- The momentum-space propagator is real-valued: its star (complex conjugate) equals itself. -/
-@[simp] lemma freePropagatorMomentum_star (m : ℝ) (k : SpaceTime) :
-  star (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
-  simp
-
-/-- Same statement via the star ring endomorphism (complex conjugate). -/
-@[simp] lemma freePropagatorMomentum_starRing (m : ℝ) (k : SpaceTime) :
-  (starRingEnd ℂ) (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
-  simp
-
-/-- In particular, the imaginary part of the momentum-space propagator vanishes. -/
-@[simp] lemma freePropagatorMomentum_im (m : ℝ) (k : SpaceTime) :
-  (freePropagatorMomentum m k : ℂ).im = 0 := by
-  simp
-
-/-- Pointwise hermiticity of the momentum-space integrand: taking star swaps f and g
-    because the propagator is real-valued. -/
-lemma momentum_integrand_hermitian
-  (m : ℝ) (f g : SpaceTime → ℂ) (k : SpaceTime) :
-  star ((star (f k)) * (freePropagatorMomentum m k : ℂ) * g k)
-    = (star (g k)) * (freePropagatorMomentum m k : ℂ) * f k := by
-  -- star distributes over products and `star (star (f k)) = f k`; the propagator is real
-  simp [mul_comm, mul_assoc]
-
-/-- Momentum-space covariance bilinear form (Fourier side). -/
-noncomputable def momentumCovarianceForm (m : ℝ) (f g : SpaceTime → ℂ) : ℂ :=
-  ∫ k, (star (f k)) * (freePropagatorMomentum m k : ℂ) * g k ∂volume
-
-/-- Helper axiom: Complex conjugation commutes with integration for integrable functions -/
-axiom integral_star_comm {f : SpaceTime → ℂ} (hf : Integrable f volume) :
-  star (∫ k, f k ∂volume) = ∫ k, star (f k) ∂volume
-
-/-- Helper axiom: The integrand in momentum covariance forms is integrable -/
-axiom momentum_covariance_integrable (m : ℝ) (f g : SpaceTime → ℂ)
-  (hf : Integrable f volume) (hg : Integrable g volume) :
-  Integrable (fun k => (star (f k)) * (freePropagatorMomentum m k : ℂ) * g k) volume
-
-/-- Hermiticity of the momentum-space covariance form.
-    Under standard integrability assumptions, the star of the integral equals the
-    integral of the starred integrand, which by `momentum_integrand_hermitian` swaps f and g. -/
-lemma momentumCovarianceForm_hermitian (m : ℝ) (f g : SpaceTime → ℂ)
-  (hf : Integrable f volume) (hg : Integrable g volume) :
-  star (momentumCovarianceForm m f g) = momentumCovarianceForm m g f := by
-  -- This proof uses the fundamental property that complex conjugation commutes with integration
-  -- combined with the pointwise hermiticity property.
-
-  unfold momentumCovarianceForm
-
-  -- Step 1: Use the fact that star commutes with the integral
-  have h_integrable := momentum_covariance_integrable m f g hf hg
-  rw [integral_star_comm h_integrable]
-
-  -- Step 2: Apply pointwise hermiticity under the integral
-  congr 1
-  ext k
-  exact momentum_integrand_hermitian m f g k
+/- Note: Momentum-space propagator lemmas (freePropagatorMomentum_star, freePropagatorMomentum_starRing,
+   freePropagatorMomentum_im, momentum_integrand_hermitian, momentumCovarianceForm and related lemmas)
+   have been moved to Aqft2/CovarianceMomentum.lean -/
 
 /-- Agreement on reals: if both arguments are real test functions (coerced to ℂ pointwise),
     the complex covariance equals the real covariance coerced to ℂ. -/

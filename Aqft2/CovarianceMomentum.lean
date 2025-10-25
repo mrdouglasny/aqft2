@@ -593,3 +593,64 @@ theorem momentum_space_integral_positive_schwartz {m : ℝ} [Fact (0 < m)] (f : 
   0 ≤ ∫ k, ‖f k‖^2 * freePropagatorMomentum m k ∂volume := by
   have hf_int := integrable_schwartz_weighted_by_propagator (m := m) (f := f)
   exact momentum_space_integral_positive (m := m) f hf_int
+
+/-! ## Complex conjugation properties of the propagator -/
+
+/-- The momentum-space propagator is real-valued: its star (complex conjugate) equals itself. -/
+@[simp] lemma freePropagatorMomentum_star (m : ℝ) (k : SpaceTime) :
+  star (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
+  simp
+
+/-- Same statement via the star ring endomorphism (complex conjugate). -/
+@[simp] lemma freePropagatorMomentum_starRing (m : ℝ) (k : SpaceTime) :
+  (starRingEnd ℂ) (freePropagatorMomentum m k : ℂ) = (freePropagatorMomentum m k : ℂ) := by
+  simp
+
+/-- In particular, the imaginary part of the momentum-space propagator vanishes. -/
+@[simp] lemma freePropagatorMomentum_im (m : ℝ) (k : SpaceTime) :
+  (freePropagatorMomentum m k : ℂ).im = 0 := by
+  simp
+
+/-- Pointwise hermiticity of the momentum-space integrand: taking star swaps f and g
+    because the propagator is real-valued. -/
+lemma momentum_integrand_hermitian
+  (m : ℝ) (f g : SpaceTime → ℂ) (k : SpaceTime) :
+  star ((star (f k)) * (freePropagatorMomentum m k : ℂ) * g k)
+    = (star (g k)) * (freePropagatorMomentum m k : ℂ) * f k := by
+  -- star distributes over products and `star (star (f k)) = f k`; the propagator is real
+  simp [mul_comm, mul_assoc]
+
+/-! ## Momentum-space covariance form -/
+
+/-- Momentum-space covariance bilinear form (Fourier side). -/
+noncomputable def momentumCovarianceForm (m : ℝ) (f g : SpaceTime → ℂ) : ℂ :=
+  ∫ k, (star (f k)) * (freePropagatorMomentum m k : ℂ) * g k ∂volume
+
+/-- Helper axiom: Complex conjugation commutes with integration for integrable functions -/
+axiom integral_star_comm {f : SpaceTime → ℂ} (hf : Integrable f volume) :
+  star (∫ k, f k ∂volume) = ∫ k, star (f k) ∂volume
+
+/-- Helper axiom: The integrand in momentum covariance forms is integrable -/
+axiom momentum_covariance_integrable (m : ℝ) (f g : SpaceTime → ℂ)
+  (hf : Integrable f volume) (hg : Integrable g volume) :
+  Integrable (fun k => (star (f k)) * (freePropagatorMomentum m k : ℂ) * g k) volume
+
+/-- Hermiticity of the momentum-space covariance form.
+    Under standard integrability assumptions, the star of the integral equals the
+    integral of the starred integrand, which by `momentum_integrand_hermitian` swaps f and g. -/
+lemma momentumCovarianceForm_hermitian (m : ℝ) (f g : SpaceTime → ℂ)
+  (hf : Integrable f volume) (hg : Integrable g volume) :
+  star (momentumCovarianceForm m f g) = momentumCovarianceForm m g f := by
+  -- This proof uses the fundamental property that complex conjugation commutes with integration
+  -- combined with the pointwise hermiticity property.
+
+  unfold momentumCovarianceForm
+
+  -- Step 1: Use the fact that star commutes with the integral
+  have h_integrable := momentum_covariance_integrable m f g hf hg
+  rw [integral_star_comm h_integrable]
+
+  -- Step 2: Apply pointwise hermiticity under the integral
+  congr 1
+  ext k
+  exact momentum_integrand_hermitian m f g k
