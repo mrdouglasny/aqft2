@@ -289,6 +289,13 @@ lemma freePropagator_complex_smooth (m : ℝ) [Fact (0 < m)] :
   · exact ofRealCLM.contDiff
   · exact freePropagator_smooth m
 
+/-- Helper axiom: Derivatives of the free propagator have polynomial growth bounds.
+   -/
+axiom iteratedFDeriv_freePropagator_polynomial_bound (m : ℝ) (hm : 0 < m) (n : ℕ) :
+  ∀ k : SpaceTime,
+    ‖iteratedFDeriv ℝ n (fun k => (freePropagatorMomentum m k : ℂ)) k‖ ≤
+      (n + 1).factorial / m^(n + 2)
+
 /-- The propagator multiplier has temperate growth as a scalar function.
     This follows from the fact that it's bounded and smooth. -/
 theorem freePropagator_temperate_growth (m : ℝ) [Fact (0 < m)] :
@@ -298,32 +305,13 @@ theorem freePropagator_temperate_growth (m : ℝ) [Fact (0 < m)] :
     exact freePropagator_complex_smooth m
   · -- Polynomial bounds on derivatives
     intro n
-    use 0, 1 / m^2  -- Use polynomial degree 0 (constant bound)
+    -- The axiom gives us a constant bound (n+1)!/m^(n+2) (independent of k)
+    -- For HasTemperateGrowth, we use polynomial degree 0 (constant bound)
+    use 0, (n + 1).factorial / m^(n + 2)
     intro k
-    -- All derivatives are bounded by the same constant since the function is bounded
-    have hbound : ‖(freePropagatorMomentum m k : ℂ)‖ ≤ 1 / m^2 := by
-      simp only [Complex.norm_real, Real.norm_eq_abs]
-      unfold freePropagatorMomentum
-      rw [abs_div, abs_of_pos]
-      · rw [abs_of_pos]
-        · apply div_le_div_of_nonneg_left
-          · norm_num
-          · exact pow_pos (Fact.out : 0 < m) 2
-          · apply le_add_of_nonneg_left
-            exact sq_nonneg ‖k‖
-        · apply add_pos_of_nonneg_of_pos
-          · exact sq_nonneg ‖k‖
-          · exact pow_pos (Fact.out : 0 < m) 2
-      · norm_num
-    -- For n = 0 (the function itself)
-    cases n with
-    | zero =>
-      simp only [pow_zero, mul_one]
-      rw [norm_iteratedFDeriv_zero]
-      exact hbound
-    | succ n' =>
-      -- For higher derivatives, we use that the function and all its derivatives are bounded
-      sorry -- This requires more detailed analysis of the derivatives of 1/(‖k‖² + m²)
+    simp only [pow_zero, mul_one]
+    have hm : 0 < m := Fact.out
+    exact iteratedFDeriv_freePropagator_polynomial_bound m hm n k
 
 /-- Multiplication by a temperate scalar function preserves Schwartz space.
     This follows from SchwartzMap.bilinLeftCLM in Mathlib. -/

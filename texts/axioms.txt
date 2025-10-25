@@ -39,13 +39,16 @@ added or assumptions are relaxed.
    Counts: 1 axiom / 0 sorrys in this section.
 
 6. Schwartz/propagator analytic prerequisites (Aqft2/Covariance.lean and CovarianceMomentum.lean)
-   Statements: freePropagator_temperate_growth, schwartz_mul_by_temperate,
-   integrable_schwartz_weighted_by_propagator, integrable_weighted_schwartz,
-   freeCovariance_exponential_decay_basic, covarianceBilinearForm_continuous_basic,
-   integral_star_comm, momentum_covariance_integrable.
+   Statements: iteratedFDeriv_freePropagator_polynomial_bound,
+   schwartz_mul_by_temperate, integrable_schwartz_weighted_by_propagator,
+   integrable_weighted_schwartz, freeCovariance_exponential_decay_basic,
+   covarianceBilinearForm_continuous_basic, integral_star_comm,
+   momentum_covariance_integrable.
    Status/Justification: Standard results about Schwartz functions and the massive propagator
-   (tempered growth, rapid decay, and basic integral manipulations). They are assumed while we
-   wait for the corresponding Mathlib lemmas or custom analytic proofs.
+   (tempered growth, rapid decay, and basic integral manipulations). The new derivative axiom
+   supplies the uniform bounds needed to prove `freePropagator_temperate_growth`, while the
+   remaining statements are assumed while we wait for the corresponding Mathlib lemmas or custom
+   analytic proofs.
    Counts: 8 axioms / 0 nearby sorrys.
 
 7. Fourier and time-reflection identities (Aqft2/Covariance.lean)
